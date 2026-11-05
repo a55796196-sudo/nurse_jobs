@@ -1,6 +1,11 @@
-name: 인스타 업로드 (수동 승인)
+name: 인스타 업로드
 
+# 1) Actions 탭에서 수동 실행 (승인 버튼)
+# 2) 저장소 변수 IG_AUTO_POST=true 이면 새 카드뉴스가 올라올 때 자동 실행
 on:
+  push:
+    branches: [main]
+    paths: ["docs/20*/card-00.jpg"]
   workflow_dispatch:
     inputs:
       day:
@@ -9,6 +14,7 @@ on:
 
 jobs:
   post:
+    if: github.event_name == 'workflow_dispatch' || vars.IG_AUTO_POST == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

@@ -1,4 +1,4 @@
-name: 매일 탈임상 공고 수집
+name: 매일 탈임상 공고 수집 (무료)
 
 on:
   schedule:
@@ -26,14 +26,15 @@ jobs:
         run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-cjk
       - run: pip install -r requirements.txt
 
-      - name: 수집 · 분류 · 카드뉴스 생성
+      - name: 수집 (API 키가 있으면 분류·카드까지)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DATA_GO_KR_KEY: ${{ secrets.DATA_GO_KR_KEY }}
           SARAMIN_KEY: ${{ secrets.SARAMIN_KEY }}
           BRAND_NAME: ${{ vars.BRAND_NAME }}
           IG_HANDLE: ${{ vars.IG_HANDLE }}
-        run: python -m src.main
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then python -m src.main run; else python -m src.main collect; fi
 
       - name: 결과 저장
         id: commit
@@ -48,13 +49,3 @@ jobs:
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: 인스타 자동 업로드 (IG_AUTO_POST=true 일 때만)
-        if: steps.commit.outputs.changed == 'true' && vars.IG_AUTO_POST == 'true'
-        env:
-          IG_USER_ID: ${{ secrets.IG_USER_ID }}
-          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
-          PAGES_BASE_URL: ${{ vars.PAGES_BASE_URL }}
-        run: |
-          DAY=$(TZ=Asia/Seoul date +%F)
-          if [ -f "docs/$DAY/card-00.jpg" ]; then python -m src.instagram "$DAY"; fi

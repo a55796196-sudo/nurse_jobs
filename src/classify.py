@@ -142,6 +142,7 @@ def _classify_rule(job: Job) -> None:
     job.is_target = bool(cat) and not re.search(_CLINICAL, text)
     job.category = cat if job.is_target else None
     job.job_role = job.job_role or (cat or "")
+    job.summary = job.summary or f"{job.org} · {job.title}"
 
 
 def classify(jobs: list[Job]) -> list[Job]:

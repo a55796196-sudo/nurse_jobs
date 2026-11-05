@@ -1,9 +1,10 @@
 # 병원 밖 간호사 · 탈임상 공고 자동화
 
-매일 아침 6시 47분(한국시간)에 자동으로 실행됩니다.
+매일 아침 자동으로 실행됩니다. **추가 비용 없이** 동작해요.
 
-1. **수집**: 잡알리오(공공기관), 사람인에서 간호사 관련 공고를 가져옴
-2. **AI 분류**: Claude가 병원 임상 공고를 걸러내고 **공공 / 학교 / 기업 / 연구**로 분류, 요약
+1. **수집** (06:47, GitHub Actions 무료): 잡알리오(공공기관), 사람인에서 간호사 관련 공고를 가져와 `data/inbox/`에 저장
+2. **AI 분류** (07:23, Claude 구독의 예약 작업): Claude가 병원 임상 공고를 걸러내고 **공공 / 학교 / 기업 / 연구**로 분류, 요약 (작업 방법은 `CLAUDE.md`)
+   - `ANTHROPIC_API_KEY`를 Secrets에 넣으면 1번 단계에서 API로 바로 분류하는 방식도 가능 (API 요금 별도)
 3. **콘텐츠 생성**: 인스타 카드뉴스(최대 10장) + 네이버 블로그 글 + 인스타 캡션
 4. **작업실 페이지**: GitHub Pages에 매일 페이지가 생기고, 복사 버튼으로 블로그에 붙여넣기
 5. **인스타 업로드**: 버튼 하나로 업로드 (원하면 완전 자동)
@@ -15,7 +16,7 @@ GitHub 저장소 → **Settings → Secrets and variables → Actions → New re
 
 | 이름 | 어디서 받나요 | 필수 |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys | ✅ (없으면 키워드 규칙으로 분류, 요약 없음) |
+| `ANTHROPIC_API_KEY` | console.anthropic.com → API Keys | ❌ 선택 (없으면 Claude 예약 작업이 분류, 추가 비용 없음) |
 | `DATA_GO_KR_KEY` | data.go.kr → "공공기관 채용정보 조회서비스" 활용신청 → 일반 인증키(Decoding) | ✅ |
 | `SARAMIN_KEY` | oapi.saramin.co.kr → API 이용 신청 | 권장 |
 | `IG_USER_ID`, `IG_ACCESS_TOKEN` | 인스타 업로드용 (아래 4번) | 선택 |
