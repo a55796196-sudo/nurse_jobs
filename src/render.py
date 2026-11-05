@@ -167,7 +167,15 @@ def job_card(job: Job, today: date, idx: int, total: int) -> Image.Image:
 
 def render_all(jobs: list[Job], today: date, out_dir: Path, limit: int = 9) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    picked = jobs[:limit]
+    # 카테고리별로 번갈아 뽑아 한 분야만 카드를 차지하지 않게 함 (마감 빠른 순 유지)
+    queues = {c: [j for j in jobs if j.category == c] for c in CATEGORIES}
+    picked: list[Job] = []
+    while len(picked) < limit and any(queues.values()):
+        for c in CATEGORIES:
+            if queues[c] and len(picked) < limit:
+                picked.append(queues[c].pop(0))
+    order = list(CATEGORIES)
+    picked.sort(key=lambda j: (order.index(j.category), j.deadline or "9999"))
     total = len(picked) + 1
     paths = []
     p = out_dir / "card-00.jpg"
