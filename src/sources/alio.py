@@ -8,11 +8,34 @@ from __future__ import annotations
 import os
 import re
 
+import time
+
 import requests
 
 from ..models import Job
 
-ENDPOINT = "https://apis.data.go.kr/1051000/recruitment/list"
+ENDPOINTS = [
+    "https://apis.data.go.kr/1051000/recruitment/list",
+    "http://apis.data.go.kr/1051000/recruitment/list",
+]
+
+
+def _get(params: dict) -> requests.Response:
+    """data.go.kr 은 가끔 응답이 느리거나 끊겨서 https/http 를 번갈아 재시도."""
+    last: Exception | None = None
+    for attempt in range(4):
+        url = ENDPOINTS[attempt % 2]
+        try:
+            r = requests.get(url, params=params, timeout=60)
+            if r.status_code == 200:
+                return r
+            last = RuntimeError(f"HTTP {r.status_code} ({url.split(':')[0]}): {r.text[:300]}")
+        except requests.RequestException as e:
+            last = e
+        time.sleep(5 * (attempt + 1))
+    raise RuntimeError(f"잡알리오 API 호출 실패: {last}")
+
+
 NURSE_PATTERN = re.compile(r"간호|보건관리|보건직|보건교사|임상연구|CRC|CRA", re.I)
 
 
@@ -31,19 +54,19 @@ def fetch(max_pages: int = 5) -> list[Job]:
 
     jobs: list[Job] = []
     for page in range(1, max_pages + 1):
-        resp = requests.get(
-            ENDPOINT,
-            params={
+        resp = _get(
+            {
                 "serviceKey": key,
                 "pageNo": page,
                 "numOfRows": 100,
                 "resultType": "json",
                 "ongoingYn": "Y",  # 진행 중인 공고만
-            },
-            timeout=30,
+            }
         )
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            data = resp.json()
+        except ValueError:  # 키 오류 등은 XML로 옴
+            raise RuntimeError(f"예상과 다른 응답: {resp.text[:300]}")
         items = data.get("result") or []
         if not items:
             break
