@@ -1,0 +1,25 @@
+name: 인스타 업로드 (수동 승인)
+
+on:
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "업로드할 날짜 (YYYY-MM-DD, 비우면 오늘)"
+        required: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          PAGES_BASE_URL: ${{ vars.PAGES_BASE_URL }}
+          DAY_INPUT: ${{ inputs.day }}
+        run: python -m src.instagram "${DAY_INPUT:-$(TZ=Asia/Seoul date +%F)}"
