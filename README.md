@@ -26,12 +26,12 @@ GitHub 저장소 → **Settings → Secrets and variables → Actions → New re
 |---|---|
 | `BRAND_NAME` | 병원 밖 간호사 |
 | `IG_HANDLE` | 인스타 아이디 (@ 빼고) |
-| `PAGES_BASE_URL` | https://내아이디.github.io/nurse-jobs |
+| `PAGES_BASE_URL` | https://내아이디.github.io/nurse_jobs |
 | `IG_AUTO_POST` | `true`면 매일 자동 업로드 (처음엔 비워두는 걸 추천) |
 
 ### 2) 작업실 페이지 켜기 (GitHub Pages)
 Settings → **Pages** → Source: *Deploy from a branch* → Branch: `main`, 폴더: `/docs` → Save
-→ 몇 분 뒤 `https://내아이디.github.io/nurse-jobs` 에서 확인
+→ 몇 분 뒤 `https://내아이디.github.io/nurse_jobs` 에서 확인
 
 > 무료 계정에서 Pages를 쓰려면 저장소가 **Public**이어야 합니다. 키는 Secrets에 있어서 공개되지 않아요.
 
