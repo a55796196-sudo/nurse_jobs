@@ -24,7 +24,7 @@ def _fmt_date(s: str | None) -> str | None:
 
 
 def fetch(max_pages: int = 5) -> list[Job]:
-    key = os.environ.get("DATA_GO_KR_KEY")
+    key = (os.environ.get("DATA_GO_KR_KEY") or "").strip()
     if not key:
         print("[alio] DATA_GO_KR_KEY 없음 → 건너뜀")
         return []

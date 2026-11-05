@@ -37,7 +37,7 @@ def _name(d: dict | None, *path: str) -> str:
 
 
 def fetch() -> list[Job]:
-    key = os.environ.get("SARAMIN_KEY")
+    key = (os.environ.get("SARAMIN_KEY") or "").strip()
     if not key:
         print("[saramin] SARAMIN_KEY 없음 → 건너뜀")
         return []
