@@ -1,6 +1,6 @@
 # 탈임상 간호사 공고 — 일일 분류 작업 안내 (Claude용)
 
-GitHub Actions가 매일 06:47(KST)에 공고를 수집해 `data/inbox/YYYY-MM-DD.json` 으로 커밋한다.
+GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `data/inbox/YYYY-MM-DD.json` 으로 커밋한다.
 예약된 Claude Code 세션이 이 파일을 분류하고 콘텐츠를 만들어 push 한다. **Claude API는 쓰지 않는다** (네가 직접 분류).
 
 ## 매일 할 일

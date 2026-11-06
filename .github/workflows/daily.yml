@@ -2,7 +2,7 @@ name: 매일 탈임상 공고 수집 (무료)
 
 on:
   schedule:
-    - cron: "47 21 * * *"   # 매일 한국시간 오전 6:47
+    - cron: "17 20 * * *"   # 매일 한국시간 오전 5:17 (GitHub 예약 실행은 최대 1시간 정도 늦어질 수 있음)
   workflow_dispatch: {}      # Actions 탭에서 수동 실행 가능
 
 permissions:
