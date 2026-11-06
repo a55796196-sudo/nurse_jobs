@@ -1,6 +1,6 @@
 """인스타그램 카드뉴스 이미지 생성 (1080x1350, 4:5 비율).
 
-카드 구성: 표지 1장 + 공고 카드 최대 8장 + 마무리 1장 (인스타 캐러셀 최대 10장)
+카드 구성: 표지 1장 + 공고 카드 최대 8장 + 전체 정리 1장 (인스타 캐러셀 최대 10장)
 폰트: fonts/ 폴더의 Pretendard (SIL OFL 1.1)
 """
 from __future__ import annotations
@@ -205,17 +205,49 @@ def job_card(job: Job, today: date, idx: int, total: int) -> Image.Image:
     return img
 
 
-def outro(total: int) -> Image.Image:
+def summary(jobs: list[Job], today: date, total: int) -> Image.Image:
+    """마지막 장: 전체 공고 한눈에 정리 (마감 빠른 순)."""
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     _header(d, BRAND, f"{total} / {total}")
-    t = font(120, "Title")
-    d.text((PAD, 400), "저장해두고", font=t, fill=INK)
-    _marked(d, PAD, 545, "마감 놓치지 마세요", t)
-    d.text((PAD, 760), "병원 밖 간호사 채용 공고를", font=font(40, "Medium"), fill=SUB)
-    d.text((PAD, 818), "매일 아침 정리해서 올려요", font=font(40, "Medium"), fill=SUB)
-    d.text((PAD, H - 160), "전체 공고와 원문 링크는 프로필에서", font=font(34, "Medium"), fill=MUTED)
-    d.text((PAD, H - 100), f"@{HANDLE} 팔로우" if HANDLE else "팔로우하고 매일 받아보기", font=font(36, "Bold"), fill=INK)
+    _marked(d, PAD, 160, "한눈에 정리", font(96, "Title"))
+
+    rows = sorted(jobs, key=lambda j: j.deadline or "9999")
+    top, bottom = 330, H - 200
+    max_rows = 18
+    extra = 0
+    if len(rows) > max_rows:
+        extra = len(rows) - (max_rows - 1)
+        rows = rows[: max_rows - 1]
+    n = len(rows) + (1 if extra else 0)
+    row_h = min(92, (bottom - top) / max(n, 1))
+    fs = max(26, min(36, int(row_h * 0.46)))
+    f_d, f_org, f_role, f_date = font(fs, "ExtraBold"), font(fs, "Bold"), font(fs, "Medium"), font(fs, "SemiBold")
+    d_w = d.textlength("D-DAY", font=f_d) + 28
+    date_w = d.textlength("12/31", font=f_date)
+
+    y = top
+    for j in rows:
+        label, dl = d_label(j.deadline, today)
+        cy = y + row_h / 2
+        d.text((PAD, cy), label if dl else "상시", font=f_d, fill=RED if _is_urgent(label) else INK, anchor="lm")
+        org = j.org.replace("(주)", "").strip()
+        x = PAD + d_w
+        room = W - PAD - date_w - 30 - x
+        org_txt = wrap(d, org, f_org, room * 0.62, 1)[0]
+        d.text((x, cy), org_txt, font=f_org, fill=INK, anchor="lm")
+        x2 = x + d.textlength(org_txt, font=f_org) + 16
+        if j.job_role and room - (x2 - x) > 60:
+            d.text((x2, cy), wrap(d, j.job_role, f_role, room - (x2 - x), 1)[0], font=f_role, fill=MUTED, anchor="lm")
+        if dl:
+            d.text((W - PAD, cy), f"{dl.month}/{dl.day}", font=f_date, fill=SUB, anchor="rm")
+        y += row_h
+        d.line([(PAD, y), (W - PAD, y)], fill=LINE, width=2)
+    if extra:
+        d.text((PAD, y + row_h / 2), f"외 {extra}건은 블로그에서 확인하세요", font=f_role, fill=MUTED, anchor="lm")
+
+    d.text((PAD, H - 140), "저장해두고 마감 놓치지 마세요", font=font(40, "Title"), fill=INK, anchor="lm")
+    d.text((PAD, H - 82), "원문 링크는 프로필에서" + (f"  ·  @{HANDLE}" if HANDLE else ""), font=font(30, "Medium"), fill=MUTED, anchor="lm")
     return img
 
 
@@ -234,7 +266,7 @@ def render_all(jobs: list[Job], today: date, out_dir: Path, limit: int = 8) -> l
     total = len(picked) + 2
     images = [cover(jobs, today, total)]
     images += [job_card(j, today, i, total) for i, j in enumerate(picked, start=2)]
-    images.append(outro(total))
+    images.append(summary(jobs, today, total))
     paths = []
     for i, im in enumerate(images):
         p = out_dir / f"card-{i:02d}.jpg"
