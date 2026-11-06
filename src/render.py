@@ -20,17 +20,16 @@ FONT_DIR = Path(__file__).resolve().parent.parent / "fonts"
 BRAND = os.environ.get("BRAND_NAME") or "병원 밖 간호사"
 HANDLE = os.environ.get("IG_HANDLE", "")
 
-# 색상: 흰 바탕 + 검정 글자 + 포인트 색 하나 (카테고리 색은 작은 라벨에만)
-BG = "#FAFAF7"
+# 색상: 크림 바탕 + 검정 글자 + 노란 형광펜
+BG = "#FFFCF3"
 INK = "#111111"
-SUB = "#555555"
-MUTED = "#9A9A9A"
-LINE = "#E4E4E0"
-ACCENT = "#0B6E4F"
-ACCENT_SOFT = "#E7F1EC"
-WHITE = "#FFFFFF"
+SUB = "#4A4A4A"
+MUTED = "#9B988F"
+LINE = "#E8E3D3"
+MARK = "#FFE24D"   # 형광펜
+RED = "#F03E3E"    # 마감 임박
 
-PALETTE = {"공공": "#2F5FD0", "학교": "#0B8457", "기업": "#D9480F", "연구": "#6741D9"}
+CAT_LABEL = {"공공": "공공기관", "학교": "학교", "기업": "기업", "연구": "연구"}
 
 _cache: dict = {}
 
@@ -38,7 +37,8 @@ _cache: dict = {}
 def font(size: int, weight: str = "Regular") -> ImageFont.FreeTypeFont:
     k = (size, weight)
     if k not in _cache:
-        path = FONT_DIR / f"Pretendard-{weight}.otf"
+        name = "BlackHanSans-Regular.ttf" if weight == "Title" else f"Pretendard-{weight}.otf"
+        path = FONT_DIR / name
         _cache[k] = ImageFont.truetype(str(path), size)
     return _cache[k]
 
@@ -93,13 +93,17 @@ def d_label(deadline: str | None, today: date) -> tuple[str, date | None]:
 
 # ---------- 그리기 도우미 ----------
 
-def _header(d: ImageDraw.ImageDraw, idx: int, total: int, color=MUTED):
-    d.text((PAD, 76), BRAND, font=font(26, "SemiBold"), fill=color, anchor="lm")
-    d.text((W - PAD, 76), f"{idx:02d} / {total:02d}", font=font(26, "Medium"), fill=color, anchor="rm")
+def _header(d: ImageDraw.ImageDraw, left: str, right: str):
+    d.text((PAD, 90), left, font=font(30, "SemiBold"), fill=MUTED, anchor="lm")
+    d.text((W - PAD, 90), right, font=font(30, "SemiBold"), fill=MUTED, anchor="rm")
 
 
-def _rule(d: ImageDraw.ImageDraw, y: int, color=LINE, width=2):
-    d.line([(PAD, y), (W - PAD, y)], fill=color, width=width)
+def _marked(d: ImageDraw.ImageDraw, x, y, text, f, fill=INK):
+    """형광펜 칠한 제목 한 줄."""
+    bb = d.textbbox((x, y), text, font=f)
+    h = bb[3] - bb[1]
+    d.rectangle([bb[0] - 10, bb[3] - h * 0.42, bb[2] + 10, bb[3] + 10], fill=MARK)
+    d.text((x, y), text, font=f, fill=fill)
 
 
 def _short_loc(loc: str | None) -> str:
@@ -111,137 +115,107 @@ def _short_loc(loc: str | None) -> str:
     return parts[0][:10] + (f" 외 {len(parts) - 1}곳" if len(parts) > 1 else "")
 
 
+def _is_urgent(label: str) -> bool:
+    return label == "D-DAY" or (label.startswith("D-") and label[2:].isdigit() and int(label[2:]) <= 3)
+
+
 # ---------- 카드 ----------
 
 def cover(jobs: list[Job], today: date, total: int) -> Image.Image:
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
-    _header(d, 1, total)
-    _rule(d, 120, INK, 3)
+    _header(d, BRAND, f"{today.month}.{today.day:02d}")
 
-    d.text((PAD, 168), f"{today.year}. {today.month:02d}. {today.day:02d}", font=font(30, "SemiBold"), fill=ACCENT)
-    d.text((PAD, 236), "오늘의", font=font(108, "ExtraBold"), fill=INK)
-    d.text((PAD, 362), "탈임상 공고", font=font(108, "ExtraBold"), fill=INK)
+    t = font(128, "Title")
+    d.text((PAD, 250), "오늘의", font=t, fill=INK)
+    _marked(d, PAD, 400, "탈임상 공고", t)
 
-    num = str(len(jobs))
-    nf = font(260, "ExtraBold")
-    d.text((PAD - 8, 500), num, font=nf, fill=ACCENT)
-    nw = d.textlength(num, font=nf)
-    d.text((PAD + nw + 8, 740), "건", font=font(80, "Bold"), fill=ACCENT, anchor="ls")
+    num = f"{len(jobs)}건"
+    d.text((PAD, 590), num, font=font(250, "Title"), fill=INK)
 
-    y = 830
-    _rule(d, y)
-    for cat, meta in CATEGORIES.items():
-        n = sum(1 for j in jobs if j.category == cat)
-        if not n:
-            continue
-        d.rectangle([PAD, y + 44, PAD + 14, y + 58], fill=PALETTE.get(cat, SUB))
-        d.text((PAD + 34, y + 51), cat, font=font(38, "Bold"), fill=INK, anchor="lm")
-        d.text((PAD + 140, y + 51), meta["desc"], font=font(28, "Regular"), fill=MUTED, anchor="lm")
-        d.text((W - PAD, y + 51), f"{n}", font=font(40, "Bold"), fill=INK, anchor="rm")
-        y += 102
-        _rule(d, y)
+    counts = [f"{c} {sum(1 for j in jobs if j.category == c)}" for c in CATEGORIES if any(j.category == c for j in jobs)]
+    d.text((PAD, 900), "  ·  ".join(counts), font=font(42, "Bold"), fill=SUB)
 
-    d.text((PAD, H - 92), "넘겨서 확인하기", font=font(32, "SemiBold"), fill=INK, anchor="lm")
-    d.text((W - PAD, H - 92), "→", font=font(40, "SemiBold"), fill=INK, anchor="rm")
+    orgs = []
+    for j in jobs:
+        o = j.org.replace("(주)", "").strip()
+        if o not in orgs:
+            orgs.append(o)
+    preview = ", ".join(orgs[:3]) + (" 외" if len(orgs) > 3 else "")
+    for i, line in enumerate(wrap(d, preview, font(34, "Medium"), W - PAD * 2, 2)):
+        d.text((PAD, 975 + i * 50), line, font=font(34, "Medium"), fill=MUTED)
+
+    d.text((PAD, H - 100), "넘겨서 확인하기 →", font=font(36, "Bold"), fill=INK, anchor="lm")
     return img
 
 
 def job_card(job: Job, today: date, idx: int, total: int) -> Image.Image:
-    cat_col = PALETTE.get(job.category or "", SUB)
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
-    _header(d, idx, total)
-    _rule(d, 120, INK, 3)
+    _header(d, f"{idx - 1:02d}  {CAT_LABEL.get(job.category or '', '기타')}", f"{idx} / {total}")
 
-    # 카테고리 라벨
-    y = 170
-    d.rectangle([PAD, y + 8, PAD + 14, y + 22], fill=cat_col)
-    d.text((PAD + 30, y + 15), f"{job.category or '기타'}  ·  {job.org.replace('(주)', '').strip()}"[:34],
-           font=font(30, "SemiBold"), fill=SUB, anchor="lm")
-
-    # 직무명
-    y += 70
-    role_f = font(92, "ExtraBold")
-    role_lines = wrap(d, job.job_role or job.title, role_f, W - PAD * 2, 2)
+    # 기관명 + 직무명(형광펜)
+    y = 190
+    t = font(92, "Title")
+    for line in wrap(d, job.org.replace("(주)", "").strip(), t, W - PAD * 2, 2):
+        d.text((PAD, y), line, font=t, fill=INK)
+        y += 118
+    role_lines = wrap(d, job.job_role or job.title, t, W - PAD * 2 - 20, 2)
     for line in role_lines:
-        d.text((PAD, y), line, font=role_f, fill=INK)
-        y += 112
-
-    # 공고명 (작게) - 직무명이 두 줄이면 한 줄만
-    for line in wrap(d, job.title, font(28, "Regular"), W - PAD * 2, 3 - len(role_lines)):
-        d.text((PAD, y + 4), line, font=font(28, "Regular"), fill=MUTED)
-        y += 42
+        _marked(d, PAD, y, line, t)
+        y += 118
 
     # 마감
-    y += 44
+    y += 30
     label, dl = d_label(job.deadline, today)
-    urgent = label == "D-DAY" or (label.startswith("D-") and label[2:].isdigit() and int(label[2:]) <= 3)
-    lf = font(64, "ExtraBold")
-    d.text((PAD, y), label, font=lf, fill="#D63031" if urgent else ACCENT)
-    lw = d.textlength(label, font=lf)
-    if dl:
-        d.text((PAD + lw + 24, y + 44), f"{dl.month}월 {dl.day}일 마감", font=font(32, "Medium"), fill=SUB, anchor="ls")
-    y += 104
+    dtxt = label + (f"  ·  {dl.month}월 {dl.day}일 마감" if dl else "")
+    d.text((PAD, y), dtxt, font=font(44, "ExtraBold"), fill=RED if _is_urgent(label) else INK)
+    y += 90
 
-    # 정보 표
-    _rule(d, y)
+    # 근무지 / 고용형태
     for k, v in (("근무지", _short_loc(job.location)), ("고용형태", (job.employment_type or "공고 참고").split(",")[0])):
-        d.text((PAD, y + 40), k, font=font(30, "Medium"), fill=MUTED, anchor="lm")
-        d.text((PAD + 200, y + 40), v, font=font(32, "SemiBold"), fill=INK, anchor="lm")
-        y += 80
-        _rule(d, y)
+        d.text((PAD, y), k, font=font(36, "Medium"), fill=MUTED)
+        d.text((PAD + 190, y), v, font=font(36, "SemiBold"), fill=INK)
+        y += 60
 
-    # 요약
-    y += 40
+    d.line([(PAD, y + 30), (W - PAD, y + 30)], fill=LINE, width=3)
+    y += 75
+
+    # 요약 + 지원 자격 (남은 공간에 맞춰 줄 수 조절)
+    bottom = H - 150
     reqs = job.requirements[:3]
-    bottom = H - 150  # 하단 구분선 위 여백
-    req_h = (56 + 52 * len(reqs) + 30) if reqs else 0
-    sum_f = font(34, "Regular")
-    max_lines = max(2, min(4, (bottom - y - req_h) // 54))
-    if reqs and y + max_lines * 54 + req_h > bottom:  # 공간이 모자라면 자격요건 개수를 줄임
-        while reqs and y + 2 * 54 + (56 + 52 * len(reqs) + 30) > bottom:
-            reqs = reqs[:-1]
-        req_h = (56 + 52 * len(reqs) + 30) if reqs else 0
-        max_lines = max(2, min(4, (bottom - y - req_h) // 54))
+    req_h = lambda n: (60 + 56 * n) if n else 0  # noqa: E731
+    while reqs and y + 2 * 54 + 30 + req_h(len(reqs)) > bottom:
+        reqs = reqs[:-1]
+    sum_f = font(35, "Regular")
+    max_lines = max(1, min(4, (bottom - y - 30 - req_h(len(reqs))) // 54))
     for line in wrap(d, job.summary or "", sum_f, W - PAD * 2, max_lines):
-        d.text((PAD, y), line, font=sum_f, fill=INK)
+        d.text((PAD, y), line, font=sum_f, fill=SUB)
         y += 54
-
-    # 지원 자격
     if reqs:
         y += 30
-        d.text((PAD, y), "지원 자격", font=font(28, "Bold"), fill=ACCENT)
-        y += 52
+        d.text((PAD, y), "지원 자격", font=font(34, "Bold"), fill=INK)
+        y += 60
         for r in reqs:
-            if y + 44 > bottom:
-                break
-            d.text((PAD, y), "—", font=font(30, "Medium"), fill=MUTED)
-            d.text((PAD + 48, y), wrap(d, r, font(31, "Medium"), W - PAD * 2 - 48, 1)[0], font=font(31, "Medium"), fill=SUB)
-            y += 52
+            d.text((PAD, y), "·", font=font(36, "Bold"), fill=INK)
+            d.text((PAD + 30, y), wrap(d, r, font(34, "Medium"), W - PAD * 2 - 30, 1)[0], font=font(34, "Medium"), fill=SUB)
+            y += 56
 
-    _rule(d, H - 130)
-    d.text((PAD, H - 82), "원문 링크는 프로필에서", font=font(26, "Medium"), fill=MUTED, anchor="lm")
-    if HANDLE:
-        d.text((W - PAD, H - 82), f"@{HANDLE}", font=font(26, "SemiBold"), fill=MUTED, anchor="rm")
+    d.text((W / 2, H - 80), "원문 링크는 프로필에서 확인하세요", font=font(28, "Medium"), fill=MUTED, anchor="mm")
     return img
 
 
 def outro(total: int) -> Image.Image:
-    img = Image.new("RGB", (W, H), ACCENT)
+    img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
-    soft = "#9CC7B5"
-    _header(d, total, total, soft)
-    d.line([(PAD, 120), (W - PAD, 120)], fill=WHITE, width=3)
-    d.text((PAD, 420), "저장해두고", font=font(104, "ExtraBold"), fill=WHITE)
-    d.text((PAD, 546), "마감 놓치지 마세요", font=font(104, "ExtraBold"), fill=WHITE)
-    d.text((PAD, 720), "병원 밖 간호사 채용 공고를", font=font(36, "Medium"), fill=soft)
-    d.text((PAD, 772), "매일 아침 정리해서 올려요.", font=font(36, "Medium"), fill=soft)
-    d.line([(PAD, H - 200), (W - PAD, H - 200)], fill=soft, width=2)
-    d.text((PAD, H - 140), "전체 공고 · 원문 링크", font=font(32, "Medium"), fill=soft, anchor="lm")
-    d.text((W - PAD, H - 140), "프로필 링크", font=font(32, "Bold"), fill=WHITE, anchor="rm")
-    d.text((PAD, H - 80), "팔로우하고 받아보기", font=font(32, "Medium"), fill=soft, anchor="lm")
-    d.text((W - PAD, H - 80), f"@{HANDLE}" if HANDLE else BRAND, font=font(32, "Bold"), fill=WHITE, anchor="rm")
+    _header(d, BRAND, f"{total} / {total}")
+    t = font(120, "Title")
+    d.text((PAD, 400), "저장해두고", font=t, fill=INK)
+    _marked(d, PAD, 545, "마감 놓치지 마세요", t)
+    d.text((PAD, 760), "병원 밖 간호사 채용 공고를", font=font(40, "Medium"), fill=SUB)
+    d.text((PAD, 818), "매일 아침 정리해서 올려요", font=font(40, "Medium"), fill=SUB)
+    d.text((PAD, H - 160), "전체 공고와 원문 링크는 프로필에서", font=font(34, "Medium"), fill=MUTED)
+    d.text((PAD, H - 100), f"@{HANDLE} 팔로우" if HANDLE else "팔로우하고 매일 받아보기", font=font(36, "Bold"), fill=INK)
     return img
 
 
