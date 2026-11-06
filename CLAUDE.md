@@ -19,8 +19,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
    - **원문(`raw_text`, `title`)에 없는 정보는 절대 지어내지 말 것** (연봉, 마감일, 경력 등)
    - 공고가 많으면 Python 스크립트로 JSON을 읽고 쓰되, 판단 자체는 네가 직접 한다.
 4. `python -m src.main check YYYY-MM-DD` → `OK` 나올 때까지 수정
-5. 폰트 확인: `fc-list | grep -q NotoSansCJK || (apt-get update -q && apt-get install -y -q fonts-noto-cjk)`
-   그리고 `pip install -q -r requirements.txt`
+5. `pip install -q -r requirements.txt` (폰트는 저장소 fonts/ 에 포함되어 있음)
 6. `python -m src.main build YYYY-MM-DD` (inbox 파일은 `data/jobs/`로 자동 이동)
 7. 카드 1~2장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/card-01.jpg`)
 8. 커밋 & 푸시:

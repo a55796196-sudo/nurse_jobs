@@ -22,8 +22,6 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: 한글 폰트 설치
-        run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-cjk
       - run: pip install -r requirements.txt
 
       - name: 수집 (API 키가 있으면 분류·카드까지)
