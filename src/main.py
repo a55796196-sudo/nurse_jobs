@@ -48,6 +48,40 @@ def save_seen(seen: dict[str, str], today: str) -> None:
     SEEN_FILE.write_text(json.dumps(seen, ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
 
 
+POSTED_FILE = DATA / "posted.json"
+CAPITAL = ("서울", "경기", "인천")
+
+
+def load_posted() -> dict[str, str]:
+    try:
+        return json.loads(POSTED_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def mark_posted(jobs: list[Job], day: str) -> None:
+    posted = load_posted()
+    for j in jobs:
+        posted.setdefault(j.key, day)
+    POSTED_FILE.write_text(json.dumps(posted, ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
+
+
+def backlog(day: str) -> list[Job]:
+    """아직 블로그에 안 올린, 마감 전(내일 이후) 탈임상 공고. 수도권 → 마감 빠른 순."""
+    posted, seen_keys, out = load_posted(), set(), []
+    files = sorted((DATA / "jobs").glob("*.json"), reverse=True)
+    for f in files:
+        for j in read_jobs(f):
+            if not j.is_target or j.key in posted or j.key in seen_keys:
+                continue
+            if j.deadline and j.deadline <= day:
+                continue
+            seen_keys.add(j.key)
+            out.append(j)
+    out.sort(key=lambda j: (not any(c in (j.location or "") for c in CAPITAL), j.deadline or "9999"))
+    return out
+
+
 def read_jobs(path: Path) -> list[Job]:
     return [Job.from_dict(d) for d in json.loads(path.read_text(encoding="utf-8"))]
 
@@ -139,6 +173,7 @@ def build(path: Path, day: str, archive: bool = True) -> None:
         print("오늘은 탈임상 공고가 없어 페이지를 만들지 않습니다.")
     build_index(DOCS)
     if archive:
+        mark_posted([j for j in targets if j.blog_pick], day)
         # 분류에 쓴 공고 이미지는 정리 (저장소 용량 관리)
         import shutil
         for j in jobs:
@@ -174,6 +209,18 @@ def main() -> None:
             print("일부 공고 분류 실패 → inbox에 남겨둠")
             return
         build(path, day)
+    elif cmd == "backlog":  # 대기열 보기: python -m src.main backlog [날짜]
+        for j in backlog(day):
+            print(f"{j.key} | {j.org} | {j.job_role or j.title[:30]} | {j.location} | ~{j.deadline}")
+    elif cmd == "backlog-add":  # 대기열 공고를 그날 inbox 에 추가: python -m src.main backlog-add 날짜 KEY [KEY...]
+        keys = set(sys.argv[3:])
+        add = [j for j in backlog(day) if j.key in keys]
+        for j in add:
+            j.blog_pick = True
+        cur = read_jobs(inbox_file) if inbox_file.exists() else []
+        have = {j.key for j in cur}
+        write_jobs(inbox_file, cur + [j for j in add if j.key not in have])
+        print(f"{len(add)}건 추가 → {inbox_file} (blog_pick=true, intro·급여 등 블로그 필드를 채울 것)")
     elif cmd == "enrich":  # inbox 공고들의 채용사이트 상세를 다시 읽고, 미수집 공고를 최신 inbox에 추가
         from .sources import sites
         seen = load_seen()
