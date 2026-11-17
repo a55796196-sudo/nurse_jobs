@@ -15,14 +15,16 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt
+      - name: 채용사이트 읽기 도구 설치 (브라우저·글자인식)
+        run: sudo apt-get install -y -q tesseract-ocr tesseract-ocr-kor >/dev/null
+      - run: pip install -r requirements.txt playwright && python -m playwright install --with-deps chromium >/dev/null
 
       - name: 수집 (API 키가 있으면 분류·카드까지)
         env:
