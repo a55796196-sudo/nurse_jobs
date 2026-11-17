@@ -2,8 +2,14 @@
 import json, os, re, requests
 from playwright.sync_api import sync_playwright
 KEY = (os.environ.get("DATA_GO_KR_KEY") or "").strip()
-det = requests.get("https://apis.data.go.kr/1051000/recruitment/detail",
-                   params={"serviceKey": KEY, "resultType": "json", "sn": 306748}, timeout=60).json().get("result") or {}
+det = {}
+for base in ("https://apis.data.go.kr", "http://apis.data.go.kr") * 2:
+    try:
+        det = requests.get(base + "/1051000/recruitment/detail",
+                           params={"serviceKey": KEY, "resultType": "json", "sn": 306748}, timeout=60).json().get("result") or {}
+        break
+    except Exception as e:
+        print("API 재시도", e.__class__.__name__)
 print("첨부:", [f.get("atchFileNm") for f in det.get("files") or []])
 print("단계:", [s.get("recrutPbancTtl") for s in det.get("steps") or []])
 for k in ("aplyQlfcCn", "prefCondCn", "scrnprcdrMthdExpln", "disqlfcRsn", "nonatchRsn"):
