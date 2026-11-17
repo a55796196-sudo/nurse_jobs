@@ -70,6 +70,14 @@ def _lines(text: str) -> list[str]:
 
 
 NEED = "공고문 확인 필요"
+
+
+def _is_site_home(url: str) -> bool:
+    """공고 상세가 아니라 채용 사이트 첫 화면 주소인지 (경로·번호가 없으면 첫 화면으로 봄)."""
+    from urllib.parse import urlparse
+    u = urlparse(url or "")
+    path = u.path.strip("/")
+    return not u.query and (not path or not any(c.isdigit() for c in path))
 SALARY_FILE = Path(__file__).resolve().parent.parent / "data" / "alio_salary.json"
 
 
@@ -184,10 +192,13 @@ def post_html(job: Job, today: date) -> str:
         out.append(f"<h2>💬 {AUTHOR}의 한마디</h2><p>{_e(job.blog_comment)}</p><p>&nbsp;</p>")
 
     out.append("<h2>🔗 지원하기</h2><ul>")
-    out.append(f'<li><a href="{_e(job.url)}">기관 채용 홈페이지</a></li>')
     alio = job.extra.get("alio_url") or (f"https://job.alio.go.kr/recruitview.do?idx={job.source_id}" if job.source == "alio" else "")
     if alio:
-        out.append(f'<li><a href="{_e(alio)}">잡알리오 공고 (공고문·첨부파일)</a></li>')
+        out.append(f'<li><a href="{_e(alio)}">이 공고 원문 보기 (잡알리오 · 공고문·첨부파일)</a></li>')
+    if _is_site_home(job.url):
+        out.append(f'<li><a href="{_e(job.url)}">{_e(_org(job))} 채용 홈페이지</a> → 공고 목록에서 <b>"{_e(job.title)}"</b>을 찾아 지원하세요</li>')
+    else:
+        out.append(f'<li><a href="{_e(job.url)}">기관 채용 홈페이지에서 바로 지원</a></li>')
     out.append("</ul><p>※ 공고 내용을 요약한 글이에요. 급여·근무조건 등 세부 내용은 원문 공고문을 확인해주세요.</p><p>&nbsp;</p>")
 
     tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", f"{_org(job).replace(' ', '')}채용"]
