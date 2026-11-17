@@ -174,6 +174,25 @@ def main() -> None:
             print("일부 공고 분류 실패 → inbox에 남겨둠")
             return
         build(path, day)
+    elif cmd == "enrich":  # inbox 공고들의 채용사이트 상세를 다시 읽고, 미수집 공고를 최신 inbox에 추가
+        from .sources import sites
+        seen = load_seen()
+        files = sorted(INBOX.glob("*.json"))
+        all_jobs, by_file = [], {}
+        for f in files:
+            js = [j for j in read_jobs(f) if not (j.deadline and j.deadline < today_kst())]
+            by_file[f] = js
+            all_jobs += js
+        found = sites.enrich(all_jobs, discover=True, seen=set(seen))
+        found = [j for j in found if not (j.deadline and j.deadline < today_kst())]
+        for j in found:
+            seen[j.key] = today_kst()
+        if files:
+            by_file[files[-1]] += found
+        for f, js in by_file.items():
+            write_jobs(f, js) if js else f.unlink()
+        save_seen(seen, today_kst())
+        print(f"상세 읽기 완료: 기존 {len(all_jobs)}건, 새로 찾은 공고 {len(found)}건")
     elif cmd == "sitetest":  # 디버그: python -m src.main sitetest URL [URL...]
         from .sources import sites
         tests = [Job(source="test", source_id=str(i), title="", org="", url=u) for i, u in enumerate(sys.argv[2:])]
