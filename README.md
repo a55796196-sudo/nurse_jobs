@@ -1,4 +1,4 @@
-# 병원 밖 간호사 · 탈임상 공고 자동화
+# 탈임상 채용노트 · 탈임상 공고 자동화
 
 매일 아침 자동으로 실행됩니다. **추가 비용 없이** 동작해요.
 
@@ -25,7 +25,7 @@ GitHub 저장소 → **Settings → Secrets and variables → Actions → New re
 
 | 이름 | 예시 |
 |---|---|
-| `BRAND_NAME` | 병원 밖 간호사 |
+| `BRAND_NAME` | 탈임상 채용노트 |
 | `IG_HANDLE` | 인스타 아이디 (@ 빼고) |
 | `PAGES_BASE_URL` | https://내아이디.github.io/nurse_jobs |
 | `IG_AUTO_POST` | `true`면 매일 자동 업로드 (처음엔 비워두는 걸 추천) |

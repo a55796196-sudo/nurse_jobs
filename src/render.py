@@ -17,7 +17,7 @@ W, H = 1080, 1350
 PAD = 80
 FONT_DIR = Path(__file__).resolve().parent.parent / "fonts"
 
-BRAND = os.environ.get("BRAND_NAME") or "병원 밖 간호사"
+BRAND = os.environ.get("BRAND_NAME") or "탈임상 채용노트"
 HANDLE = os.environ.get("IG_HANDLE", "")
 
 # 색상: 크림 바탕 + 검정 글자 + 노란 형광펜
