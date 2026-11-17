@@ -22,7 +22,12 @@ for page in (1, 2, 3):
     items += api("list", pageNo=page, numOfRows=100, ongoingYn="Y").get("result") or []
 nurse = [i for i in items if "간호" in (i.get("recrutPbancTtl", "") + i.get("aplyQlfcCn", ""))]
 print("간호 공고", len(nurse), "/ 전체", len(items))
-with_files = [i for i in nurse if i.get("files")] or [i for i in items if i.get("files")]
+with_files = []
+for i in nurse[:15]:
+    det = api("detail", sn=i["recrutPblntSn"]).get("result") or {}
+    print("detail", i["recrutPblntSn"], "files:", len(det.get("files") or []), "steps:", len(det.get("steps") or []))
+    if det.get("files"):
+        with_files.append(det)
 print("첨부 있는 공고", len(with_files))
 for it in with_files[:2]:
     print("\n=== 공고", it["recrutPblntSn"], it["instNm"], it["recrutPbancTtl"])
