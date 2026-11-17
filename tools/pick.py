@@ -1,24 +1,31 @@
-"""일회성: 수도권 간호 관련 진행 중 공고 후보 + 상세(첨부/사이트) 확인."""
-import json, os, re, sys, requests
-KEY = (os.environ.get("DATA_GO_KR_KEY") or "").strip()
-def api(path, **p):
-    p.update(serviceKey=KEY, resultType="json")
-    for base in ("https://apis.data.go.kr", "http://apis.data.go.kr") * 2:
+"""일회성: 시도교육청 구인 게시판에서 보건교사 공고 찾기."""
+import re
+from playwright.sync_api import sync_playwright
+SITES = {
+    "서울": "https://work.sen.go.kr/work/search/recInfo/BD_selectSrchRecInfo.do",
+    "경기": "https://www.goe.go.kr/recruit/main.do",
+}
+with sync_playwright() as p:
+    b = p.chromium.launch(); pg = b.new_page()
+    for name, url in SITES.items():
         try:
-            return requests.get(f"{base}/1051000/recruitment/{path}", params=p, timeout=60).json()
+            pg.goto(url, wait_until="networkidle", timeout=60000); pg.wait_for_timeout(2000)
         except Exception as e:
-            print("재시도", e.__class__.__name__)
-    return {}
-items = []
-for page in range(1, 8):
-    res = api("list", pageNo=page, numOfRows=100, ongoingYn="Y").get("result") or []
-    items += res
-    if len(res) < 100: break
-NURSE = re.compile(r"간호|보건관리|임상시험|연구간호|CRC|코디네이터")
-CLIN = re.compile(r"병동|수술실|중환자|응급실|3교대|교대근무|외래|NICU|분만실|조무사")
-for it in items:
-    blob = " ".join(str(it.get(k) or "") for k in ("recrutPbancTtl", "aplyQlfcCn", "prefCondCn"))
-    if not NURSE.search(blob) or not re.search("서울|경기|인천", it.get("workRgnNmLst") or ""):
-        continue
-    print(f"\n#### [{'임상의심' if CLIN.search(blob) else '후보'}] {it['instNm']} | {it['recrutPbancTtl']} | {it.get('hireTypeNmLst')} | {it.get('workRgnNmLst')} | ~{it.get('pbancEndYmd')} | 인원 {it.get('recrutNope')} | sn {it['recrutPblntSn']} | {it.get('srcUrl')}")
-    print("자격:", " ".join((it.get("aplyQlfcCn") or "").split())[:900])
+            print("###", name, "접속 실패", e); continue
+        print(f"\n### {name} {pg.url} / {pg.title()}")
+        # 검색창이 있으면 '보건' 검색
+        for sel in ("input[name*='earch']", "input[name*='keyword']", "input[type='search']", "input[title*='검색']", "input[name='srchKwd']"):
+            try:
+                el = pg.query_selector(sel)
+                if el and el.is_visible():
+                    el.fill("보건"); el.press("Enter"); pg.wait_for_timeout(3000)
+                    print("검색 실행:", sel); break
+            except Exception:
+                pass
+        text = pg.inner_text("body")
+        lines = [l.strip() for l in text.split("\n") if "보건" in l]
+        print("보건 포함 줄:", lines[:30])
+        links = pg.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,120), e.href, e.getAttribute('onclick')]).filter(x => x[0].includes('보건'))")
+        print("보건 링크:", links[:20])
+        print("페이지 일부:", " ".join(text.split())[:1500])
+    b.close()
