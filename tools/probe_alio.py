@@ -29,7 +29,7 @@ for i in nurse[:15]:
     if det.get("files"):
         with_files.append(det)
 print("첨부 있는 공고", len(with_files))
-for it in with_files[:2]:
+for it in with_files[:1]:
     print("\n=== 공고", it["recrutPblntSn"], it["instNm"], it["recrutPbancTtl"])
     print("files:", json.dumps(it["files"], ensure_ascii=False, indent=1)[:2500])
     print("steps:", json.dumps(it.get("steps"), ensure_ascii=False)[:800])
@@ -44,6 +44,13 @@ for it in with_files[:2]:
             print("다운로드 실패:", e)
             continue
         print("HTTP", r.status_code, r.headers.get("content-type"), r.headers.get("content-disposition"), len(r.content), "bytes")
+        if "html" in (r.headers.get("content-type") or ""):
+            import re
+            body = r.text
+            print("HTML 제목:", re.findall(r"<title>(.*?)</title>", body, re.S)[:1])
+            print("HTML 본문 텍스트:", " ".join(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\\1>", " ", body, flags=re.S)).split())[:800])
+            print("script/링크 일부:", re.findall(r"(location[^;]{0,200}|action=\"[^\"]+\"|href=\"[^\"]*down[^\"]*\")", body)[:10])
+            break
         head = r.content[:8]
         with tempfile.NamedTemporaryFile(delete=False) as t:
             t.write(r.content)
