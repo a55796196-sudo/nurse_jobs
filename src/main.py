@@ -209,6 +209,24 @@ def main() -> None:
             print("일부 공고 분류 실패 → inbox에 남겨둠")
             return
         build(path, day)
+    elif cmd == "edutest":  # 디버그: 교육청 보건교사 수집 시험 + 경기 게시판 구조 확인
+        from .sources import edu
+        for j in edu.fetch():
+            print("\n####", j.key, j.org, "|", j.title, "|", j.location, "|", j.start_date, "~", j.deadline, "|", j.employment_type)
+            print("   ", {k: j.extra.get(k) for k in ("address", "recrutNope", "work_hours", "pay_type")})
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            b = p.chromium.launch(); pg = b.new_page()
+            pg.goto("https://www.goe.go.kr/recruit/main.do", wait_until="networkidle", timeout=60000)
+            links = pg.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,40), e.href]).filter(x => /채용|구인|공고/.test(x[0]))")
+            print("\n[경기] 링크:", links[:15])
+            more = [h for t, h in links if "더보기" in t or "채용공고" in t]
+            if more:
+                pg.goto(more[0], wait_until="networkidle", timeout=60000); pg.wait_for_timeout(2000)
+                print("[경기] 목록 URL:", pg.url)
+                print("[경기] 입력칸:", pg.eval_on_selector_all("input,select", "els => els.map(e => [e.tagName, e.name, e.id, e.type, e.title, e.placeholder])")[:25])
+                print("[경기] 본문:", " ".join(pg.inner_text("body").split())[:1200])
+            b.close()
     elif cmd == "backlog":  # 대기열 보기: python -m src.main backlog [날짜]
         for j in backlog(day):
             print(f"{j.key} | {j.org} | {j.job_role or j.title[:30]} | {j.location} | ~{j.deadline}")
