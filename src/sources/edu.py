@@ -122,18 +122,20 @@ def fetch_gyeonggi(page, max_items: int = 30) -> list[Job]:
             m_cnt = re.search(r"채용인원\s+(\d+)", card1)
             m_kind = re.search(r"직무분야\s+(\S+)", card1)
             m_addr = re.search(r"(경기도\s+\S+[시군]\s+[^\n]{3,40}?)(?:\s{2}|\s+\S+학교|$)", body)
-            sid = re.findall(r"\d+", detail_url)[-1] if re.findall(r"\d+", detail_url) else f"{i}"
+            import hashlib
+            sid = hashlib.md5(card1[:120].encode("utf8")).hexdigest()[:10]  # 상세 주소에 번호가 없어 카드 내용으로 구분
             title = re.sub(r"^\S+\s+\d{2,3}-\d{3,4}-\d{4}\s+등록일\s*:\s*\S+\s+조회수\s*:\s*\d+\s*", "", m_title.group(1)) if m_title else "보건교사 채용"
+            title = re.sub(r"^(마감임박|오늘마감|D-\d+)\s*", "", title)
             city = re.search(r"경기도\s+(\S+[시군])", body)
             jobs.append(Job(
-                source="goe", source_id=sid, title=title, url=detail_url if detail_url != list_url else GOE_LIST,
+                source="goe", source_id=sid, title=title, url=GOE_LIST,
                 org=m_org.group(1) if m_org else "경기 학교",
                 deadline="-".join(m_dl.groups()[3:]) if m_dl else None,
                 start_date="-".join(m_dl.groups()[:3]) if m_dl else None,
                 location=f"경기 {city.group(1)}" if city else "경기",
                 employment_type=m_kind.group(1) if m_kind else "계약제교원",
                 raw_text=(card1 + " " + body)[:3000],
-                extra={"site_text": body[:8000], "list_card": card1, "detail_url": detail_url,
+                extra={"site_text": body[:8000], "list_card": card1, "search_hint": "경기도교육청 구인구직 → 구인정보조회에서 학교명 검색",
                        "address": m_addr.group(1).strip() if m_addr else None,
                        "recrutNope": m_cnt.group(1) if m_cnt else None,
                        "pay_type": m_pay.group(1) if m_pay else None},

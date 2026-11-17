@@ -95,7 +95,8 @@ def collect() -> Path | None:
     today = today_kst()
     seen = load_seen()
     jobs: list[Job] = []
-    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch)):
+    from .sources import edu
+    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch), ("edu", edu.fetch)):
         try:
             jobs += fn()
         except Exception as e:  # 한 출처가 실패해도 나머지는 계속

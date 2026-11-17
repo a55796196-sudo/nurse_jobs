@@ -216,7 +216,9 @@ def post_html(job: Job, today: date) -> str:
     alio = job.extra.get("alio_url") or (f"https://job.alio.go.kr/recruitview.do?idx={job.source_id}" if job.source == "alio" else "")
     if alio:
         out.append(f'<li><a href="{_e(alio)}">이 공고 원문 보기 (잡알리오 · 공고문·첨부파일)</a></li>')
-    if _is_site_home(job.url):
+    if job.extra.get("search_hint"):
+        out.append(f'<li><a href="{_e(job.url)}">경기도교육청 구인정보조회</a> → <b>"{_e(_org(job))}"</b> 검색 후 지원하세요</li>')
+    elif _is_site_home(job.url):
         out.append(f'<li><a href="{_e(job.url)}">{_e(_org(job))} 채용 홈페이지</a> → 공고 목록에서 <b>"{_e(job.title)}"</b>을 찾아 지원하세요</li>')
     else:
         out.append(f'<li><a href="{_e(job.url)}">기관 채용 홈페이지에서 바로 지원</a></li>')
