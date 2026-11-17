@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -33,15 +34,18 @@ def _md(d: date) -> str:
 
 
 def _org(job: Job) -> str:
-    return job.org.replace("(주)", "").strip()
+    return re.sub(r"^\((재|사|주)\)|\(주\)|㈜", "", job.org).strip()
 
 
 def _emp(job: Job) -> str:
-    """고용형태를 제목용으로 짧게 (비정규직 → 기간제 표기는 원문에 있을 때만)."""
+    """제목용 고용형태: 공고 제목에 쓰인 표현을 우선 (예: 대체인력 계약직)."""
+    words = [w for w in ("무기계약직", "정규직", "대체인력", "기간제", "계약직", "인턴") if w in job.title]
+    if "무기계약직" in words and "계약직" in words:
+        words.remove("계약직")
+    if words:
+        return " ".join(words[:2])
     t = (job.employment_type or "").split(",")[0].strip()
-    if "기간제" in job.title:
-        return "기간제"
-    return t
+    return {"비정규직": "계약직"}.get(t, t)
 
 
 def post_title(job: Job) -> str:
@@ -50,9 +54,11 @@ def post_title(job: Job) -> str:
     role = job.job_role or ""
     if job.department and job.department not in role:
         role = f"{job.department} {role}"
-    if "간호" not in role and "보건" not in role:
-        role += " 간호사"
-    return f"{dl}{_org(job)} {role.strip()} {_emp(job)} 채용".replace("  ", " ")
+    emp = "" if "강사" in role else _emp(job)
+    if emp and emp in role:
+        emp = ""
+    tail = "" if ("간호" in role or "보건" in role) else " (간호사 지원 가능)"
+    return " ".join(f"{dl}{_org(job)} {role.strip()} {emp} 채용".split()) + tail
 
 
 def _x(job: Job, key: str) -> str:
@@ -99,7 +105,8 @@ def salary_ref(job: Job) -> dict | None:
     if job.salary or any(k in job.org for k in MEDICAL_ORG):
         return None
     orgs = _salary_db().get("orgs", {})
-    for name in (job.org, job.org.replace("(주)", "").strip(), job.org.strip() + "(주)"):
+    base = re.sub(r"^\((재|사|주)\)|\((재|사|주)\)$|㈜", "", job.org).strip()
+    for name in (job.org, base, base + "(주)", "(재)" + base, "(사)" + base):
         if name in orgs:
             return orgs[name]
     return None
