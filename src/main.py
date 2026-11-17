@@ -213,22 +213,8 @@ def main() -> None:
         from .sources import edu
         for j in edu.fetch():
             print("\n####", j.key, j.org, "|", j.title, "|", j.location, "|", j.start_date, "~", j.deadline, "|", j.employment_type)
-            print("   ", {k: j.extra.get(k) for k in ("address", "recrutNope", "work_hours", "pay_type")})
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as p:
-            b = p.chromium.launch(); pg = b.new_page()
-            pg.goto("https://www.goe.go.kr/recruit/ad/func/pb/hnfpPbancList.do?mi=10502", wait_until="networkidle", timeout=60000)
-            pg.wait_for_timeout(2000)
-            print("[경기] 입력칸:", [x for x in pg.eval_on_selector_all("input,select,button", "els => els.map(e => [e.tagName, e.name, e.id, e.type, (e.title||'')+(e.innerText||'').slice(0,15)])") if x[3] != "checkbox"][:30])
-            for sel in ("input[name='searchKwd']", "input[name='keyword']", "input[name*='earch']", "input[title*='검색']"):
-                el = pg.query_selector(sel)
-                if el and el.is_visible():
-                    el.fill("보건"); el.press("Enter"); pg.wait_for_timeout(3500); print("[경기] 검색:", sel, pg.url); break
-            body = " ".join(pg.inner_text("body").split())
-            i = body.find("보건")
-            print("[경기] 본문(보건 주변):", body[max(0, i - 200): i + 1500])
-            print("[경기] 항목 링크:", pg.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,50), e.href, e.getAttribute('onclick')]).filter(x => x[0].includes('보건'))")[:10])
-            b.close()
+            print("   ", {k: j.extra.get(k) for k in ("address", "recrutNope", "work_hours", "pay_type", "detail_url")})
+            print("    본문:", (j.extra.get("site_text") or "")[:600])
     elif cmd == "backlog":  # 대기열 보기: python -m src.main backlog [날짜]
         for j in backlog(day):
             print(f"{j.key} | {j.org} | {j.job_role or j.title[:30]} | {j.location} | ~{j.deadline}")
