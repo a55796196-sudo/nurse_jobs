@@ -81,8 +81,15 @@ def _salary_db() -> dict:
         return {}
 
 
+# 의료기관은 의사·간호사(교대)·행정직 급여가 한 숫자에 섞여 있어 초임·평균보수가 참고가 안 됨
+MEDICAL_ORG = ("병원", "의료원", "의학원", "암센터", "혈액원")
+
+
 def salary_ref(job: Job) -> dict | None:
-    """알리오 경영공시 기관별 초임·평균보수 (천원 단위)."""
+    """알리오 경영공시 기관별 초임·평균보수 (천원 단위).
+    공고에 급여가 있거나 의료기관이면 쓰지 않는다."""
+    if job.salary or any(k in job.org for k in MEDICAL_ORG):
+        return None
     orgs = _salary_db().get("orgs", {})
     for name in (job.org, job.org.replace("(주)", "").strip(), job.org.strip() + "(주)"):
         if name in orgs:
