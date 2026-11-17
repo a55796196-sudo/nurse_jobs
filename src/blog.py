@@ -116,31 +116,56 @@ def _manwon(thousand: int) -> str:
     return f"약 {round(thousand / 10):,}만 원"
 
 
+def blog_tags(job: Job) -> list[str]:
+    """네이버 태그 칸에 넣을 태그 (5~10개)."""
+    tags = [f"{_org(job).replace(' ', '')}채용", "간호사채용", "탈임상", "탈임상간호사"]
+    for t in job.tags:
+        t = t.replace(" ", "").lstrip("#")
+        if t and t not in tags:
+            tags.append(t)
+    for t in ("간호사이직", "공공기관채용" if job.category == "공공" else "", "보건교사채용" if job.category == "학교" else ""):
+        if t and t not in tags:
+            tags.append(t)
+    return tags[:10]
+
+
 def post_html(job: Job, today: date) -> str:
     label, dl = d_label(job.deadline, today)
+    tm = f" {job.deadline_time}" if job.deadline_time else ""
     if job.start_date and dl:
-        period = f"{_md(date.fromisoformat(job.start_date))} ~ {_md(dl)} ({label})"
+        period = f"{_md(date.fromisoformat(job.start_date))} ~ {_md(dl)}{tm} ({label})"
     elif dl:
-        period = f"~ {_md(dl)} ({label})"
+        period = f"~ {_md(dl)}{tm} ({label})"
     else:
         period = "상시 (채용 시 마감)"
-    headcount = job.headcount or (f"{_x(job, 'recrutNope')}명" if _x(job, "recrutNope") not in ("", "0") else NEED)
-
+    total = _x(job, "recrutNope")
+    if job.headcount:
+        headcount = job.headcount
+    elif total not in ("", "0"):
+        headcount = f"공고 전체 {total}명 (분야별 인원은 공고문 확인)" if len(set(job.extra.get("steps") or [])) > 1 else f"{total}명"
+    else:
+        headcount = NEED
+    emp = job.employment_type or NEED
+    if job.contract_period:
+        emp = f"{emp} ({job.contract_period})"
+    edu = job.education or (_x(job, "acbgCondNmLst") if _x(job, "acbgCondNmLst").count(",") < 2 else "")
+    ref = salary_ref(job)
     rows = [
         ("기관", _org(job)),
         ("부서 · 직무", " ".join(x for x in (job.department, job.job_role) if x)),
         ("채용 인원", headcount),
-        ("고용 형태", job.employment_type or NEED),
-        ("구분", _x(job, "recrutSeNm") or NEED),
-        ("근무지", job.location or NEED),
-        ("학력", (_x(job, "acbgCondNmLst") if _x(job, "acbgCondNmLst").count(",") < 2 else "분야별 상이 (지원 자격 참고)") or NEED),
-        ("급여", job.salary or (f"{NEED} (아래 경영공시 참고)" if salary_ref(job) else f"{NEED} (기관 내규)")),
+        ("고용 형태", emp),
+        ("구분", _x(job, "recrutSeNm")),
+        ("근무지", job.address or job.location or NEED),
+        ("학력", edu),
+        ("급여", job.salary or (f"{NEED} (아래 경영공시 참고)" if ref else f"{NEED} (기관 내규)")),
         ("근무 시간", job.work_hours or NEED),
         ("접수 기간", period),
     ]
 
     out: list[str] = []
-    out.append(f"<p><b>{_e(post_title(job))}</b> 공고 정리예요. 지원 전 원문 공고문도 꼭 확인해주세요.</p><p>&nbsp;</p>")
+    intro = job.intro or job.summary or ""
+    out.append(f"<p>{_e(intro)}</p><p>&nbsp;</p>")
 
     out.append("<h2>📌 채용 개요</h2>")
     out.append('<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">')
@@ -151,8 +176,9 @@ def post_html(job: Job, today: date) -> str:
         out.append(f'<tr><td style="width:30%;background:#f5f5f5"><b>{k}</b></td><td>{_e(v)}</td></tr>')
     out.append("</table><p>&nbsp;</p>")
 
-    ref = salary_ref(job)
-    if ref:
+    if job.salary_detail:
+        out.append("<h2>💰 급여</h2><ul>" + "".join(f"<li>{_e(x)}</li>" for x in job.salary_detail) + "</ul><p>&nbsp;</p>")
+    elif ref:
         year = _salary_db().get("year", "")
         out.append(f"<h2>💰 이 기관 연봉 참고 ({year}년 알리오 경영공시)</h2><ul>")
         if ref.get("starting"):
@@ -165,6 +191,9 @@ def post_html(job: Job, today: date) -> str:
             out.append(f"<li><b>정규직 평균 근속</b> : 약 {ref['tenure_months'] // 12}년 {ref['tenure_months'] % 12}개월</li>")
         out.append("</ul><p>※ 기관 전체 기준 공시 금액이에요. 이 공고의 직무·고용형태 급여와는 다를 수 있어요.</p><p>&nbsp;</p>")
 
+    if job.benefits:
+        out.append("<h2>🎁 복리후생</h2><ul>" + "".join(f"<li>{_e(b)}</li>" for b in job.benefits) + "</ul><p>&nbsp;</p>")
+
     quals = job.qualifications or job.requirements or _lines(_x(job, "aplyQlfcCn"))
     if quals:
         out.append("<h2>✅ 지원 자격</h2><ul>" + "".join(f"<li>{_e(q)}</li>" for q in quals[:8]) + "</ul><p>&nbsp;</p>")
@@ -173,27 +202,12 @@ def post_html(job: Job, today: date) -> str:
     if pref:
         out.append("<h2>⭐ 우대 사항</h2><ul>" + "".join(f"<li>{_e(q)}</li>" for q in pref[:8]) + "</ul><p>&nbsp;</p>")
 
+    if job.duties:
+        out.append("<h2>📎 직무내용</h2><ul>" + "".join(f"<li>{_e(d)}</li>" for d in job.duties[:10]) + "</ul><p>&nbsp;</p>")
+
     steps = _lines(job.process or _x(job, "scrnprcdrMthdExpln"))
     if steps:
         out.append("<h2>🧭 전형 절차</h2><ol>" + "".join(f"<li>{_e(x)}</li>" for x in steps[:8]) + "</ol><p>&nbsp;</p>")
-    if job.benefits:
-        out.append("<h2>🎁 복리후생</h2><ul>" + "".join(f"<li>{_e(b)}</li>" for b in job.benefits) + "</ul><p>&nbsp;</p>")
-
-    files = job.extra.get("files") or []
-    out.append("<h2>📎 제출 서류 · 자소서</h2><ul>")
-    if files:
-        out.append("<li>첨부 파일: " + ", ".join(_e(f) for f in files) + "</li>")
-    out.append("<li>자기소개서 문항: 공고 첨부 공고문·입사지원서 양식에 있어요</li>")
-    missing = [k for k, ok in (("전형 절차", steps), ("복리후생", job.benefits)) if not ok]
-    if missing:
-        out.append(f"<li>{'·'.join(missing)}: 공고문에서 확인해주세요</li>")
-    out.append("</ul><p>&nbsp;</p>")
-
-    if job.faq:
-        out.append("<h2>❓ 자주 궁금한 점</h2>")
-        for q, a in job.faq:
-            out.append(f"<p><b>Q. {_e(q)}</b><br>A. {_e(a)}</p>")
-        out.append("<p>&nbsp;</p>")
 
     if job.blog_comment:
         out.append(f"<h2>💬 {AUTHOR}의 한마디</h2><p>{_e(job.blog_comment)}</p><p>&nbsp;</p>")
@@ -206,14 +220,9 @@ def post_html(job: Job, today: date) -> str:
         out.append(f'<li><a href="{_e(job.url)}">{_e(_org(job))} 채용 홈페이지</a> → 공고 목록에서 <b>"{_e(job.title)}"</b>을 찾아 지원하세요</li>')
     else:
         out.append(f'<li><a href="{_e(job.url)}">기관 채용 홈페이지에서 바로 지원</a></li>')
-    out.append("</ul><p>※ 공고 내용을 요약한 글이에요. 급여·근무조건 등 세부 내용은 원문 공고문을 확인해주세요.</p><p>&nbsp;</p>")
+    out.append("</ul><p>※ 공고 내용을 요약한 글이에요. 지원 전 원문 공고문을 꼭 확인해주세요.</p><p>&nbsp;</p>")
 
-    tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", f"{_org(job).replace(' ', '')}채용"]
-    for t in job.tags:
-        t = t.replace(" ", "").lstrip("#")
-        if t and t not in tags:
-            tags.append(t)
-    out.append("<p>" + " ".join(f"#{_e(t)}" for t in tags[:12]) + "</p>")
+    out.append("<p>" + " ".join(f"#{_e(t)}" for t in blog_tags(job)) + "</p>")
     return "\n".join(out)
 
 

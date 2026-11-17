@@ -273,3 +273,39 @@ def render_all(jobs: list[Job], today: date, out_dir: Path, limit: int = 8) -> l
         im.save(p, quality=93)
         paths.append(p)
     return paths
+
+
+# ---------- 블로그 썸네일 (1080x1080): 기관·직무·마감·근무지·고용형태만 ----------
+WEEK = "월화수목금토일"
+
+
+def thumb(org: str, role: str, deadline: str | None, deadline_time: str | None, loc: str, emp: str) -> Image.Image:
+    S, P = 1080, 90
+    img = Image.new("RGB", (S, S), BG)
+    d = ImageDraw.Draw(img)
+    for size in (100, 90, 80, 72, 64):
+        t = font(size, "Title")
+        org_l = wrap(d, org, t, S - P * 2, 2)
+        role_l = wrap(d, role, t, S - P * 2 - 20, 2)
+        if len(org_l) + len(role_l) <= 4 and not any(x.endswith("…") for x in org_l + role_l):
+            break
+    y, lh = 130, int(size * 1.28)
+    for x in org_l:
+        d.text((P, y), x, font=t, fill=INK)
+        y += lh
+    for x in role_l:
+        _marked(d, P, y, x, t)
+        y += lh
+    if deadline:
+        dt = date.fromisoformat(deadline)
+        dl = f"{dt.month}.{dt.day} ({WEEK[dt.weekday()]})" + (f" {deadline_time}" if deadline_time else "")
+    else:
+        dl = "상시 (채용 시 마감)"
+    rows = [("마감", dl, RED), ("근무지", loc, INK), ("고용형태", emp, INK)]
+    y = S - 130 - 3 * 92
+    d.line([(P, y - 40), (S - P, y - 40)], fill=LINE, width=3)
+    for k, v, c in rows:
+        d.text((P, y + 34), k, font=font(38, "Medium"), fill=MUTED, anchor="lm")
+        d.text((P + 220, y + 34), wrap(d, v, font(48, "Bold"), S - P * 2 - 220, 1)[0], font=font(48, "Bold"), fill=c, anchor="lm")
+        y += 92
+    return img

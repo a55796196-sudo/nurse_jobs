@@ -46,7 +46,14 @@ class Job:
     salary: Optional[str] = None         # 급여 (원문에 있을 때만)
     work_hours: Optional[str] = None     # 근무시간·근무형태 (예: 09:00~18:00 / 3교대)
     benefits: list[str] = field(default_factory=list)  # 복리후생 (원문에 있을 때만)
-    faq: list[list[str]] = field(default_factory=list)  # [[질문, 답], ...] 지원자가 궁금해할 것
+    faq: list[list[str]] = field(default_factory=list)  # (사용 안 함, 예전 데이터 호환용)
+    intro: Optional[str] = None          # 글 도입부 2~3문장 (공고마다 다르게)
+    salary_detail: list[str] = field(default_factory=list)  # 💰 급여 칸: 연봉/일급, 월 환산, 포함·미포함 항목
+    duties: list[str] = field(default_factory=list)         # 📎 직무내용
+    contract_period: Optional[str] = None  # 계약기간 (예: 2027.01.18~2027.05.02)
+    address: Optional[str] = None          # 상세 근무지 주소
+    deadline_time: Optional[str] = None    # 마감 시각 (예: 16:00)
+    education: Optional[str] = None        # 학력 조건만 (예: 학력무관, 학사 이상)
 
     @property
     def key(self) -> str:

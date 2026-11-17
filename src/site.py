@@ -13,7 +13,8 @@ from pathlib import Path
 
 from .models import CATEGORIES, Job
 from .render import d_day
-from .blog import BLOG_CATEGORY, picks, post_html, post_title
+from .blog import BLOG_CATEGORY, _emp, _org, blog_tags, picks, post_html, post_title
+from .render import thumb
 
 STYLE = """
 :root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb}
@@ -113,6 +114,11 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
     imgs = "".join(f'<a href="{p.name}" download><img src="{p.name}" alt="카드 {i}"></a>' for i, p in enumerate(card_paths))
     posts = []
     for n, j in enumerate(picks(jobs), start=1):
+        role = " ".join(x for x in (j.department, j.job_role) if x)
+        loc = (j.location or "").replace(",", " · ")
+        emp_txt = _emp(j) + (" (상근)" if (j.work_hours or "").startswith("상근") else "")
+        thumb(_org(j), role, j.deadline, j.deadline_time, loc, emp_txt).save(day_dir / f"thumb-{n:02d}.png")
+        tags = " ".join("#" + t for t in blog_tags(j))
         posts.append(f"""<div class="box"><div class="row"><b>글 {n}. {_e(j.org)} · {_e(j.job_role)}</b>
 <span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>
 <div class="row" style="margin-top:8px"><pre id="pt{n}" style="flex:1;margin:0">{_e(post_title(j))}</pre>
@@ -120,7 +126,11 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
 <details open><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기 (접기)</summary>
 <div id="pb{n}" class="post">{post_html(j, today)}</div></details>
 <div class="row"><span class="muted">네이버 글쓰기에 제목 → 본문 순서로 붙여넣으세요</span>
-<button onclick="copyHtml('pb{n}',this)">본문 복사</button></div></div>""")
+<button onclick="copyHtml('pb{n}',this)">본문 복사</button></div>
+<div class="row" style="margin-top:10px"><pre id="tg{n}" style="flex:1;margin:0">{_e(tags)}</pre>
+<button onclick="copyText('tg{n}',this)">태그 복사</button></div>
+<div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb-{n:02d}.png" download><img src="thumb-{n:02d}.png" alt="썸네일 {n}" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
+<span class="muted">썸네일: 이미지를 눌러 저장 후 글 맨 위에 넣으세요</span></div></div>""")
     posts_html = "".join(posts) or '<div class="box"><p class="muted">오늘은 개별 글로 올릴 공고가 없어요.</p></div>'
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{today.isoformat()} 탈임상 공고</title>
