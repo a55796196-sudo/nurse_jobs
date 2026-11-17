@@ -15,16 +15,16 @@ import requests
 from ..models import Job
 
 ENDPOINTS = [
-    "https://apis.data.go.kr/1051000/recruitment/list",
-    "http://apis.data.go.kr/1051000/recruitment/list",
+    "https://apis.data.go.kr/1051000/recruitment/{path}",
+    "http://apis.data.go.kr/1051000/recruitment/{path}",
 ]
 
 
-def _get(params: dict) -> requests.Response:
+def _get(params: dict, path: str = "list") -> requests.Response:
     """data.go.kr 은 가끔 응답이 느리거나 끊겨서 https/http 를 번갈아 재시도."""
     last: Exception | None = None
     for attempt in range(4):
-        url = ENDPOINTS[attempt % 2]
+        url = ENDPOINTS[attempt % 2].format(path=path)
         try:
             r = requests.get(url, params=params, timeout=60)
             if r.status_code == 200:
@@ -95,6 +95,15 @@ def fetch(max_pages: int = 5) -> list[Job]:
             )
         if len(items) < 100:
             break
+
+    # 간호 공고만 상세 API 호출 (첨부파일 목록 등). 실패해도 목록 정보로 진행.
+    for j in jobs:
+        try:
+            det = _get({"serviceKey": key, "resultType": "json", "sn": j.source_id}, path="detail").json().get("result") or {}
+            j.extra["files"] = [f.get("atchFileNm") for f in det.get("files") or [] if f.get("atchFileNm")]
+        except Exception as e:  # noqa: BLE001
+            print(f"[alio] 상세 실패 {j.source_id}: {e}")
+        j.extra["alio_url"] = f"https://job.alio.go.kr/recruitview.do?idx={j.source_id}"
 
     print(f"[alio] 간호 관련 {len(jobs)}건")
     return jobs

@@ -42,6 +42,11 @@ class Job:
     process: Optional[str] = None        # 전형 절차 (예: 서류 → 필기 → 면접)
     headcount: Optional[str] = None      # 모집 인원
     blog_comment: Optional[str] = None   # 리브의 한마디 (2~3문장, 이 공고만의 포인트)
+    department: Optional[str] = None     # 소속 부서 (예: 간호행정부, 일차의료거점지원센터)
+    salary: Optional[str] = None         # 급여 (원문에 있을 때만)
+    work_hours: Optional[str] = None     # 근무시간·근무형태 (예: 09:00~18:00 / 3교대)
+    benefits: list[str] = field(default_factory=list)  # 복리후생 (원문에 있을 때만)
+    faq: list[list[str]] = field(default_factory=list)  # [[질문, 답], ...] 지원자가 궁금해할 것
 
     @property
     def key(self) -> str:

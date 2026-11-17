@@ -33,71 +33,116 @@ def _org(job: Job) -> str:
     return job.org.replace("(주)", "").strip()
 
 
+def _emp(job: Job) -> str:
+    """고용형태를 제목용으로 짧게 (비정규직 → 기간제 표기는 원문에 있을 때만)."""
+    t = (job.employment_type or "").split(",")[0].strip()
+    if "기간제" in job.title:
+        return "기간제"
+    return t
+
+
 def post_title(job: Job) -> str:
-    """검색용 제목: 기관명 + 직무 + '채용' + 정리 키워드."""
-    year = (job.deadline or "")[:4] or str(date.today().year)
-    return f"{_org(job)} {job.job_role} 채용 {year} | 지원자격·마감일 정리"
+    """예: (~12/1) 국민건강보험공단 일산병원 간호행정부 간호사 기간제 채용"""
+    dl = f"(~{int(job.deadline[5:7])}/{int(job.deadline[8:10])}) " if job.deadline else "(상시) "
+    role = job.job_role or ""
+    if job.department and job.department not in role:
+        role = f"{job.department} {role}"
+    if "간호" not in role and "보건" not in role:
+        role += " 간호사"
+    return f"{dl}{_org(job)} {role.strip()} {_emp(job)} 채용".replace("  ", " ")
+
+
+def _x(job: Job, key: str) -> str:
+    return str(job.extra.get(key) or "").strip()
+
+
+def _lines(text: str) -> list[str]:
+    """API 원문(줄바꿈·· 기호 섞인 텍스트)을 항목 목록으로."""
+    out = []
+    for ln in text.replace("\r", "").split("\n"):
+        ln = ln.strip(" ·-•ㅁ○*\t")
+        if len(ln) > 1:
+            out.append(ln)
+    return out
+
+
+NEED = "공고문 확인 필요"
 
 
 def post_html(job: Job, today: date) -> str:
     label, dl = d_label(job.deadline, today)
-    period = ""
     if job.start_date and dl:
-        period = f"{_md(date.fromisoformat(job.start_date))} ~ {_md(dl)}"
+        period = f"{_md(date.fromisoformat(job.start_date))} ~ {_md(dl)} ({label})"
     elif dl:
-        period = f"~ {_md(dl)}"
+        period = f"~ {_md(dl)} ({label})"
     else:
         period = "상시 (채용 시 마감)"
+    headcount = job.headcount or (f"{_x(job, 'recrutNope')}명" if _x(job, "recrutNope") not in ("", "0") else NEED)
 
-    out: list[str] = []
-    out.append(f"<p>안녕하세요, 탈임상 채용노트 {AUTHOR}예요 :)</p>")
-    out.append(f"<p>오늘은 <b>{_e(_org(job))} {_e(job.job_role)}</b> 채용 공고를 정리해봤어요.</p>")
-    if job.summary:
-        out.append(f"<p>{_e(job.summary)}</p>")
-    out.append("<p>&nbsp;</p>")
-
-    # 한눈에 보기
-    out.append("<h2>📌 한눈에 보기</h2><ul>")
     rows = [
         ("기관", _org(job)),
-        ("직무", job.job_role),
-        ("고용형태", job.employment_type),
-        ("근무지", job.location),
-        ("모집인원", job.headcount),
-        ("접수기간", period),
+        ("부서 · 직무", " ".join(x for x in (job.department, job.job_role) if x)),
+        ("채용 인원", headcount),
+        ("고용 형태", job.employment_type or NEED),
+        ("구분", _x(job, "recrutSeNm") or NEED),
+        ("근무지", job.location or NEED),
+        ("학력", _x(job, "acbgCondNmLst") or NEED),
+        ("급여", job.salary or f"{NEED} (기관 내규)"),
+        ("근무 시간", job.work_hours or NEED),
+        ("접수 기간", period),
     ]
+
+    out: list[str] = []
+    out.append(f"<p><b>{_e(post_title(job))}</b> 공고 정리예요. 지원 전 원문 공고문도 꼭 확인해주세요.</p><p>&nbsp;</p>")
+
+    out.append("<h2>📌 채용 개요</h2>")
+    out.append('<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">')
+    keep = {"급여", "근무 시간"}  # 없어도 '확인 필요'로 보여줄 항목
     for k, v in rows:
-        if v:
-            out.append(f"<li><b>{k}</b> : {_e(v)}</li>")
-    if dl:
-        out.append(f"<li><b>마감</b> : {_md(dl)} ({label})</li>")
+        if (not v or v == NEED) and k not in keep:
+            continue
+        out.append(f'<tr><td style="width:30%;background:#f5f5f5"><b>{k}</b></td><td>{_e(v)}</td></tr>')
+    out.append("</table><p>&nbsp;</p>")
+
+    quals = job.qualifications or job.requirements or _lines(_x(job, "aplyQlfcCn"))
+    if quals:
+        out.append("<h2>✅ 지원 자격</h2><ul>" + "".join(f"<li>{_e(q)}</li>" for q in quals[:8]) + "</ul><p>&nbsp;</p>")
+
+    pref = job.preferred or _lines(_x(job, "prefCn"))
+    if pref:
+        out.append("<h2>⭐ 우대 사항</h2><ul>" + "".join(f"<li>{_e(q)}</li>" for q in pref[:8]) + "</ul><p>&nbsp;</p>")
+
+    steps = _lines(job.process or _x(job, "scrnprcdrMthdExpln"))
+    if steps:
+        out.append("<h2>🧭 전형 절차</h2><ol>" + "".join(f"<li>{_e(x)}</li>" for x in steps[:8]) + "</ol><p>&nbsp;</p>")
+    if job.benefits:
+        out.append("<h2>🎁 복리후생</h2><ul>" + "".join(f"<li>{_e(b)}</li>" for b in job.benefits) + "</ul><p>&nbsp;</p>")
+
+    files = job.extra.get("files") or []
+    out.append("<h2>📎 제출 서류 · 자소서</h2><ul>")
+    if files:
+        out.append("<li>첨부 파일: " + ", ".join(_e(f) for f in files) + "</li>")
+    out.append("<li>자기소개서 문항: 공고 첨부 공고문·입사지원서 양식에 있어요</li>")
+    missing = [k for k, ok in (("전형 절차", steps), ("복리후생", job.benefits)) if not ok]
+    if missing:
+        out.append(f"<li>{'·'.join(missing)}: 공고문에서 확인해주세요</li>")
     out.append("</ul><p>&nbsp;</p>")
 
-    quals = job.qualifications or job.requirements
-    if quals:
-        out.append("<h2>✅ 지원 자격</h2><ul>")
-        out += [f"<li>{_e(q)}</li>" for q in quals]
-        out.append("</ul><p>&nbsp;</p>")
-
-    if job.preferred:
-        out.append("<h2>⭐ 우대 사항</h2><ul>")
-        out += [f"<li>{_e(q)}</li>" for q in job.preferred]
-        out.append("</ul><p>&nbsp;</p>")
-
-    if job.process:
-        out.append(f"<h2>🧭 전형 절차</h2><p>{_e(job.process)}</p><p>&nbsp;</p>")
-
-    out.append("<h2>✍️ 자기소개서 항목</h2>")
-    out.append("<p>자기소개서 문항은 공고문 첨부파일에 있어요. 아래 원문 링크에서 첨부된 공고문을 꼭 확인해주세요.</p><p>&nbsp;</p>")
-
-    out.append("<h2>🔗 지원 방법</h2>")
-    out.append(f'<p>👉 <a href="{_e(job.url)}">공고 원문 바로가기</a></p>')
-    out.append("<p>※ 이 글은 공고 내용을 요약한 거예요. 지원 전 원문 공고를 꼭 확인해주세요.</p><p>&nbsp;</p>")
+    if job.faq:
+        out.append("<h2>❓ 자주 궁금한 점</h2>")
+        for q, a in job.faq:
+            out.append(f"<p><b>Q. {_e(q)}</b><br>A. {_e(a)}</p>")
+        out.append("<p>&nbsp;</p>")
 
     if job.blog_comment:
         out.append(f"<h2>💬 {AUTHOR}의 한마디</h2><p>{_e(job.blog_comment)}</p><p>&nbsp;</p>")
 
-    out.append("<p>병원 밖 간호사 채용 공고는 매일 정리해서 올리고 있어요. 이웃추가 해두시면 놓치지 않으실 거예요!</p>")
+    out.append("<h2>🔗 지원하기</h2><ul>")
+    out.append(f'<li><a href="{_e(job.url)}">기관 채용 홈페이지</a></li>')
+    alio = job.extra.get("alio_url") or (f"https://job.alio.go.kr/recruitview.do?idx={job.source_id}" if job.source == "alio" else "")
+    if alio:
+        out.append(f'<li><a href="{_e(alio)}">잡알리오 공고 (공고문·첨부파일)</a></li>')
+    out.append("</ul><p>※ 공고 내용을 요약한 글이에요. 급여·근무조건 등 세부 내용은 원문 공고문을 확인해주세요.</p><p>&nbsp;</p>")
 
     tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", f"{_org(job).replace(' ', '')}채용"]
     for t in job.tags:
