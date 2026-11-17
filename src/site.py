@@ -26,7 +26,7 @@ button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:1
 button.done{background:#16a34a}.muted{color:var(--muted);font-size:.9rem}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.cards img{width:100%;border-radius:8px;border:1px solid var(--line)}
 pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8px;font-family:inherit;margin:8px 0 0}
-#post,.post{background:#fff;color:#111;padding:16px;border-radius:8px;max-height:480px;overflow:auto}
+#post,.post{background:#fff;color:#111;padding:16px;border-radius:8px;}
 h2{font-size:1.2rem;margin:28px 0 4px}
 a{color:var(--accent)}ul.days{padding-left:1.2em}
 """
@@ -117,7 +117,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
 <span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>
 <div class="row" style="margin-top:8px"><pre id="pt{n}" style="flex:1;margin:0">{_e(post_title(j))}</pre>
 <button onclick="copyText('pt{n}',this)">제목 복사</button></div>
-<details><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기</summary>
+<details open><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기 (접기)</summary>
 <div id="pb{n}" class="post">{post_html(j, today)}</div></details>
 <div class="row"><span class="muted">네이버 글쓰기에 제목 → 본문 순서로 붙여넣으세요</span>
 <button onclick="copyHtml('pb{n}',this)">본문 복사</button></div></div>""")
@@ -131,7 +131,13 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
 <h2>📝 오늘 올릴 블로그 글 {len(picks(jobs))}개</h2>
 {posts_html}
 
-<h2>📦 기타</h2>
+<div class="box"><div class="row"><b>📷 인스타 카드뉴스</b><span class="muted">이미지를 눌러 저장</span></div>
+<div class="cards">{imgs}</div></div>
+
+<div class="box"><div class="row"><b>📷 인스타 캡션</b><button onclick="copyText('cap',this)">캡션 복사</button></div>
+<pre id="cap">{_e(ig_caption(jobs, today))}</pre></div>
+
+<details><summary class="muted" style="margin:24px 0 8px;cursor:pointer">(지금은 안 써도 돼요) 하루치 모음 글 보기</summary>
 <div class="box"><div class="row"><b>① 하루치 모음 글 제목 (선택)</b><button onclick="copyText('t',this)">제목 복사</button></div>
 <pre id="t">{_e(title)}</pre></div>
 
@@ -139,11 +145,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
 <p class="muted">복사 후 네이버 블로그 글쓰기 화면에 붙여넣기(Ctrl+V)만 하면 돼요.</p>
 <div id="post">{blog_html(jobs, today)}</div></div>
 
-<div class="box"><div class="row"><b>③ 인스타 카드뉴스</b><span class="muted">이미지를 눌러 저장</span></div>
-<div class="cards">{imgs}</div></div>
-
-<div class="box"><div class="row"><b>④ 인스타 캡션</b><button onclick="copyText('cap',this)">캡션 복사</button></div>
-<pre id="cap">{_e(ig_caption(jobs, today))}</pre></div>
+</details>
 </main><script>{SCRIPT}</script></body></html>"""
     (day_dir / "index.html").write_text(page, encoding="utf-8")
     (day_dir / "caption.txt").write_text(ig_caption(jobs, today), encoding="utf-8")

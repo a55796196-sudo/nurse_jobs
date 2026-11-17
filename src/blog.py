@@ -5,7 +5,10 @@
 from __future__ import annotations
 
 import html
+import json
 from datetime import date
+from functools import lru_cache
+from pathlib import Path
 
 from .models import Job
 from .render import d_label
@@ -67,6 +70,28 @@ def _lines(text: str) -> list[str]:
 
 
 NEED = "공고문 확인 필요"
+SALARY_FILE = Path(__file__).resolve().parent.parent / "data" / "alio_salary.json"
+
+
+@lru_cache(maxsize=1)
+def _salary_db() -> dict:
+    try:
+        return json.loads(SALARY_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def salary_ref(job: Job) -> dict | None:
+    """알리오 경영공시 기관별 초임·평균보수 (천원 단위)."""
+    orgs = _salary_db().get("orgs", {})
+    for name in (job.org, job.org.replace("(주)", "").strip(), job.org.strip() + "(주)"):
+        if name in orgs:
+            return orgs[name]
+    return None
+
+
+def _manwon(thousand: int) -> str:
+    return f"약 {round(thousand / 10):,}만 원"
 
 
 def post_html(job: Job, today: date) -> str:
@@ -87,7 +112,7 @@ def post_html(job: Job, today: date) -> str:
         ("구분", _x(job, "recrutSeNm") or NEED),
         ("근무지", job.location or NEED),
         ("학력", _x(job, "acbgCondNmLst") or NEED),
-        ("급여", job.salary or f"{NEED} (기관 내규)"),
+        ("급여", job.salary or (f"{NEED} (아래 경영공시 참고)" if salary_ref(job) else f"{NEED} (기관 내규)")),
         ("근무 시간", job.work_hours or NEED),
         ("접수 기간", period),
     ]
@@ -103,6 +128,20 @@ def post_html(job: Job, today: date) -> str:
             continue
         out.append(f'<tr><td style="width:30%;background:#f5f5f5"><b>{k}</b></td><td>{_e(v)}</td></tr>')
     out.append("</table><p>&nbsp;</p>")
+
+    ref = salary_ref(job)
+    if ref:
+        year = _salary_db().get("year", "")
+        out.append(f"<h2>💰 이 기관 연봉 참고 ({year}년 알리오 경영공시)</h2><ul>")
+        if ref.get("starting"):
+            out.append(f"<li><b>정규직 신입사원 초임</b> : {_manwon(ref['starting'])}</li>")
+        if ref.get("avg"):
+            out.append(f"<li><b>정규직 직원 평균보수</b> : {_manwon(ref['avg'])}</li>")
+        if ref.get("avg_mugi"):
+            out.append(f"<li><b>무기계약직 평균보수</b> : {_manwon(ref['avg_mugi'])}</li>")
+        if ref.get("tenure_months"):
+            out.append(f"<li><b>정규직 평균 근속</b> : 약 {ref['tenure_months'] // 12}년 {ref['tenure_months'] % 12}개월</li>")
+        out.append("</ul><p>※ 기관 전체 기준 공시 금액이에요. 이 공고의 직무·고용형태 급여와는 다를 수 있어요.</p><p>&nbsp;</p>")
 
     quals = job.qualifications or job.requirements or _lines(_x(job, "aplyQlfcCn"))
     if quals:

@@ -1,0 +1,2088 @@
+{
+"orgs": {
+"(사)남북교류협력지원협회": {
+"avg": 62655,
+"avg_mugi": 24759,
+"starting": 35771,
+"tenure_months": 95
+},
+"(재)예술경영지원센터": {
+"avg": 53297,
+"avg_mugi": 41600,
+"starting": 29789,
+"tenure_months": 86
+},
+"(재)우체국금융개발원": {
+"avg": 58149,
+"avg_mugi": 36713,
+"starting": 34603,
+"tenure_months": 139
+},
+"(재)우체국물류지원단": {
+"avg": 60666,
+"avg_mugi": 47997,
+"starting": 43534,
+"tenure_months": 221
+},
+"(재)우체국시설관리단": {
+"avg": 69486,
+"avg_mugi": 37263,
+"starting": 37800,
+"tenure_months": 143
+},
+"(재)일제강제동원피해자지원재단": {
+"avg": 57409,
+"avg_mugi": 39331,
+"starting": 32431,
+"tenure_months": 101
+},
+"(재)축산환경관리원": {
+"avg": 68688,
+"starting": 38369,
+"tenure_months": 69
+},
+"(재)한국보건의료정보원": {
+"avg": 62344,
+"avg_mugi": 58164,
+"starting": 37964,
+"tenure_months": 42
+},
+"(재)한국우편사업진흥원": {
+"avg": 62773,
+"avg_mugi": 37852,
+"starting": 37757,
+"tenure_months": 159
+},
+"(재)한국통계정보원": {
+"avg": 63018,
+"avg_mugi": 41871,
+"tenure_months": 109
+},
+"(재)한국통계진흥원": {
+"avg": 60017,
+"avg_mugi": 42731,
+"starting": 39395,
+"tenure_months": 92
+},
+"(주)강원랜드": {
+"avg": 85331,
+"avg_mugi": 57910,
+"starting": 40448,
+"tenure_months": 199
+},
+"(주)공영홈쇼핑": {
+"avg": 76276,
+"avg_mugi": 56917,
+"starting": 36814,
+"tenure_months": 101
+},
+"(주)한국가스기술공사": {
+"avg": 78676,
+"avg_mugi": 48092,
+"starting": 42013,
+"tenure_months": 182
+},
+"88관광개발(주)": {
+"avg": 73813,
+"starting": 36107,
+"tenure_months": 229
+},
+"KDI국제정책대학원": {
+"avg": 107925,
+"avg_mugi": 48622,
+"starting": 51400,
+"tenure_months": 172
+},
+"가덕도신공항건설공단": {
+"avg": 100396,
+"starting": 49354,
+"tenure_months": 13
+},
+"가축위생방역지원본부": {
+"avg": 71251,
+"avg_mugi": 42625,
+"starting": 34061,
+"tenure_months": 157
+},
+"강원대학교병원": {
+"avg": 66326,
+"avg_mugi": 60107,
+"starting": 34126,
+"tenure_months": 109
+},
+"강원대학교치과병원": {
+"avg": 48521,
+"avg_mugi": 37747,
+"starting": 27312,
+"tenure_months": 117
+},
+"건강보험심사평가원": {
+"avg": 73335,
+"avg_mugi": 40225,
+"starting": 42006,
+"tenure_months": 135
+},
+"건설근로자공제회": {
+"avg": 90179,
+"avg_mugi": 52024,
+"starting": 44785,
+"tenure_months": 132
+},
+"건축공간연구원": {
+"avg": 72737,
+"avg_mugi": 54699,
+"starting": 40093,
+"tenure_months": 115
+},
+"게임물관리위원회": {
+"avg": 60027,
+"avg_mugi": 43701,
+"starting": 29721,
+"tenure_months": 110
+},
+"경북대학교병원": {
+"avg": 79466,
+"starting": 45489,
+"tenure_months": 124
+},
+"경북대학교치과병원": {
+"avg": 67166,
+"avg_mugi": 37238,
+"starting": 44512,
+"tenure_months": 84
+},
+"경상국립대학교병원": {
+"avg": 69121,
+"starting": 40679,
+"tenure_months": 122
+},
+"경제인문사회연구회": {
+"avg": 69674,
+"avg_mugi": 52147,
+"starting": 40450,
+"tenure_months": 133
+},
+"공간정보산업진흥원": {
+"avg": 51044,
+"avg_mugi": 36809,
+"starting": 37212,
+"tenure_months": 86
+},
+"공간정보품질관리원": {
+"avg": 66119,
+"starting": 30488,
+"tenure_months": 63
+},
+"공무원연금공단": {
+"avg": 74900,
+"avg_mugi": 44685,
+"starting": 41129,
+"tenure_months": 165
+},
+"과학기술사업화진흥원": {
+"avg": 63803,
+"avg_mugi": 32196,
+"starting": 37453,
+"tenure_months": 87
+},
+"과학기술정책연구원": {
+"avg": 74419,
+"avg_mugi": 65588,
+"starting": 46970,
+"tenure_months": 128
+},
+"국가과학기술인력개발원": {
+"avg": 75205,
+"avg_mugi": 72036,
+"starting": 29759,
+"tenure_months": 98
+},
+"국가생명윤리정책원": {
+"avg": 54269,
+"avg_mugi": 44466,
+"starting": 36301,
+"tenure_months": 68
+},
+"국가수리과학연구소": {
+"avg": 82770,
+"avg_mugi": 71816,
+"starting": 44014,
+"tenure_months": 150
+},
+"국가아동권리보장원": {
+"avg": 50809,
+"starting": 34641,
+"tenure_months": 49
+},
+"국가유산진흥원": {
+"avg": 63358,
+"avg_mugi": 42932,
+"starting": 35537,
+"tenure_months": 160
+},
+"국가철도공단": {
+"avg": 80892,
+"avg_mugi": 38011,
+"starting": 43345,
+"tenure_months": 160
+},
+"국가평생교육진흥원": {
+"avg": 78307,
+"avg_mugi": 49542,
+"starting": 39472,
+"tenure_months": 153
+},
+"국립공원공단": {
+"avg": 62177,
+"avg_mugi": 36199,
+"starting": 37809,
+"tenure_months": 153
+},
+"국립광주과학관": {
+"avg": 64377,
+"avg_mugi": 35260,
+"starting": 46489,
+"tenure_months": 86
+},
+"국립낙동강생물자원관": {
+"avg": 67620,
+"avg_mugi": 36544,
+"starting": 40889,
+"tenure_months": 83
+},
+"국립농업박물관": {
+"avg": 74915,
+"avg_mugi": 41594,
+"starting": 41706,
+"tenure_months": 38
+},
+"국립대구과학관": {
+"avg": 67037,
+"avg_mugi": 35763,
+"starting": 45124,
+"tenure_months": 103
+},
+"국립박물관문화재단": {
+"avg": 61714,
+"avg_mugi": 44000,
+"starting": 29627,
+"tenure_months": 126
+},
+"국립부산과학관": {
+"avg": 66977,
+"avg_mugi": 35566,
+"starting": 41861,
+"tenure_months": 86
+},
+"국립생태원": {
+"avg": 73503,
+"avg_mugi": 38567,
+"starting": 46762,
+"tenure_months": 96
+},
+"국립아시아문화전당재단": {
+"avg": 64747,
+"avg_mugi": 45209,
+"starting": 37674,
+"tenure_months": 43
+},
+"국립암센터": {
+"avg": 82421,
+"avg_mugi": 35045,
+"starting": 43241,
+"tenure_months": 127
+},
+"국립울진해양과학관": {
+"avg": 64994,
+"avg_mugi": 32637,
+"starting": 32665,
+"tenure_months": 43
+},
+"국립인천해양박물관": {
+"avg": 62199,
+"avg_mugi": 34445,
+"starting": 40838,
+"tenure_months": 15
+},
+"국립중앙의료원": {
+"avg": 78648,
+"avg_mugi": 37058,
+"starting": 37506,
+"tenure_months": 89
+},
+"국립항공박물관": {
+"avg": 67299,
+"avg_mugi": 39353,
+"starting": 39296,
+"tenure_months": 48
+},
+"국립해양박물관": {
+"avg": 66082,
+"avg_mugi": 34290,
+"starting": 36016,
+"tenure_months": 90
+},
+"국립해양생물자원관": {
+"avg": 80520,
+"avg_mugi": 36436,
+"starting": 34595,
+"tenure_months": 94
+},
+"국립호남권생물자원관": {
+"avg": 65566,
+"avg_mugi": 39329,
+"starting": 42914,
+"tenure_months": 46
+},
+"국민건강보험공단": {
+"avg": 70405,
+"avg_mugi": 35047,
+"starting": 43209,
+"tenure_months": 159
+},
+"국민건강보험공단 일산병원": {
+"avg": 82314,
+"avg_mugi": 38517,
+"starting": 44234,
+"tenure_months": 112
+},
+"국민연금공단": {
+"avg": 76455,
+"avg_mugi": 34513,
+"starting": 41046,
+"tenure_months": 176
+},
+"국방과학연구소": {
+"avg": 116414,
+"avg_mugi": 49625,
+"starting": 52156,
+"tenure_months": 180
+},
+"국방기술진흥연구소": {
+"avg": 97053,
+"avg_mugi": 76302,
+"starting": 48514,
+"tenure_months": 145
+},
+"국방기술품질원": {
+"avg": 93878,
+"avg_mugi": 64752,
+"starting": 48474,
+"tenure_months": 145
+},
+"국방전직교육원": {
+"avg": 51998,
+"avg_mugi": 40442,
+"starting": 31414,
+"tenure_months": 84
+},
+"국악방송": {
+"avg": 60140,
+"avg_mugi": 50087,
+"starting": 36894,
+"tenure_months": 114
+},
+"국제방송교류재단": {
+"avg": 63660,
+"avg_mugi": 46747,
+"starting": 31996,
+"tenure_months": 204
+},
+"국제식물검역인증원": {
+"avg": 54286,
+"starting": 35641,
+"tenure_months": 85
+},
+"국토교통과학기술진흥원": {
+"avg": 91033,
+"avg_mugi": 56828,
+"starting": 36035,
+"tenure_months": 224
+},
+"국토안전관리원": {
+"avg": 71206,
+"avg_mugi": 44940,
+"starting": 42031,
+"tenure_months": 153
+},
+"국토연구원": {
+"avg": 90497,
+"avg_mugi": 52428,
+"starting": 47760,
+"tenure_months": 153
+},
+"그랜드코리아레저(주)": {
+"avg": 72385,
+"avg_mugi": 55474,
+"starting": 42788,
+"tenure_months": 189
+},
+"극지연구소": {
+"avg": 87567,
+"avg_mugi": 56828,
+"starting": 36635,
+"tenure_months": 155
+},
+"근로복지공단": {
+"avg": 68282,
+"avg_mugi": 34752,
+"starting": 36638,
+"tenure_months": 178
+},
+"기술보증기금": {
+"avg": 100180,
+"avg_mugi": 46015,
+"starting": 53490,
+"tenure_months": 177
+},
+"기초과학연구원": {
+"avg": 88632,
+"starting": 42965,
+"tenure_months": 101
+},
+"노사발전재단": {
+"avg": 53855,
+"avg_mugi": 47855,
+"starting": 34921,
+"tenure_months": 164
+},
+"농림수산식품교육문화정보원": {
+"avg": 60456,
+"avg_mugi": 41524,
+"starting": 36269,
+"tenure_months": 128
+},
+"농림식품기술기획평가원": {
+"avg": 67907,
+"starting": 36150,
+"tenure_months": 102
+},
+"농업정책보험금융원": {
+"avg": 70181,
+"avg_mugi": 45115,
+"starting": 44665,
+"tenure_months": 91
+},
+"대구경북첨단의료산업진흥재단": {
+"avg": 62693,
+"starting": 37100,
+"tenure_months": 82
+},
+"대외경제정책연구원": {
+"avg": 77745,
+"avg_mugi": 45144,
+"starting": 38545,
+"tenure_months": 142
+},
+"대한무역투자진흥공사": {
+"avg": 109401,
+"avg_mugi": 44693,
+"starting": 38173,
+"tenure_months": 158
+},
+"대한법률구조공단": {
+"avg": 82954,
+"avg_mugi": 36217,
+"starting": 36643,
+"tenure_months": 212
+},
+"대한석탄공사": {
+"avg": 41279,
+"avg_mugi": 24418,
+"tenure_months": 236
+},
+"대한장애인체육회": {
+"avg": 64941,
+"avg_mugi": 35329,
+"starting": 43075,
+"tenure_months": 129
+},
+"대한적십자사": {
+"avg": 69367,
+"avg_mugi": 40172,
+"starting": 38690,
+"tenure_months": 154
+},
+"대한체육회": {
+"avg": 69169,
+"avg_mugi": 45549,
+"starting": 34306,
+"tenure_months": 149
+},
+"독립기념관": {
+"avg": 68324,
+"avg_mugi": 39879,
+"starting": 37376,
+"tenure_months": 162
+},
+"동남권원자력의학원": {
+"avg": 87214,
+"avg_mugi": 39032,
+"starting": 43045,
+"tenure_months": 115
+},
+"동북아역사재단": {
+"avg": 72464,
+"avg_mugi": 39431,
+"starting": 36836,
+"tenure_months": 125
+},
+"무역안보관리원": {
+"avg": 54470,
+"avg_mugi": 32017,
+"starting": 37699,
+"tenure_months": 94
+},
+"민주화운동기념사업회": {
+"avg": 60485,
+"avg_mugi": 41816,
+"starting": 33645,
+"tenure_months": 103
+},
+"부산대학교병원": {
+"avg": 77120,
+"starting": 45002,
+"tenure_months": 115
+},
+"부산대학교치과병원": {
+"avg": 65709,
+"avg_mugi": 38276,
+"starting": 41303,
+"tenure_months": 102
+},
+"부산항만공사": {
+"avg": 91182,
+"avg_mugi": 95876,
+"starting": 36815,
+"tenure_months": 132
+},
+"북한이탈주민지원재단": {
+"avg": 63955,
+"avg_mugi": 37832,
+"starting": 42050,
+"tenure_months": 147
+},
+"분당서울대학교병원": {
+"avg": 82985,
+"avg_mugi": 59908,
+"starting": 44587,
+"tenure_months": 92
+},
+"사립학교교직원연금공단": {
+"avg": 68647,
+"avg_mugi": 45527,
+"starting": 41989,
+"tenure_months": 146
+},
+"산업연구원": {
+"avg": 81496,
+"avg_mugi": 46305,
+"starting": 44400,
+"tenure_months": 145
+},
+"새만금개발공사": {
+"avg": 74898,
+"avg_mugi": 49566,
+"starting": 36942,
+"tenure_months": 58
+},
+"서민금융진흥원": {
+"avg": 70304,
+"avg_mugi": 41090,
+"starting": 43221,
+"tenure_months": 64
+},
+"서울대학교병원": {
+"avg": 82770,
+"avg_mugi": 52393,
+"starting": 53752,
+"tenure_months": 133
+},
+"서울대학교치과병원": {
+"avg": 69338,
+"avg_mugi": 36002,
+"starting": 49737,
+"tenure_months": 116
+},
+"서울올림픽기념국민체육진흥공단": {
+"avg": 75826,
+"avg_mugi": 39110,
+"starting": 45325,
+"tenure_months": 196
+},
+"서울요양원": {
+"avg": 35737,
+"avg_mugi": 32321,
+"starting": 32989,
+"tenure_months": 39
+},
+"선박해양플랜트연구소": {
+"avg": 101640,
+"avg_mugi": 59415,
+"starting": 43657,
+"tenure_months": 156
+},
+"세종학당재단": {
+"avg": 62237,
+"avg_mugi": 45435,
+"starting": 39865,
+"tenure_months": 78
+},
+"소상공인시장진흥공단": {
+"avg": 56448,
+"avg_mugi": 43661,
+"starting": 35912,
+"tenure_months": 111
+},
+"소프트웨어정책연구소": {
+"avg": 79342,
+"avg_mugi": 54475,
+"starting": 42585,
+"tenure_months": 76
+},
+"수도권매립지관리공사": {
+"avg": 93110,
+"avg_mugi": 42792,
+"starting": 44601,
+"tenure_months": 187
+},
+"스포츠윤리센터": {
+"avg": 54169,
+"starting": 36141,
+"tenure_months": 36
+},
+"시청자미디어재단": {
+"avg": 56835,
+"avg_mugi": 28617,
+"starting": 33603,
+"tenure_months": 83
+},
+"식품안전정보원": {
+"avg": 54865,
+"avg_mugi": 39035,
+"starting": 33832,
+"tenure_months": 76
+},
+"신용보증기금": {
+"avg": 99811,
+"avg_mugi": 62278,
+"starting": 54048,
+"tenure_months": 160
+},
+"신용보증재단중앙회": {
+"avg": 75007,
+"avg_mugi": 61531,
+"starting": 48235,
+"tenure_months": 101
+},
+"아시아·태평양경제협력체 기후센터": {
+"avg": 65923,
+"starting": 33915,
+"tenure_months": 136
+},
+"양육비이행관리원": {
+"avg": 53644,
+"avg_mugi": 42640,
+"starting": 39753,
+"tenure_months": 94
+},
+"에너지경제연구원": {
+"avg": 99683,
+"avg_mugi": 53367,
+"starting": 51002,
+"tenure_months": 130
+},
+"여수광양항만공사": {
+"avg": 92200,
+"avg_mugi": 63557,
+"starting": 39944,
+"tenure_months": 111
+},
+"연구개발특구진흥재단": {
+"avg": 66778,
+"avg_mugi": 50791,
+"starting": 45108,
+"tenure_months": 114
+},
+"영상물등급위원회": {
+"avg": 57496,
+"avg_mugi": 37370,
+"starting": 30054,
+"tenure_months": 144
+},
+"영화진흥위원회": {
+"avg": 77170,
+"avg_mugi": 34366,
+"starting": 43697,
+"tenure_months": 170
+},
+"예금보험공사": {
+"avg": 100288,
+"avg_mugi": 41888,
+"starting": 51313,
+"tenure_months": 175
+},
+"예술의전당": {
+"avg": 79323,
+"avg_mugi": 38882,
+"starting": 45229,
+"tenure_months": 191
+},
+"오송첨단의료산업진흥재단": {
+"avg": 62832,
+"avg_mugi": 48468,
+"starting": 37200,
+"tenure_months": 82
+},
+"울산항만공사": {
+"avg": 88882,
+"avg_mugi": 79234,
+"starting": 46792,
+"tenure_months": 126
+},
+"육아정책연구소": {
+"avg": 74319,
+"avg_mugi": 53769,
+"starting": 36734,
+"tenure_months": 123
+},
+"의료기관평가인증원": {
+"avg": 57095,
+"avg_mugi": 42292,
+"starting": 35911,
+"tenure_months": 80
+},
+"인천국제공항공사": {
+"avg": 97188,
+"avg_mugi": 47452,
+"starting": 48880,
+"tenure_months": 171
+},
+"인천항만공사": {
+"avg": 96676,
+"avg_mugi": 82816,
+"starting": 36869,
+"tenure_months": 146
+},
+"자동차손해배상진흥원": {
+"avg": 83860,
+"avg_mugi": 75759,
+"starting": 49477,
+"tenure_months": 48
+},
+"재단법인 건설기술교육원": {
+"avg": 91435,
+"avg_mugi": 38291,
+"starting": 43056,
+"tenure_months": 166
+},
+"재단법인 대한건설기계안전관리원": {
+"avg": 48412,
+"starting": 33076,
+"tenure_months": 140
+},
+"재단법인 장애인기업종합지원센터": {
+"avg": 53731,
+"avg_mugi": 48819,
+"starting": 33569,
+"tenure_months": 91
+},
+"재단법인 한국공공조직은행": {
+"avg": 56919,
+"starting": 33973,
+"tenure_months": 56
+},
+"재단법인 한국에너지재단": {
+"avg": 54759,
+"avg_mugi": 43735,
+"starting": 38600,
+"tenure_months": 69
+},
+"재단법인 한국자활복지개발원": {
+"avg": 57610,
+"avg_mugi": 38318,
+"starting": 34759,
+"tenure_months": 56
+},
+"재단법인 한국장기조직기증원": {
+"avg": 60980,
+"avg_mugi": 44593,
+"starting": 32550,
+"tenure_months": 73
+},
+"재외동포협력센터": {
+"avg": 73047,
+"starting": 39189,
+"tenure_months": 30
+},
+"전국재해구호협회": {
+"avg": 64166,
+"starting": 38606,
+"tenure_months": 88
+},
+"전남대학교병원": {
+"avg": 79111,
+"avg_mugi": 47985,
+"starting": 42885,
+"tenure_months": 157
+},
+"전북대학교병원": {
+"avg": 77286,
+"avg_mugi": 36607,
+"starting": 40076,
+"tenure_months": 139
+},
+"전쟁기념사업회": {
+"avg": 68986,
+"avg_mugi": 33442,
+"starting": 32916,
+"tenure_months": 171
+},
+"정보통신기획평가원": {
+"avg": 96093,
+"avg_mugi": 48755,
+"starting": 45834,
+"tenure_months": 209
+},
+"정보통신산업진흥원": {
+"avg": 81951,
+"avg_mugi": 56522,
+"starting": 39563,
+"tenure_months": 200
+},
+"정보통신정책연구원": {
+"avg": 95246,
+"avg_mugi": 45333,
+"starting": 49626,
+"tenure_months": 153
+},
+"정부법무공단": {
+"avg": 98018,
+"starting": 31696,
+"tenure_months": 117
+},
+"제주국제자유도시개발센터": {
+"avg": 66377,
+"avg_mugi": 41561,
+"starting": 37205,
+"tenure_months": 160
+},
+"제주대학교병원": {
+"avg": 70443,
+"avg_mugi": 39852,
+"starting": 34219,
+"tenure_months": 123
+},
+"주식회사 에스알": {
+"avg": 72650,
+"avg_mugi": 44653,
+"starting": 40398,
+"tenure_months": 87
+},
+"주택관리공단(주)": {
+"avg": 49784,
+"avg_mugi": 24880,
+"starting": 34204,
+"tenure_months": 166
+},
+"주택도시보증공사": {
+"avg": 82123,
+"avg_mugi": 51752,
+"starting": 47717,
+"tenure_months": 114
+},
+"중소기업기술정보진흥원": {
+"avg": 66226,
+"avg_mugi": 44870,
+"starting": 39721,
+"tenure_months": 96
+},
+"중소기업은행": {
+"avg": 115439,
+"avg_mugi": 77605,
+"starting": 58202,
+"tenure_months": 195
+},
+"중소벤처기업연구원": {
+"avg": 75698,
+"starting": 39440,
+"tenure_months": 112
+},
+"중소벤처기업진흥공단": {
+"avg": 88385,
+"avg_mugi": 44906,
+"starting": 44062,
+"tenure_months": 163
+},
+"중앙사회서비스원": {
+"avg": 68104,
+"avg_mugi": 50667,
+"starting": 44649,
+"tenure_months": 39
+},
+"창업진흥원": {
+"avg": 72915,
+"avg_mugi": 57260,
+"starting": 46820,
+"tenure_months": 112
+},
+"축산물품질평가원": {
+"avg": 65492,
+"avg_mugi": 34445,
+"starting": 36322,
+"tenure_months": 179
+},
+"충남대학교병원": {
+"avg": 76580,
+"avg_mugi": 40606,
+"starting": 44201,
+"tenure_months": 110
+},
+"충북대학교병원": {
+"avg": 70329,
+"avg_mugi": 60568,
+"starting": 40898,
+"tenure_months": 127
+},
+"코레일관광개발(주)": {
+"avg": 44410,
+"avg_mugi": 33485,
+"starting": 29969,
+"tenure_months": 144
+},
+"코레일네트웍스(주)": {
+"avg": 55565,
+"avg_mugi": 40415,
+"starting": 32478,
+"tenure_months": 150
+},
+"코레일로지스(주)": {
+"avg": 50762,
+"avg_mugi": 45283,
+"starting": 36378,
+"tenure_months": 114
+},
+"코레일유통(주)": {
+"avg": 55843,
+"avg_mugi": 36821,
+"starting": 34025,
+"tenure_months": 166
+},
+"코레일테크(주)": {
+"avg": 46881,
+"avg_mugi": 36376,
+"starting": 33452,
+"tenure_months": 73
+},
+"태권도진흥재단": {
+"avg": 59209,
+"avg_mugi": 49115,
+"starting": 37276,
+"tenure_months": 100
+},
+"통일연구원": {
+"avg": 67356,
+"avg_mugi": 52488,
+"starting": 36245,
+"tenure_months": 154
+},
+"학교법인한국폴리텍": {
+"avg": 83325,
+"avg_mugi": 33846,
+"starting": 43371,
+"tenure_months": 179
+},
+"한국가스공사": {
+"avg": 106088,
+"starting": 50846,
+"tenure_months": 200
+},
+"한국가스안전공사": {
+"avg": 76834,
+"avg_mugi": 41620,
+"starting": 44083,
+"tenure_months": 188
+},
+"한국개발연구원": {
+"avg": 86349,
+"avg_mugi": 47981,
+"starting": 49950,
+"tenure_months": 145
+},
+"한국건강가정진흥원": {
+"avg": 53923,
+"avg_mugi": 37896,
+"starting": 34923,
+"tenure_months": 98
+},
+"한국건강증진개발원": {
+"avg": 52562,
+"avg_mugi": 55164,
+"starting": 35015,
+"tenure_months": 103
+},
+"한국고용노동교육원": {
+"avg": 79108,
+"avg_mugi": 38907,
+"starting": 40097,
+"tenure_months": 52
+},
+"한국고용정보원": {
+"avg": 70005,
+"avg_mugi": 36826,
+"starting": 43760,
+"tenure_months": 128
+},
+"한국고전번역원": {
+"avg": 67179,
+"avg_mugi": 41301,
+"starting": 40239,
+"tenure_months": 151
+},
+"한국공예디자인문화진흥원": {
+"avg": 57608,
+"avg_mugi": 44366,
+"starting": 36016,
+"tenure_months": 112
+},
+"한국공정거래조정원": {
+"avg": 61891,
+"avg_mugi": 36593,
+"starting": 38385,
+"tenure_months": 75
+},
+"한국공항공사": {
+"avg": 73587,
+"avg_mugi": 61148,
+"starting": 40765,
+"tenure_months": 160
+},
+"한국과학기술기획평가원": {
+"avg": 89628,
+"avg_mugi": 60187,
+"starting": 43360,
+"tenure_months": 150
+},
+"한국과학창의재단": {
+"avg": 75815,
+"avg_mugi": 46445,
+"starting": 45833,
+"tenure_months": 130
+},
+"한국관광공사": {
+"avg": 83353,
+"avg_mugi": 49809,
+"starting": 37800,
+"tenure_months": 190
+},
+"한국관세정보원": {
+"avg": 66714,
+"avg_mugi": 42060,
+"starting": 39874,
+"tenure_months": 17
+},
+"한국광해광업공단": {
+"avg": 83767,
+"avg_mugi": 35698,
+"starting": 38192,
+"tenure_months": 199
+},
+"한국교육개발원": {
+"avg": 95840,
+"avg_mugi": 50022,
+"starting": 46047,
+"tenure_months": 152
+},
+"한국교육과정평가원": {
+"avg": 96523,
+"avg_mugi": 42346,
+"starting": 48416,
+"tenure_months": 155
+},
+"한국교육학술정보원": {
+"avg": 79858,
+"avg_mugi": 55076,
+"starting": 49047,
+"tenure_months": 164
+},
+"한국교통안전공단": {
+"avg": 80214,
+"avg_mugi": 41050,
+"starting": 44333,
+"tenure_months": 172
+},
+"한국교통연구원": {
+"avg": 96908,
+"avg_mugi": 54894,
+"starting": 49556,
+"tenure_months": 164
+},
+"한국국방연구원": {
+"avg": 97328,
+"avg_mugi": 86449,
+"starting": 46296,
+"tenure_months": 141
+},
+"한국국제교류재단": {
+"avg": 73608,
+"avg_mugi": 47390,
+"starting": 33745,
+"tenure_months": 121
+},
+"한국국제보건의료재단": {
+"avg": 62644,
+"starting": 32743,
+"tenure_months": 103
+},
+"한국국제협력단": {
+"avg": 74694,
+"avg_mugi": 67359,
+"starting": 40016,
+"tenure_months": 129
+},
+"한국국토정보공사": {
+"avg": 81890,
+"avg_mugi": 51745,
+"starting": 46871,
+"tenure_months": 213
+},
+"한국기상산업기술원": {
+"avg": 55841,
+"avg_mugi": 33291,
+"starting": 35155,
+"tenure_months": 103
+},
+"한국기술교육대학교": {
+"avg": 86989,
+"avg_mugi": 45141,
+"starting": 42626,
+"tenure_months": 145
+},
+"한국나노기술원": {
+"avg": 113296,
+"avg_mugi": 73013,
+"starting": 49070,
+"tenure_months": 180
+},
+"한국남동발전(주)": {
+"avg": 99637,
+"starting": 44880,
+"tenure_months": 176
+},
+"한국남부발전(주)": {
+"avg": 101266,
+"starting": 46977,
+"tenure_months": 190
+},
+"한국노동연구원": {
+"avg": 74264,
+"starting": 44261,
+"tenure_months": 148
+},
+"한국노인인력개발원": {
+"avg": 58309,
+"avg_mugi": 43834,
+"starting": 36299,
+"tenure_months": 123
+},
+"한국농수산식품유통공사": {
+"avg": 78642,
+"avg_mugi": 54350,
+"starting": 39016,
+"tenure_months": 148
+},
+"한국농어촌공사": {
+"avg": 74189,
+"avg_mugi": 41328,
+"starting": 37244,
+"tenure_months": 208
+},
+"한국농업기술진흥원": {
+"avg": 69454,
+"avg_mugi": 41611,
+"starting": 35404,
+"tenure_months": 99
+},
+"한국농촌경제연구원": {
+"avg": 88878,
+"avg_mugi": 43717,
+"starting": 43356,
+"tenure_months": 154
+},
+"한국데이터산업진흥원": {
+"avg": 69962,
+"avg_mugi": 38856,
+"starting": 39321,
+"tenure_months": 112
+},
+"한국도로공사": {
+"avg": 90690,
+"avg_mugi": 54111,
+"starting": 42369,
+"tenure_months": 200
+},
+"한국도로공사서비스(주)": {
+"avg": 50772,
+"starting": 41421,
+"tenure_months": 66
+},
+"한국도로교통공단": {
+"avg": 68973,
+"avg_mugi": 41912,
+"starting": 32619,
+"tenure_months": 149
+},
+"한국도박문제예방치유원": {
+"avg": 62814,
+"avg_mugi": 50345,
+"starting": 31053,
+"tenure_months": 93
+},
+"한국동서발전(주)": {
+"avg": 98990,
+"starting": 47540,
+"tenure_months": 203
+},
+"한국등산·트레킹지원센터": {
+"avg": 51696,
+"avg_mugi": 30497,
+"starting": 33417,
+"tenure_months": 64
+},
+"한국디자인진흥원": {
+"avg": 69469,
+"avg_mugi": 36600,
+"starting": 42588,
+"tenure_months": 159
+},
+"한국로봇산업진흥원": {
+"avg": 80469,
+"avg_mugi": 54756,
+"starting": 44414,
+"tenure_months": 102
+},
+"한국마사회": {
+"avg": 97265,
+"avg_mugi": 56261,
+"starting": 47448,
+"tenure_months": 206
+},
+"한국마약퇴치운동본부": {
+"avg": 36765,
+"starting": 32300,
+"tenure_months": 36
+},
+"한국무역보험공사": {
+"avg": 102075,
+"avg_mugi": 37198,
+"starting": 46691,
+"tenure_months": 172
+},
+"한국문학번역원": {
+"avg": 53919,
+"avg_mugi": 37792,
+"starting": 30204,
+"tenure_months": 117
+},
+"한국문화관광연구원": {
+"avg": 80588,
+"avg_mugi": 44020,
+"starting": 43900,
+"tenure_months": 127
+},
+"한국문화예술교육진흥원": {
+"avg": 59844,
+"avg_mugi": 41038,
+"starting": 34146,
+"tenure_months": 128
+},
+"한국문화예술위원회": {
+"avg": 64796,
+"avg_mugi": 49106,
+"starting": 37740,
+"tenure_months": 163
+},
+"한국문화정보원": {
+"avg": 60051,
+"avg_mugi": 50768,
+"starting": 36518,
+"tenure_months": 96
+},
+"한국문화진흥주식회사": {
+"avg": 57872,
+"starting": 30481,
+"tenure_months": 133
+},
+"한국물기술인증원": {
+"avg": 74056,
+"starting": 47060,
+"tenure_months": 52
+},
+"한국발명진흥회": {
+"avg": 71374,
+"avg_mugi": 59070,
+"starting": 42855,
+"tenure_months": 156
+},
+"한국방송광고진흥공사": {
+"avg": 88903,
+"avg_mugi": 36118,
+"starting": 45601,
+"tenure_months": 239
+},
+"한국방송통신전파진흥원": {
+"avg": 75416,
+"avg_mugi": 43914,
+"starting": 39415,
+"tenure_months": 179
+},
+"한국법무보호복지공단": {
+"avg": 58879,
+"avg_mugi": 37101,
+"starting": 33586,
+"tenure_months": 118
+},
+"한국법제연구원": {
+"avg": 66330,
+"avg_mugi": 44487,
+"starting": 38572,
+"tenure_months": 149
+},
+"한국벤처투자": {
+"avg": 97493,
+"avg_mugi": 40965,
+"starting": 42243,
+"tenure_months": 85
+},
+"한국보건복지인재원": {
+"avg": 56324,
+"avg_mugi": 47859,
+"starting": 35166,
+"tenure_months": 120
+},
+"한국보건사회연구원": {
+"avg": 81617,
+"avg_mugi": 55027,
+"starting": 47343,
+"tenure_months": 163
+},
+"한국보건산업진흥원": {
+"avg": 72118,
+"avg_mugi": 68773,
+"starting": 38891,
+"tenure_months": 124
+},
+"한국보건의료연구원": {
+"avg": 63568,
+"avg_mugi": 44199,
+"starting": 36466,
+"tenure_months": 114
+},
+"한국보건의료인국가시험원": {
+"avg": 69546,
+"avg_mugi": 45856,
+"starting": 37905,
+"tenure_months": 151
+},
+"한국보훈복지의료공단": {
+"avg": 71721,
+"avg_mugi": 36849,
+"starting": 41702,
+"tenure_months": 139
+},
+"한국부동산원": {
+"avg": 93604,
+"avg_mugi": 86857,
+"starting": 51900,
+"tenure_months": 139
+},
+"한국사학진흥재단": {
+"avg": 55574,
+"avg_mugi": 63389,
+"starting": 37264,
+"tenure_months": 115
+},
+"한국사회보장정보원": {
+"avg": 63464,
+"avg_mugi": 45615,
+"starting": 36263,
+"tenure_months": 120
+},
+"한국사회복지협의회": {
+"avg": 56065,
+"avg_mugi": 41010,
+"starting": 34203,
+"tenure_months": 151
+},
+"한국사회적기업진흥원": {
+"avg": 60553,
+"avg_mugi": 43844,
+"starting": 31318,
+"tenure_months": 94
+},
+"한국산림복지진흥원": {
+"avg": 59790,
+"avg_mugi": 35065,
+"starting": 35942,
+"tenure_months": 72
+},
+"한국산업기술기획평가원": {
+"avg": 94535,
+"avg_mugi": 66399,
+"starting": 44371,
+"tenure_months": 156
+},
+"한국산업기술시험원": {
+"avg": 101675,
+"avg_mugi": 69089,
+"starting": 48732,
+"tenure_months": 161
+},
+"한국산업기술진흥원": {
+"avg": 81237,
+"avg_mugi": 68921,
+"starting": 41650,
+"tenure_months": 149
+},
+"한국산업단지공단": {
+"avg": 79452,
+"avg_mugi": 42442,
+"starting": 49758,
+"tenure_months": 173
+},
+"한국산업안전보건공단": {
+"avg": 72334,
+"avg_mugi": 34591,
+"starting": 36993,
+"tenure_months": 146
+},
+"한국산업은행": {
+"avg": 117900,
+"avg_mugi": 59833,
+"starting": 54828,
+"tenure_months": 185
+},
+"한국산업인력공단": {
+"avg": 67662,
+"avg_mugi": 32969,
+"starting": 36092,
+"tenure_months": 151
+},
+"한국상하수도협회": {
+"avg": 71040,
+"avg_mugi": 51228,
+"starting": 44155,
+"tenure_months": 118
+},
+"한국생명존중희망재단": {
+"avg": 54209,
+"avg_mugi": 36555,
+"starting": 39062,
+"tenure_months": 42
+},
+"한국서부발전(주)": {
+"avg": 97952,
+"starting": 49814,
+"tenure_months": 177
+},
+"한국석유공사": {
+"avg": 96598,
+"avg_mugi": 46470,
+"starting": 39270,
+"tenure_months": 208
+},
+"한국석유관리원": {
+"avg": 69782,
+"avg_mugi": 30477,
+"starting": 41984,
+"tenure_months": 167
+},
+"한국세라믹기술원": {
+"avg": 99577,
+"avg_mugi": 46029,
+"starting": 47167,
+"tenure_months": 146
+},
+"한국소방산업기술원": {
+"avg": 67041,
+"avg_mugi": 38580,
+"starting": 39592,
+"tenure_months": 139
+},
+"한국소비자원": {
+"avg": 66394,
+"avg_mugi": 43820,
+"starting": 42300,
+"tenure_months": 132
+},
+"한국수력원자력(주)": {
+"avg": 108465,
+"avg_mugi": 57450,
+"starting": 44410,
+"tenure_months": 184
+},
+"한국수목원정원관리원": {
+"avg": 61448,
+"avg_mugi": 37779,
+"starting": 39466,
+"tenure_months": 61
+},
+"한국수산자원공단": {
+"avg": 70838,
+"avg_mugi": 41206,
+"starting": 37213,
+"tenure_months": 99
+},
+"한국수자원공사": {
+"avg": 82288,
+"avg_mugi": 51735,
+"starting": 41714,
+"tenure_months": 157
+},
+"한국수자원조사기술원": {
+"avg": 69453,
+"starting": 38992,
+"tenure_months": 73
+},
+"한국수출입은행": {
+"avg": 114437,
+"avg_mugi": 47912,
+"starting": 50403,
+"tenure_months": 151
+},
+"한국수치모델개발원": {
+"avg": 79886,
+"starting": 39089,
+"tenure_months": 47
+},
+"한국스포츠레저(주)": {
+"avg": 59383,
+"avg_mugi": 31276,
+"starting": 42735,
+"tenure_months": 6
+},
+"한국승강기안전공단": {
+"avg": 59669,
+"avg_mugi": 38343,
+"starting": 41954,
+"tenure_months": 166
+},
+"한국식품산업클러스터진흥원": {
+"avg": 57026,
+"avg_mugi": 37142,
+"starting": 33513,
+"tenure_months": 63
+},
+"한국식품안전관리인증원": {
+"avg": 60554,
+"avg_mugi": 40519,
+"starting": 37632,
+"tenure_months": 118
+},
+"한국양성평등교육진흥원": {
+"avg": 57363,
+"avg_mugi": 43823,
+"starting": 35020,
+"tenure_months": 113
+},
+"한국어촌어항공단": {
+"avg": 57302,
+"avg_mugi": 46308,
+"starting": 32840,
+"tenure_months": 91
+},
+"한국언론진흥재단": {
+"avg": 79838,
+"avg_mugi": 62797,
+"starting": 36297,
+"tenure_months": 174
+},
+"한국에너지공단": {
+"avg": 71023,
+"avg_mugi": 36297,
+"starting": 42432,
+"tenure_months": 157
+},
+"한국에너지기술평가원": {
+"avg": 88791,
+"avg_mugi": 49487,
+"starting": 40347,
+"tenure_months": 113
+},
+"한국에너지정보문화재단": {
+"avg": 68574,
+"starting": 32125,
+"tenure_months": 208
+},
+"한국여성과학기술인육성재단": {
+"avg": 53895,
+"avg_mugi": 37026,
+"starting": 35336,
+"tenure_months": 96
+},
+"한국여성인권진흥원": {
+"avg": 44743,
+"avg_mugi": 40881,
+"starting": 32875,
+"tenure_months": 60
+},
+"한국여성정책연구원": {
+"avg": 77358,
+"avg_mugi": 56878,
+"starting": 45548,
+"tenure_months": 170
+},
+"한국연구재단": {
+"avg": 95761,
+"avg_mugi": 39310,
+"starting": 53877,
+"tenure_months": 173
+},
+"한국영상자료원": {
+"avg": 56508,
+"avg_mugi": 37851,
+"starting": 28250,
+"tenure_months": 164
+},
+"한국영유아보육·교육진흥원": {
+"avg": 48750,
+"avg_mugi": 30021,
+"starting": 32427,
+"tenure_months": 72
+},
+"한국예술인복지재단": {
+"avg": 53102,
+"starting": 33990,
+"tenure_months": 75
+},
+"한국원산지정보원": {
+"avg": 54811,
+"starting": 37432,
+"tenure_months": 103
+},
+"한국원자력안전기술원": {
+"avg": 112435,
+"avg_mugi": 242270,
+"starting": 51929,
+"tenure_months": 168
+},
+"한국원자력안전재단": {
+"avg": 77208,
+"avg_mugi": 50703,
+"starting": 42109,
+"tenure_months": 95
+},
+"한국원자력의학원": {
+"avg": 91733,
+"avg_mugi": 60599,
+"starting": 47232,
+"tenure_months": 183
+},
+"한국원자력통제기술원": {
+"avg": 92960,
+"avg_mugi": 43527,
+"starting": 51967,
+"tenure_months": 131
+},
+"한국원자력환경공단": {
+"avg": 85118,
+"avg_mugi": 46350,
+"starting": 45814,
+"tenure_months": 129
+},
+"한국의료기기안전정보원": {
+"avg": 58121,
+"avg_mugi": 54942,
+"starting": 42613,
+"tenure_months": 64
+},
+"한국의료분쟁조정중재원": {
+"avg": 77136,
+"avg_mugi": 36364,
+"starting": 37765,
+"tenure_months": 83
+},
+"한국의약품안전관리원": {
+"avg": 60246,
+"avg_mugi": 53511,
+"starting": 40407,
+"tenure_months": 64
+},
+"한국인터넷진흥원": {
+"avg": 74146,
+"avg_mugi": 61338,
+"starting": 39220,
+"tenure_months": 151
+},
+"한국임업진흥원": {
+"avg": 60872,
+"avg_mugi": 34173,
+"starting": 32770,
+"tenure_months": 94
+},
+"한국자산관리공사": {
+"avg": 92036,
+"avg_mugi": 40276,
+"starting": 48658,
+"tenure_months": 160
+},
+"한국잡월드": {
+"avg": 60558,
+"starting": 38755,
+"tenure_months": 105
+},
+"한국장애인개발원": {
+"avg": 64089,
+"avg_mugi": 43546,
+"starting": 40763,
+"tenure_months": 124
+},
+"한국장애인고용공단": {
+"avg": 61324,
+"avg_mugi": 32963,
+"starting": 32799,
+"tenure_months": 158
+},
+"한국장학재단": {
+"avg": 84437,
+"avg_mugi": 47790,
+"starting": 46461,
+"tenure_months": 149
+},
+"한국재정정보원": {
+"avg": 74467,
+"starting": 42830,
+"tenure_months": 70
+},
+"한국저작권보호원": {
+"avg": 59943,
+"avg_mugi": 45900,
+"starting": 37612,
+"tenure_months": 85
+},
+"한국저작권위원회": {
+"avg": 65812,
+"avg_mugi": 50540,
+"starting": 36487,
+"tenure_months": 160
+},
+"한국전기안전공사": {
+"avg": 71314,
+"avg_mugi": 46068,
+"starting": 43212,
+"tenure_months": 178
+},
+"한국전력거래소": {
+"avg": 98655,
+"avg_mugi": 47276,
+"starting": 48810,
+"tenure_months": 146
+},
+"한국전력공사": {
+"avg": 96379,
+"starting": 47210,
+"tenure_months": 191
+},
+"한국전력국제원자력대학원대학교": {
+"avg": 97508,
+"avg_mugi": 38574,
+"starting": 38918,
+"tenure_months": 125
+},
+"한국전력기술주식회사": {
+"avg": 100970,
+"avg_mugi": 83751,
+"starting": 43132,
+"tenure_months": 179
+},
+"한국제품안전관리원": {
+"avg": 49905,
+"starting": 34389,
+"tenure_months": 46
+},
+"한국조세재정연구원": {
+"avg": 85831,
+"avg_mugi": 41837,
+"starting": 30332,
+"tenure_months": 121
+},
+"한국조폐공사": {
+"avg": 93897,
+"starting": 40846,
+"tenure_months": 213
+},
+"한국주택금융공사": {
+"avg": 95674,
+"avg_mugi": 43274,
+"starting": 42242,
+"tenure_months": 146
+},
+"한국중부발전(주)": {
+"avg": 102332,
+"starting": 47445,
+"tenure_months": 187
+},
+"한국중소벤처기업유통원": {
+"avg": 67757,
+"avg_mugi": 39207,
+"starting": 45125,
+"tenure_months": 135
+},
+"한국지능정보사회진흥원": {
+"avg": 74903,
+"avg_mugi": 55393,
+"starting": 37883,
+"tenure_months": 162
+},
+"한국지식재산보호원": {
+"avg": 60729,
+"avg_mugi": 41684,
+"starting": 32943,
+"tenure_months": 124
+},
+"한국지식재산연구원": {
+"avg": 74555,
+"avg_mugi": 32254,
+"starting": 44308,
+"tenure_months": 133
+},
+"한국지역난방공사": {
+"avg": 88025,
+"avg_mugi": 74499,
+"starting": 37880,
+"tenure_months": 182
+},
+"한국직업능력연구원": {
+"avg": 90897,
+"avg_mugi": 58125,
+"starting": 36352,
+"tenure_months": 177
+},
+"한국철도공사": {
+"avg": 77380,
+"starting": 39171,
+"tenure_months": 191
+},
+"한국청소년상담복지개발원": {
+"avg": 55722,
+"avg_mugi": 45346,
+"starting": 35361,
+"tenure_months": 132
+},
+"한국청소년정책연구원": {
+"avg": 74785,
+"avg_mugi": 41059,
+"starting": 42324,
+"tenure_months": 180
+},
+"한국청소년활동진흥원": {
+"avg": 55847,
+"avg_mugi": 43867,
+"starting": 33963,
+"tenure_months": 139
+},
+"한국체육산업개발(주)": {
+"avg": 62756,
+"avg_mugi": 34016,
+"starting": 41789,
+"tenure_months": 176
+},
+"한국출판문화산업진흥원": {
+"avg": 57987,
+"avg_mugi": 40929,
+"starting": 33981,
+"tenure_months": 157
+},
+"한국치산기술협회": {
+"avg": 78913,
+"avg_mugi": 43201,
+"starting": 30397,
+"tenure_months": 78
+},
+"한국콘텐츠진흥원": {
+"avg": 73053,
+"avg_mugi": 45893,
+"starting": 39648,
+"tenure_months": 130
+},
+"한국탄소산업진흥원": {
+"avg": 81500,
+"starting": 39640,
+"tenure_months": 113
+},
+"한국토지주택공사": {
+"avg": 84077,
+"avg_mugi": 40645,
+"starting": 41184,
+"tenure_months": 201
+},
+"한국투자공사": {
+"avg": 131396,
+"avg_mugi": 58669,
+"starting": 53031,
+"tenure_months": 97
+},
+"한국특허기술진흥원": {
+"avg": 76678,
+"avg_mugi": 49178,
+"starting": 35175,
+"tenure_months": 242
+},
+"한국특허전략개발원": {
+"avg": 75343,
+"avg_mugi": 82796,
+"starting": 35543,
+"tenure_months": 129
+},
+"한국특허정보원": {
+"avg": 61685,
+"avg_mugi": 47437,
+"starting": 39622,
+"tenure_months": 161
+},
+"한국학중앙연구원": {
+"avg": 77652,
+"avg_mugi": 45686,
+"starting": 32120,
+"tenure_months": 145
+},
+"한국한의약진흥원": {
+"avg": 58754,
+"avg_mugi": 43986,
+"starting": 36421,
+"tenure_months": 99
+},
+"한국항로표지기술원": {
+"avg": 63344,
+"avg_mugi": 39754,
+"starting": 34702,
+"tenure_months": 113
+},
+"한국해양과학기술원": {
+"avg": 94684,
+"avg_mugi": 55712,
+"starting": 42068,
+"tenure_months": 155
+},
+"한국해양교통안전공단": {
+"avg": 66498,
+"avg_mugi": 38867,
+"starting": 42383,
+"tenure_months": 124
+},
+"한국해양수산개발원": {
+"avg": 81701,
+"avg_mugi": 50683,
+"starting": 39719,
+"tenure_months": 139
+},
+"한국해양수산연수원": {
+"avg": 59891,
+"avg_mugi": 28907,
+"starting": 28259,
+"tenure_months": 111
+},
+"한국해양조사협회": {
+"avg": 68139,
+"avg_mugi": 46858,
+"starting": 31411,
+"tenure_months": 115
+},
+"한국해양진흥공사": {
+"avg": 87406,
+"avg_mugi": 53782,
+"starting": 49116,
+"tenure_months": 64
+},
+"한국해외인프라도시개발지원공사": {
+"avg": 86840,
+"avg_mugi": 51667,
+"starting": 43203,
+"tenure_months": 50
+},
+"한국행정연구원": {
+"avg": 66721,
+"avg_mugi": 33856,
+"starting": 34716,
+"tenure_months": 120
+},
+"한국형사·법무정책연구원": {
+"avg": 73283,
+"avg_mugi": 46978,
+"starting": 38165,
+"tenure_months": 142
+},
+"한국환경공단": {
+"avg": 65721,
+"avg_mugi": 36538,
+"starting": 36888,
+"tenure_months": 151
+},
+"한국환경보전원": {
+"avg": 60945,
+"starting": 38097,
+"tenure_months": 111
+},
+"한국환경산업기술원": {
+"avg": 78776,
+"avg_mugi": 50344,
+"starting": 46336,
+"tenure_months": 124
+},
+"한국환경연구원": {
+"avg": 85158,
+"avg_mugi": 53740,
+"starting": 40825,
+"tenure_months": 159
+},
+"한식진흥원": {
+"avg": 63744,
+"avg_mugi": 46105,
+"starting": 42009,
+"tenure_months": 86
+},
+"한전KDN": {
+"avg": 82759,
+"avg_mugi": 62975,
+"starting": 37295,
+"tenure_months": 185
+},
+"한전KPS(주)": {
+"avg": 88029,
+"starting": 44565,
+"tenure_months": 172
+},
+"한전MCS(주)": {
+"avg": 63655,
+"starting": 41072,
+"tenure_months": 64
+},
+"한전원자력연료주식회사": {
+"avg": 89594,
+"avg_mugi": 52439,
+"starting": 40629,
+"tenure_months": 177
+},
+"항공안전기술원": {
+"avg": 82426,
+"avg_mugi": 69304,
+"starting": 51696,
+"tenure_months": 76
+},
+"해양수산과학기술진흥원": {
+"avg": 85078,
+"avg_mugi": 56951,
+"starting": 54008,
+"tenure_months": 123
+},
+"해양환경공단": {
+"avg": 72826,
+"avg_mugi": 34903,
+"starting": 39709,
+"tenure_months": 154
+}
+},
+"source": "ALIO 경영공시",
+"unit": "천원",
+"year": "2025"
+}
