@@ -24,6 +24,8 @@ class Job:
     location: Optional[str] = None
     employment_type: Optional[str] = None
     raw_text: str = ""     # AI 분류에 쓰는 원문 요약 텍스트
+    start_date: Optional[str] = None  # 접수 시작일 YYYY-MM-DD
+    extra: dict = field(default_factory=dict)  # 출처 API 원본 항목 (모집인원·전형 등)
 
     # AI 분류 결과
     is_target: Optional[bool] = None     # 간호사 대상 탈임상 공고인가
@@ -32,6 +34,14 @@ class Job:
     summary: Optional[str] = None        # 2~3문장 한국어 요약
     requirements: list[str] = field(default_factory=list)  # 핵심 자격요건
     tags: list[str] = field(default_factory=list)
+
+    # 블로그 글용 (blog_pick=True 인 공고만 채움)
+    blog_pick: Optional[bool] = None     # 오늘 개별 블로그 글로 올릴 공고인가 (하루 3~5개)
+    qualifications: list[str] = field(default_factory=list)  # 지원 자격 전체
+    preferred: list[str] = field(default_factory=list)       # 우대 사항
+    process: Optional[str] = None        # 전형 절차 (예: 서류 → 필기 → 면접)
+    headcount: Optional[str] = None      # 모집 인원
+    blog_comment: Optional[str] = None   # 리브의 한마디 (2~3문장, 이 공고만의 포인트)
 
     @property
     def key(self) -> str:

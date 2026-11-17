@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .models import CATEGORIES, Job
 from .render import d_day
+from .blog import BLOG_CATEGORY, picks, post_html, post_title
 
 STYLE = """
 :root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb}
@@ -25,7 +26,8 @@ button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:1
 button.done{background:#16a34a}.muted{color:var(--muted);font-size:.9rem}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.cards img{width:100%;border-radius:8px;border:1px solid var(--line)}
 pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8px;font-family:inherit;margin:8px 0 0}
-#post{background:#fff;color:#111;padding:16px;border-radius:8px;max-height:480px;overflow:auto}
+#post,.post{background:#fff;color:#111;padding:16px;border-radius:8px;max-height:480px;overflow:auto}
+h2{font-size:1.2rem;margin:28px 0 4px}
 a{color:var(--accent)}ul.days{padding-left:1.2em}
 """
 
@@ -109,16 +111,31 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
     day_dir.mkdir(parents=True, exist_ok=True)
     title = blog_title(jobs, today)
     imgs = "".join(f'<a href="{p.name}" download><img src="{p.name}" alt="카드 {i}"></a>' for i, p in enumerate(card_paths))
+    posts = []
+    for n, j in enumerate(picks(jobs), start=1):
+        posts.append(f"""<div class="box"><div class="row"><b>글 {n}. {_e(j.org)} · {_e(j.job_role)}</b>
+<span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>
+<div class="row" style="margin-top:8px"><pre id="pt{n}" style="flex:1;margin:0">{_e(post_title(j))}</pre>
+<button onclick="copyText('pt{n}',this)">제목 복사</button></div>
+<details><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기</summary>
+<div id="pb{n}" class="post">{post_html(j, today)}</div></details>
+<div class="row"><span class="muted">네이버 글쓰기에 제목 → 본문 순서로 붙여넣으세요</span>
+<button onclick="copyHtml('pb{n}',this)">본문 복사</button></div></div>""")
+    posts_html = "".join(posts) or '<div class="box"><p class="muted">오늘은 개별 글로 올릴 공고가 없어요.</p></div>'
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{today.isoformat()} 탈임상 공고</title>
 <style>{STYLE}</style></head><body><main>
 <p class="muted"><a href="../">← 날짜 목록</a></p>
 <h1>{today.isoformat()} 탈임상 공고 {len(jobs)}건</h1>
 
-<div class="box"><div class="row"><b>① 네이버 블로그 제목</b><button onclick="copyText('t',this)">제목 복사</button></div>
+<h2>📝 오늘 올릴 블로그 글 {len(picks(jobs))}개</h2>
+{posts_html}
+
+<h2>📦 기타</h2>
+<div class="box"><div class="row"><b>① 하루치 모음 글 제목 (선택)</b><button onclick="copyText('t',this)">제목 복사</button></div>
 <pre id="t">{_e(title)}</pre></div>
 
-<div class="box"><div class="row"><b>② 네이버 블로그 본문</b><button onclick="copyHtml('post',this)">본문 복사</button></div>
+<div class="box"><div class="row"><b>② 하루치 모음 글 본문 (선택)</b><button onclick="copyHtml('post',this)">본문 복사</button></div>
 <p class="muted">복사 후 네이버 블로그 글쓰기 화면에 붙여넣기(Ctrl+V)만 하면 돼요.</p>
 <div id="post">{blog_html(jobs, today)}</div></div>
 

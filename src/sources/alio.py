@@ -89,6 +89,8 @@ def fetch(max_pages: int = 5) -> list[Job]:
                     location=it.get("workRgnNmLst"),
                     employment_type=it.get("hireTypeNmLst"),
                     raw_text=text[:2000],
+                    start_date=_fmt_date(it.get("pbancBgngYmd")),
+                    extra={k: str(v)[:1500] for k, v in it.items() if v not in (None, "", [])},
                 )
             )
         if len(items) < 100:

@@ -102,6 +102,8 @@ def check(path: Path) -> list[str]:
             errors.append(f"#{i} 잘못된 category '{j.category}': {j.title}")
         elif j.is_target and not (j.summary and j.job_role):
             errors.append(f"#{i} summary/job_role 비어있음: {j.title}")
+        elif j.blog_pick and not (j.is_target and (j.qualifications or j.requirements) and j.blog_comment):
+            errors.append(f"#{i} 블로그 글 필드(qualifications/blog_comment) 비어있음: {j.title}")
     return errors
 
 
