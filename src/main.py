@@ -80,6 +80,16 @@ def collect() -> Path | None:
     new_jobs = list(uniq.values())
     print(f"새 공고 {len(new_jobs)}건 (전체 수집 {len(jobs)}건)")
 
+    # 기관 채용 사이트에서 상세(보수·근무조건) 읽기 + 잡알리오에 없는 간호 공고 찾기
+    try:
+        from .sources import sites
+        extra_jobs = sites.enrich(new_jobs, discover=True, seen=set(seen))
+        extra_jobs = [j for j in extra_jobs if not (j.deadline and j.deadline < today)]
+        new_jobs += extra_jobs
+        print(f"채용 사이트에서 추가 발견 {len(extra_jobs)}건")
+    except Exception as e:  # 사이트 읽기 실패해도 수집은 계속
+        print(f"[sites] 전체 실패: {e}")
+
     for j in new_jobs:
         seen[j.key] = today
     save_seen(seen, today)
@@ -129,6 +139,10 @@ def build(path: Path, day: str, archive: bool = True) -> None:
         print("오늘은 탈임상 공고가 없어 페이지를 만들지 않습니다.")
     build_index(DOCS)
     if archive:
+        # 분류에 쓴 공고 이미지는 정리 (저장소 용량 관리)
+        import shutil
+        for j in jobs:
+            shutil.rmtree(DATA / "assets" / f"{j.source}-{j.source_id}".replace(":", "-"), ignore_errors=True)
         dest = DATA / "jobs" / f"{day}.json"
         dest.parent.mkdir(parents=True, exist_ok=True)
         path.replace(dest)
@@ -160,6 +174,16 @@ def main() -> None:
             print("일부 공고 분류 실패 → inbox에 남겨둠")
             return
         build(path, day)
+    elif cmd == "sitetest":  # 디버그: python -m src.main sitetest URL [URL...]
+        from .sources import sites
+        tests = [Job(source="test", source_id=str(i), title="", org="", url=u) for i, u in enumerate(sys.argv[2:])]
+        found = sites.enrich(tests, discover=True)
+        for j in tests + found[:3]:
+            e = j.extra
+            print("\n####", j.source, j.title or e.get("page_title"), e.get("detail_url"))
+            print("본문:", (e.get("site_text") or "")[:1500])
+            print("OCR:", (e.get("site_ocr") or "")[:2500])
+            print("이미지:", e.get("site_images"))
     elif cmd == "sample":
         from .classify import classify
         jobs = classify(read_jobs(ROOT / "tests" / "sample_jobs.json"))
