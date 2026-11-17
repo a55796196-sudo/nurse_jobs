@@ -217,15 +217,17 @@ def main() -> None:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
             b = p.chromium.launch(); pg = b.new_page()
-            pg.goto("https://www.goe.go.kr/recruit/main.do", wait_until="networkidle", timeout=60000)
-            links = pg.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,40), e.href]).filter(x => /채용|구인|공고/.test(x[0]))")
-            print("\n[경기] 링크:", links[:15])
-            more = [h for t, h in links if "더보기" in t or "채용공고" in t]
-            if more:
-                pg.goto(more[0], wait_until="networkidle", timeout=60000); pg.wait_for_timeout(2000)
-                print("[경기] 목록 URL:", pg.url)
-                print("[경기] 입력칸:", pg.eval_on_selector_all("input,select", "els => els.map(e => [e.tagName, e.name, e.id, e.type, e.title, e.placeholder])")[:25])
-                print("[경기] 본문:", " ".join(pg.inner_text("body").split())[:1200])
+            pg.goto("https://www.goe.go.kr/recruit/ad/func/pb/hnfpPbancList.do?mi=10502", wait_until="networkidle", timeout=60000)
+            pg.wait_for_timeout(2000)
+            print("[경기] 입력칸:", [x for x in pg.eval_on_selector_all("input,select,button", "els => els.map(e => [e.tagName, e.name, e.id, e.type, (e.title||'')+(e.innerText||'').slice(0,15)])") if x[3] != "checkbox"][:30])
+            for sel in ("input[name='searchKwd']", "input[name='keyword']", "input[name*='earch']", "input[title*='검색']"):
+                el = pg.query_selector(sel)
+                if el and el.is_visible():
+                    el.fill("보건"); el.press("Enter"); pg.wait_for_timeout(3500); print("[경기] 검색:", sel, pg.url); break
+            body = " ".join(pg.inner_text("body").split())
+            i = body.find("보건")
+            print("[경기] 본문(보건 주변):", body[max(0, i - 200): i + 1500])
+            print("[경기] 항목 링크:", pg.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,50), e.href, e.getAttribute('onclick')]).filter(x => x[0].includes('보건'))")[:10])
             b.close()
     elif cmd == "backlog":  # 대기열 보기: python -m src.main backlog [날짜]
         for j in backlog(day):
