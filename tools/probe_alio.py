@@ -18,7 +18,7 @@ for warm in ("https://opendata.alio.go.kr/", f"https://job.alio.go.kr/recruitvie
     print("방문", warm, r.status_code, len(r.content))
     if "job.alio" in warm:
         print("공고 페이지 다운로드 링크 후보:", sorted(set(re.findall(r"[\"'](/?[^\"' ]*(?:down|Down|file|File)[^\"' ]*)[\"']", r.text)))[:15])
-r = s.get(f["url"], timeout=60)
+r = s.get(f"https://www.alio.go.kr/download/download.json?fileNo={f['recrutAtchFileNo']}", timeout=60)
 print("다운로드:", r.status_code, r.headers.get("content-type"), r.headers.get("content-disposition"), len(r.content), r.content[:8])
 if r.content[:4] == b"\xd0\xcf\x11\xe0":
     with tempfile.NamedTemporaryFile(suffix=".hwp", delete=False) as t:
