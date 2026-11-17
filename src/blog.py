@@ -133,7 +133,7 @@ def post_html(job: Job, today: date) -> str:
         ("고용 형태", job.employment_type or NEED),
         ("구분", _x(job, "recrutSeNm") or NEED),
         ("근무지", job.location or NEED),
-        ("학력", _x(job, "acbgCondNmLst") or NEED),
+        ("학력", (_x(job, "acbgCondNmLst") if _x(job, "acbgCondNmLst").count(",") < 2 else "분야별 상이 (지원 자격 참고)") or NEED),
         ("급여", job.salary or (f"{NEED} (아래 경영공시 참고)" if salary_ref(job) else f"{NEED} (기관 내규)")),
         ("근무 시간", job.work_hours or NEED),
         ("접수 기간", period),
