@@ -311,26 +311,6 @@ def thumb(org: str, role: str, deadline: str | None, deadline_time: str | None, 
     return img
 
 
-def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: int) -> Image.Image:
-    """'전체 공고 정리' 글 썸네일."""
-    S, P = 1080, 90
-    img = Image.new("RGB", (S, S), BG)
-    d = ImageDraw.Draw(img)
-    t = font(100, "Title")
-    d.text((P, 130), f"{today.month}월 {today.day}일", font=t, fill=INK)
-    d.text((P, 258), "탈임상 채용공고", font=t, fill=INK)
-    _marked(d, P, 386, "총정리", t)
-    rows = [("진행 중", f"{total}건", INK), ("분야", "  ".join(f"{k} {v}" for k, v in counts if v) or "-", INK),
-            ("마감 임박", f"3일 이내 {soon}건", RED)]
-    y = S - 130 - 3 * 92
-    d.line([(P, y - 40), (S - P, y - 40)], fill=LINE, width=3)
-    for k, v, c in rows:
-        d.text((P, y + 34), k, font=font(38, "Medium"), fill=MUTED, anchor="lm")
-        d.text((P + 220, y + 34), v, font=font(48, "Bold"), fill=c, anchor="lm")
-        y += 92
-    return img
-
-
 # ---------- 인스타 게시물 (공고 1개 = 1장, 1080x1350): 파스텔 + 형광펜 ----------
 # (배경, 형광펜·장식, 포인트색, 칩 이름) — 주로 나오는 기업·공공이 분홍·노랑
 IG_PAL = {
@@ -338,8 +318,9 @@ IG_PAL = {
     "공공": ("#FFF1C9", "#FFE07A", "#E08A1E", "공공기관"),
     "연구": ("#DCEEFB", "#B3DAF7", "#2F86C8", "임상연구"),
     "학교": ("#DDF0E6", "#B8E6CF", "#2E9E6E", "학교 보건실"),
-    "기타": ("#E6E3FA", "#CFC7FF", "#6C5CE0", "기타"),
+    "기타": ("#EEEBE4", "#DCD5C8", "#857760", "기타"),
 }
+SUMMARY_PAL = ("#E6E3FA", "#CFC7FF", "#6C5CE0")  # 총정리 글 전용 보라
 IG_SOURCE = {"alio": "잡알리오", "sen": "서울시교육청 교육일자리포털", "goe": "경기도교육청 구인정보",
              "gojobs": "나라일터", "site": "기관 채용 홈페이지", "saramin": "사람인"}
 
@@ -597,4 +578,48 @@ def blog_thumb(job: Job, today: date) -> Image.Image:
         lx = X + d.textlength(lab, font=font(44, "Bold")) + 66
         d.rounded_rectangle((lx, y0 + 60, lx + lw + 52, y0 + 132), 36, fill=bg)
         d.text((lx + 26, y0 + 96), loc, font=font(44, "Bold"), fill=pt, anchor="lm")
+    return img
+
+
+def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: int) -> Image.Image:
+    """'진행 중 공고 전체 정리' 글 썸네일: 보라색(총정리 전용) + 분야별 색 칩."""
+    S = 1080
+    bg, mark, pt = SUMMARY_PAL
+    img = Image.new("RGB", (S, S), bg)
+    d = ImageDraw.Draw(img)
+    x0, y0, x1, y1 = 50, 50, S - 50, S - 50
+    d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
+    d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
+    X = x0 + 70
+    fc = font(44, "Bold")
+    lab = f"{today.month}/{today.day} 기준"
+    cw = d.textlength(lab, font=fc)
+    d.rounded_rectangle((X - 6, y0 + 60, X + cw + 46, y0 + 132), 36, fill=pt)
+    d.text((X + 20, y0 + 96), lab, font=fc, fill="white", anchor="lm")
+    _sparkle(d, x1 - 90, y0 + 90, 30, mark)
+    t = font(112, "Title")
+    y = y0 + 190
+    for i, ln in enumerate(("탈임상 간호사", "채용공고 총정리")):
+        if i == 1:
+            tw = d.textlength(ln, font=t)
+            d.rounded_rectangle((X - 8, y + 112 * 0.55, X + tw + 8, y + 112 * 1.05), 12, fill=mark)
+        d.text((X, y), ln, font=t, fill="#1E1E1E"); y += 140
+    d.text((X, y + 10), f"진행 중 {total}건", font=font(70, "ExtraBold"), fill=pt)
+    # 분야별 칩 (카테고리 색)
+    names = {"기업": "기업", "공공": "공공", "연구": "연구", "학교": "학교", "기타": "기타"}
+    cx, cy = X, y1 - 250
+    fchip = font(42, "Bold")
+    for k, v in counts:
+        if not v:
+            continue
+        c = IG_PAL.get(k, IG_PAL["기타"])
+        txt = f"{names.get(k, k)} {v}"
+        w = d.textlength(txt, font=fchip) + 52
+        if cx + w > x1 - 60:
+            break
+        d.rounded_rectangle((cx, cy, cx + w, cy + 76), 38, fill=c[0])
+        d.text((cx + 26, cy + 38), txt, font=fchip, fill=c[2], anchor="lm")
+        cx += w + 14
+    if soon:
+        d.text((X, y1 - 120), f"3일 안에 마감 {soon}건", font=font(52, "ExtraBold"), fill="#E5383B", anchor="lm")
     return img
