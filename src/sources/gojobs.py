@@ -10,7 +10,9 @@ import re
 from ..models import Job
 
 LIST = "https://www.gojobs.go.kr/apmList.do"
-KEYWORDS = ["보건소 간호", "치매안심센터", "방문간호", "정신건강복지센터 간호", "보건지소"]
+# (검색칸, 검색어): searchKeyword=공고명, searchSelectninsttnm=기관명
+KEYWORDS = [("searchKeyword", "간호"), ("searchSelectninsttnm", "보건소"), ("searchKeyword", "치매안심"),
+            ("searchKeyword", "방문건강"), ("searchKeyword", "정신건강")]
 NURSE = re.compile(r"간호")
 
 
@@ -24,26 +26,23 @@ def _text_all(page) -> str:
     return "\n".join(out)
 
 
-def _search(page, kw: str) -> list[tuple[str, str]]:
+def _search(page, field: str, kw: str) -> list[tuple[str, str]]:
     page.goto(LIST, wait_until="networkidle", timeout=60000)
     page.wait_for_timeout(1500)
-    box = None
-    for sel in ("input[name='searchKwd']", "input[name*='earch'][type='text']", "input[title*='검색']", "input[type='text']"):
-        el = page.query_selector(sel)
-        if el and el.is_visible():
-            box = el
-            break
+    box = page.query_selector(f"#{field}")
     if not box:
         print("[gojobs] 검색창 없음")
         return []
     box.fill(kw)
     box.press("Enter")
-    page.wait_for_timeout(3000)
+    page.wait_for_load_state("networkidle", timeout=30000)
+    page.wait_for_timeout(2500)
     links = page.eval_on_selector_all(
-        "a", "els => els.map(e => [e.innerText.trim(), e.href, e.getAttribute('onclick') || ''])")
+        "a", "els => els.map(e => [e.innerText.trim(), e.getAttribute('href') || '', e.getAttribute('onclick') || ''])")
     out = []
     for t, h, oc in links:
-        m = re.search(r"empmnsn=(\d+)", h or "") or re.search(r"(\d{5,})", oc or "")
+        js = h + " " + oc
+        m = re.search(r"empmnsn=(\d+)", js) or (re.search(r"\((?:[^)]*?)'?(\d{5,})'?", js) if ("View" in js or "view" in js or "Detail" in js) else None)
         if m and t:
             out.append((" ".join(t.split()), f"https://www.gojobs.go.kr/apmView.do?empmnsn={m.group(1)}"))
     return out
@@ -59,9 +58,9 @@ def fetch(max_per_kw: int = 15) -> list[Job]:
     with sync_playwright() as p:
         b = p.chromium.launch()
         page = b.new_page()
-        for kw in KEYWORDS:
+        for field, kw in KEYWORDS:
             try:
-                items = _search(page, kw)
+                items = _search(page, field, kw)
             except Exception as e:  # noqa: BLE001
                 print(f"[gojobs] 검색 실패 {kw}: {e}")
                 continue
@@ -109,5 +108,10 @@ def debug() -> None:
         print("FORMS", page.eval_on_selector_all("form", "els => els.map(e => [e.id, e.name, e.action])"))
         print("BODY0", " ".join(page.inner_text("body").split())[:1500])
         a = page.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,40), e.getAttribute('href'), e.getAttribute('onclick')])")
-        print("ANCH", [x for x in a if x[0]][:60])
+        box = page.query_selector("#searchKeyword"); box.fill("간호"); box.press("Enter")
+        page.wait_for_load_state("networkidle", timeout=30000); page.wait_for_timeout(2500)
+        print("URL1", page.url)
+        print("BODY1", " ".join(page.inner_text("body").split())[1200:3500])
+        a = page.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,40), e.getAttribute('href'), e.getAttribute('onclick')])")
+        print("ANCH1", [x for x in a if x[0] and 'gfn_menu_move' not in (x[1] or '')][:40])
         b.close()
