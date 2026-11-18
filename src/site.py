@@ -178,10 +178,15 @@ def build_index(docs: Path) -> None:
         except (OSError, ValueError):
             n = "?"
         items.append(f'<li><a href="{d}/">{d}</a> <span class="muted">· {n}건</span></li>')
+    from .guide import index_items
+    guides = index_items(docs)
+    guide_box = f'<h2>💡 탈임상 가이드 (주 1회)</h2><div class="box"><ul class="days">{"".join(guides)}</ul></div>' if guides else ""
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>탈임상 공고 작업실</title>
 <style>{STYLE}</style></head><body><main><h1>탈임상 공고 작업실</h1>
 <p class="muted">매일 아침 자동으로 업데이트됩니다. 날짜를 눌러 블로그 글과 카드뉴스를 확인하세요.</p>
+{guide_box}
+<h2>📅 날짜별 공고</h2>
 <div class="box"><ul class="days">{''.join(items) or '<li>아직 데이터가 없어요</li>'}</ul></div>
 </main></body></html>"""
     (docs / "index.html").write_text(page, encoding="utf-8")

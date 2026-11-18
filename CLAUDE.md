@@ -5,7 +5,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 
 ## 매일 할 일
 1. `git pull origin main`
-2. `ls data/inbox/` — 파일이 없으면 "오늘 새 공고 없음"이라고 보고하고 끝.
+2. `ls data/inbox/` — 파일이 없으면 "오늘 새 공고 없음"이라고 보고하고 끝. (단, **토·일요일이면 아래 '주말 탈임상 가이드'를 먼저 하고** 끝)
 3. 파일마다(오래된 날짜부터) 각 공고 객체에 아래 필드를 채워 **같은 파일에 저장**:
    - `is_target` (bool): 간호사 면허 소지자가 지원 가능한 **탈임상(병원 밖·비임상)** 공고면 true
      - 병동/외래/수술실/응급실/중환자실/요양병원 등 환자 직접 간호 = false
@@ -57,6 +57,22 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
    (push가 네트워크 오류로 실패하면 2·4·8·16초 간격으로 재시도)
 9. 결과를 한 줄로 보고: 전체 N건 중 탈임상 M건 (카테고리별 개수), 작업실 페이지 주소
    https://a55796196-sudo.github.io/nurse_jobs/YYYY-MM-DD/
+
+## 주말 탈임상 가이드 (주 1회, 블로그 글 + 인스타 카드뉴스)
+**토요일**(KST) 세션에서 쓴다. 토요일에 못 썼으면 일요일에 쓴다. 이번 주 토·일 날짜의 `data/guides/YYYY-MM-DD.json`이 이미 있으면 건너뛴다.
+1. `data/guides/topics.md`에서 주제를 고른다: "직접 던진 주제"의 첫 `- [ ]` → 없으면 "기본 주제"의 첫 `- [ ]`. 기본 주제도 다 썼으면 비슷한 결의 새 주제를 정해 추가한다.
+2. `data/guides/YYYY-MM-DD.json` 작성 (형식은 `data/guides/2026-11-21.json` 참고):
+   - `category`: `"자소서/면접"` 또는 `"병원 밖 업무 스킬"` (자격증 글은 병원 밖 업무 스킬)
+   - `title`: 블로그 제목 (검색될 단어를 넣어서). `cover`: 표지·썸네일 1~3줄 (한 줄 10자 이내, 마지막 줄 형광펜). `subtitle`: 표지 한 줄 설명
+   - `intro`: 도입 2~3문장. `sections` 3~7개: `emoji`, `heading`, `paragraphs`, `bullets`, `tip`(선택), `card_title`(카드 제목 16자 이내), `card`(카드 문장 1~4개, 각 42자 이내)
+   - `comment`: 리브의 한마디. `closing`: 마지막 카드 문장. `links`: 공식 확인처 (확실한 주소만). `tags`: 4~6개. `caption_hook`: 인스타 첫 줄
+   - **정확성**: 시험 일정·응시료·합격률·연봉 숫자·법 조항 번호처럼 바뀌거나 틀리기 쉬운 정보는 쓰지 말고 "공식 사이트에서 확인"으로 안내한다. 확실하지 않은 기관명·제도는 빼거나 일반적으로 표현한다. 이 환경에서는 국내 사이트 확인이 안 되므로 확실히 아는 내용만 쓴다.
+   - 말투는 공고 글과 같은 친근한 존댓말(~요). `data/jobs/`의 최근 공고(자격요건·우대사항)를 근거로 쓰면 좋다.
+3. `python -m src.main guide-check YYYY-MM-DD` → OK 나올 때까지 수정 → `python -m src.main guide-build YYYY-MM-DD`
+4. `topics.md`에서 쓴 주제를 `- [x] 주제 (YYYY-MM-DD)`로 바꾼다.
+5. 커밋에 `data/guides` 포함: `git add -A data docs && git commit -m "탈임상 가이드 YYYY-MM-DD" && git push origin main`
+6. 보고에 한 줄 추가: 가이드 주제 + https://a55796196-sudo.github.io/nurse_jobs/guides/YYYY-MM-DD/
+- 인스타 업로드: Actions → "인스타 업로드" → 날짜 칸에 `guides/YYYY-MM-DD` 입력
 
 ## 주의
 - **사용량 절약**: 탈임상이 아닌 공고는 is_target만 판단하고 나머지 필드는 비워둔다. 7번(카드 눈으로 확인)은 생략한다. 보고는 2~3줄.

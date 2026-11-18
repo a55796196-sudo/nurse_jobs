@@ -5,6 +5,8 @@
   python -m src.main build [날짜]      # 분류된 inbox → 카드뉴스·블로그·작업실 페이지 생성
   python -m src.main run              # collect + Claude API 분류 + build 한 번에 (API 키 있을 때만)
   python -m src.main sample           # 샘플 데이터로 동작 확인
+  python -m src.main guide-check 날짜  # 주말 가이드 글(data/guides/날짜.json) 검사
+  python -m src.main guide-build 날짜  # 가이드 글 → docs/guides/날짜/ (블로그·카드뉴스)
 
 분류는 두 가지 방법 중 하나로 합니다.
   A) 예약된 Claude Code 세션이 inbox 파일을 직접 읽고 분류 필드를 채움 (구독 사용, 추가 비용 없음)
@@ -268,6 +270,18 @@ def main() -> None:
             print("본문:", (e.get("site_text") or "")[:1500])
             print("OCR:", (e.get("site_ocr") or "")[:2500])
             print("이미지:", e.get("site_images"))
+    elif cmd in ("guide-check", "guide-build"):
+        from . import guide
+        gpath = DATA / "guides" / f"{day}.json"
+        if not gpath.exists():
+            sys.exit(f"{gpath} 가 없습니다.")
+        if cmd == "guide-check":
+            errs = guide.check(guide.load(gpath))
+            print("\n".join(errs) if errs else "OK: 가이드 글 필드 완료")
+            sys.exit(1 if errs else 0)
+        out = guide.build(gpath, DOCS)
+        build_index(DOCS)
+        print(f"완료: {out.relative_to(ROOT)}/index.html")
     elif cmd == "sample":
         from .classify import classify
         jobs = classify(read_jobs(ROOT / "tests" / "sample_jobs.json"))
