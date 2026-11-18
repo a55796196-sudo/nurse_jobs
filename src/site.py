@@ -14,7 +14,7 @@ from pathlib import Path
 from .models import CATEGORIES, Job
 from .render import d_day
 from .blog import BLOG_CATEGORY, SUMMARY_CATEGORY, _emp, _org, blog_tags, picks, post_html, post_title, summary_html, summary_title
-from .render import summary_thumb, thumb
+from .render import ig_post, summary_thumb, thumb
 
 STYLE = """
 :root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb}
@@ -134,7 +134,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
         role = " ".join(x for x in (j.department, j.job_role) if x)
         loc = (j.location or "").replace(",", " · ")
         emp_txt = _emp(j) + (" (상근)" if (j.work_hours or "").startswith("상근") else "")
-        thumb(_org(j), role, j.deadline, j.deadline_time, loc, emp_txt).save(day_dir / f"thumb-{n:02d}.png")
+        ig_post(j, today, h=1080).save(day_dir / f"thumb-{n:02d}.png")  # 인스타 표지와 같은 디자인
         tags = " ".join("#" + t for t in blog_tags(j))
         posts.append(f"""<div class="box"><div class="row"><b>글 {n}. {_e(j.org)} · {_e(j.job_role)}</b>
 <span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>

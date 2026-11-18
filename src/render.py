@@ -354,7 +354,9 @@ def _sparkle(d: ImageDraw.ImageDraw, x: float, y: float, r: float, col: str) -> 
     d.polygon(pts, fill=col)
 
 
-def ig_post(job: Job, today: date) -> Image.Image:
+def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
+    """h=1350 인스타 표지, h=1080 블로그 썸네일(정사각형)."""
+    sq = h < H
     from .blog import _emp, _org  # 순환 import 방지
     bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
     role = job.job_role or ""
@@ -367,13 +369,13 @@ def ig_post(job: Job, today: date) -> Image.Image:
     dd = ("D-DAY" if left == 0 else f"D-{left}") if dl else "상시"
     loc = (job.location or "").split(",")[0].replace("특별시", "").replace("광역시", "").strip()
 
-    img = Image.new("RGB", (W, H), bg)
+    img = Image.new("RGB", (W, h), bg)
     d = ImageDraw.Draw(img)
     for i in range(0, W + 80, 120):  # 물방울 무늬
-        for j in range(0, H + 80, 120):
+        for j in range(0, h + 80, 120):
             if (i // 120 + j // 120) % 2 == 0:
                 d.ellipse((i - 7, j - 7, i + 7, j + 7), fill=mark)
-    x0, y0, x1, y1 = 80, 150, W - 80, H - 150
+    x0, y0, x1, y1 = (80, 100, W - 80, h - 130) if sq else (80, 150, W - 80, H - 150)
     d.rounded_rectangle((x0, y0 + 12, x1, y1 + 12), 56, fill=mark)
     d.rounded_rectangle((x0, y0, x1, y1), 56, fill="white")
     # 칩: 카테고리 / 지역
@@ -388,16 +390,17 @@ def ig_post(job: Job, today: date) -> Image.Image:
         cx += tw + 52 + 16
     # 제목: 기관 / 부서 / 직무 단위 줄바꿈, 첫 줄 형광펜
     maxw = x1 - x0 - 140
-    for size in (94, 84, 74, 66):
+    nmax = 4 if sq else 5
+    for size in ((84, 74, 66, 58) if sq else (94, 84, 74, 66)):
         ft = font(size, "Title")
         lines: list[str] = []
         for sg in segs:
             lines += wrap(d, sg, ft, maxw, 3)
-        if len(lines) <= 5:
+        if len(lines) <= nmax:
             break
-    lines = lines[:5]
+    lines = lines[:nmax]
     lh = int(size * 1.3)
-    y = y0 + 200 + (5 - len(lines)) * lh // 2 - 20
+    y = y0 + (180 if sq else 200) + (nmax - len(lines)) * lh // 2 - 20
     for i, ln in enumerate(lines):
         if i == 0:
             tw = d.textlength(ln, font=ft)
@@ -407,7 +410,7 @@ def ig_post(job: Job, today: date) -> Image.Image:
     _sparkle(d, x1 - 95, y0 + 210, 26, mark)
     _sparkle(d, x1 - 140, y0 + 260, 14, mark)
     # 마감: 날짜 + D-day 스티커 (3일 이내면 '마감임박' 꼬리표)
-    scx, scy, r = x1 - 150, y1 - 170, 112
+    scx, scy, r = x1 - 150, y1 - 170, (100 if sq else 112)
     d.ellipse((scx - r + 8, scy - r + 10, scx + r + 8, scy + r + 10), fill=mark)
     d.ellipse((scx - r, scy - r, scx + r, scy + r), fill=pt)
     d.text((scx, scy - 4), dd, font=font(68 if len(dd) <= 4 else 56, "Title"), fill="white", anchor="mm")
@@ -420,7 +423,7 @@ def ig_post(job: Job, today: date) -> Image.Image:
     d.text((x0 + 70, y1 - 225), label, font=font(36, "SemiBold"), fill="#8C8C8C")
     d.text((x0 + 70, y1 - 175), when, font=font(70, "ExtraBold"), fill="#1E1E1E")
     src = IG_SOURCE.get(job.source, "")
-    d.text((W / 2, H - 85), BRAND + (f"  ·  출처 {src}" if src else ""), font=font(30, "SemiBold"), fill=pt, anchor="mm")
+    d.text((W / 2, h - 65 if sq else H - 85), BRAND + (f"  ·  출처 {src}" if src else ""), font=font(30, "SemiBold"), fill=pt, anchor="mm")
     return img
 
 

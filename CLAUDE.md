@@ -50,9 +50,9 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
    - **3교대·2교대 등 교대근무 자리는 환자를 직접 보지 않아도 제외** (예: 응급의료상황실 3교대) — `is_target: false`.
    - **원문(`raw_text`, `title`, `extra`)에 없는 정보는 절대 지어내지 말 것** (연봉, 마감일, 경력 등)
    - 공고가 많으면 Python 스크립트로 JSON을 읽고 쓰되, 판단 자체는 네가 직접 한다.
-3-1. **글이 3개 미만이면 대기열에서 채우기**: `python -m src.main backlog YYYY-MM-DD` 로 아직 안 올린 마감 전 공고를 보고(수도권→마감순으로 정렬됨),
+3-1. **글이 5개 미만이면 대기열에서 채우기**: `python -m src.main backlog YYYY-MM-DD` 로 아직 안 올린 마감 전 공고를 보고(수도권→마감순으로 정렬됨),
    부족한 만큼 골라 `python -m src.main backlog-add YYYY-MM-DD KEY1 KEY2` 로 오늘 inbox 에 추가한 뒤, 그 공고들의 블로그 필드(intro·급여 등)를 채운다.
-   목표는 **하루 3개**(좋은 공고가 많은 날만 최대 5개). 대기열에도 없으면 있는 만큼만.
+   목표는 **하루 최소 3개, 많으면 5개** (밀린 공고를 소진하는 동안은 5개를 채우는 쪽으로). 대기열에도 없으면 있는 만큼만.
 4. `python -m src.main check YYYY-MM-DD` → `OK` 나올 때까지 수정
 5. `pip install -q -r requirements.txt` (폰트는 저장소 fonts/ 에 포함되어 있음)
 6. `python -m src.main build YYYY-MM-DD` (inbox 파일은 `data/jobs/`로 자동 이동)
