@@ -540,3 +540,48 @@ def ig_slides(job: Job, today: date) -> list[Image.Image]:
         _ig_footer(d, job, pal, n, total)
         out.append(img)
     return out
+
+
+def blog_thumb(job: Job, today: date) -> Image.Image:
+    """블로그 목록용 정사각형 썸네일: 인스타 표지와 같은 색·형광펜, 목록 크기에서도 읽히게 제목을 크게."""
+    from .blog import _emp, _org
+    S = 1080
+    bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
+    role = job.job_role or ""
+    emp = "" if "강사" in role else _emp(job)
+    segs = [s for s in (_org(job), job.department or "", " ".join(f"{role} {emp if emp not in role else ''} 채용".split())) if s]
+    dl = date.fromisoformat(job.deadline) if job.deadline else None
+    img = Image.new("RGB", (S, S), bg)
+    d = ImageDraw.Draw(img)
+    x0, y0, x1, y1 = 50, 50, S - 50, S - 50
+    d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
+    d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
+    X = x0 + 70
+    for size in (120, 108, 96, 86, 78):
+        ft = font(size, "Title")
+        lines: list[str] = []
+        for sg in segs:
+            lines += wrap(d, sg, ft, x1 - X - 60, 3)
+        if len(lines) <= 4:
+            break
+    lines = lines[:4]
+    lh = int(size * 1.25)
+    y = y0 + 90
+    for i, ln in enumerate(lines):
+        if i == 0:
+            tw = d.textlength(ln, font=ft)
+            d.rounded_rectangle((X - 8, y + size * 0.55, X + tw + 8, y + size * 1.05), 12, fill=mark)
+        d.text((X, y), ln, font=ft, fill="#1E1E1E")
+        y += lh
+    _sparkle(d, x1 - 80, y0 + 90, 34, mark)
+    # 하단: 마감일(크게) + 지역
+    when = f"~{dl.month}/{dl.day}({WEEK[dl.weekday()]})" if dl else "상시 채용"
+    loc = (job.location or "").split(",")[0].replace("특별시", "").replace("광역시", "").strip()
+    fb = font(76, "ExtraBold")
+    tw = d.textlength(when, font=fb)
+    by = y1 - 190
+    d.rounded_rectangle((X - 10, by, X + tw + 50, by + 120), 60, fill=pt)
+    d.text((X + 20, by + 60), when + " 마감", font=fb, fill="white", anchor="lm") if False else d.text((X + 20, by + 60), when, font=fb, fill="white", anchor="lm")
+    if loc:
+        d.text((x1 - 70, by + 60), loc, font=font(58, "Bold"), fill=pt, anchor="rm")
+    return img
