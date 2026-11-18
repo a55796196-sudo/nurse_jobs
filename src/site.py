@@ -108,9 +108,9 @@ def ig_caption(job: Job, today: date) -> str:
         lines.append(f"🕘 근무: {job.work_hours}")
     if job.requirements:
         lines.append("✅ 자격: " + " / ".join(job.requirements[:3]))
-    if job.summary:
-        lines += ["", job.summary]
-    lines += ["", "🔗 자세한 조건과 지원 링크는 프로필 링크(블로그)에서 확인하세요!", "💾 저장해두고 마감 놓치지 마세요", ""]
+    if job.ig_tip or job.summary:
+        lines += ["", "💡 " + (job.ig_tip or job.summary)]
+    lines += ["", "🔗 우대 사항·전형·지원 링크는 프로필 링크(블로그)에서", "💾 저장해두고 마감 체크", ""]
     tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", "간호사취업"]
     tags += [t.replace(" ", "") for t in (job.tags or [])][:6]
     lines.append(" ".join("#" + t for t in dict.fromkeys(tags)))

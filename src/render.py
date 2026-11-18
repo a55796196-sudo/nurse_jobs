@@ -470,7 +470,7 @@ def _ig_heading(d, x, y, text, pal) -> int:
 def _ig_page(job: Job, sections: list[tuple[str, list[tuple[str, str]]]]):
     """한 장에 섹션 여러 개. 공간이 모자라면 남은 항목은 생략 (자세한 건 블로그)."""
     img, d, box, pal = _ig_frame(job)
-    fv, fl = font(42, "Medium"), font(36, "Bold")
+    fv, fl = font(50, "SemiBold"), font(42, "Bold")
     x0, ylim = box[0] + 70, box[3] - 60
     maxw = box[2] - box[0] - 140
     y = box[1] + 110
@@ -481,48 +481,54 @@ def _ig_page(job: Job, sections: list[tuple[str, list[tuple[str, str]]]]):
             break
         y = _ig_heading(d, x0, y, title, pal)
         for label, val in rows:
-            tx = x0 + (180 if label else 40)
+            tx = x0 + (200 if label else 44)
             lines = wrap(d, val, fv, maxw - (tx - x0), 4)
-            if y + len(lines) * 58 > ylim:
+            if y + len(lines) * 68 > ylim:
                 break
             if label:
-                d.text((x0, y + 4), label, font=fl, fill=pal[2])
+                d.text((x0, y + 6), label, font=fl, fill=pal[2])
             else:
-                d.ellipse((x0 + 4, y + 21, x0 + 20, y + 37), fill=pal[1])
+                d.ellipse((x0 + 4, y + 24, x0 + 24, y + 44), fill=pal[1])
             for ln in lines:
-                d.text((tx, y), ln, font=fv, fill="#2A2A2A"); y += 58
-            y += 22
+                d.text((tx, y), ln, font=fv, fill="#2A2A2A"); y += 68
+            y += 40
     return img, d, pal
 
 
 def ig_slides(job: Job, today: date) -> list[Image.Image]:
-    """표지 + 상세 장(근무 조건 / 지원 자격·전형 / 복리후생 / 리브의 한마디)."""
+    """인스타 4장: 표지 / 핵심 조건 / 핵심 자격 3개 / 한줄 TIP + 블로그 안내.
+    판단에 필요한 정보만 인스타에, 우대·전형·복지·지원 링크는 블로그로."""
+    from .blog import _org
     cond = [(k, v) for k, v in (
         ("급여", job.salary or ""), ("근무", job.work_hours or ""), ("계약", job.contract_period or ""),
-        ("인원", job.headcount or ""), ("근무지", job.address or job.location or ""),
-        ("고용", job.employment_type or "")) if v]
-    cond += [("", s) for s in (job.salary_detail or [])[:3]]
-    qual = [("", q) for q in (job.qualifications or job.requirements or [])[:6]]
-    groups = [
-        [("근무 조건", cond)],
-        [("지원 자격", qual), ("우대 사항", [("", p) for p in (job.preferred or [])[:3]])],
-        [("전형 절차", [("", job.process)] if job.process else []), ("복리후생", [("", b) for b in (job.benefits or [])[:7]])],
-    ]
+        ("근무지", job.location or ""), ("인원", job.headcount or "")) if v]
+    qual = [("", q) for q in (job.requirements or job.qualifications or [])[:3]]
     pages = []
-    for g in groups:
-        g = [(t, r) for t, r in g if r]
-        if g:
-            pages.append(_ig_page(job, g))
-    # 마지막 장: 리브의 한마디 + 저장·블로그 안내
+    if cond:
+        pages.append(_ig_page(job, [("핵심 조건", cond)]))
+    if qual:
+        img, d, pal = _ig_page(job, [("핵심 자격", qual)])
+        more = [x for x, v in (("우대 사항", job.preferred), ("전형", job.process), ("복리후생", job.benefits)) if v]
+        if more:
+            box = (80, 110, W - 80, H - 150)
+            cy = box[3] - 200
+            d.rounded_rectangle((box[0] + 70, cy, box[2] - 70, cy + 120), 30, fill=pal[0])
+            d.text((W / 2, cy + 60), " · ".join(more) + "은 블로그 참고", font=font(36, "SemiBold"), fill=pal[2], anchor="mm")
+        pages.append((img, d, pal))
+    # 마지막 장: 한줄 TIP + 블로그 찾는 법
     img, d, box, pal = _ig_frame(job)
     x0 = box[0] + 70
-    y = _ig_heading(d, x0, box[1] + 110, "리브의 한마디", pal)
-    for ln in wrap(d, job.blog_comment or job.summary or "", font(44, "Medium"), box[2] - box[0] - 140, 9):
-        d.text((x0, y), ln, font=font(44, "Medium"), fill="#2A2A2A"); y += 66
-    cy = box[3] - 260
-    d.rounded_rectangle((x0, cy, box[2] - 70, cy + 190), 36, fill=pal[0])
-    d.text((W / 2, cy + 62), "자세한 조건 · 지원 링크는", font=font(40, "SemiBold"), fill="#555", anchor="mm")
-    d.text((W / 2, cy + 128), "프로필 링크(블로그)에서!", font=font(52, "Title"), fill=pal[2], anchor="mm")
+    y = _ig_heading(d, x0, box[1] + 110, "한줄 TIP", pal)
+    tip = job.ig_tip or (job.summary or "").split(". ")[0]
+    for ln in wrap(d, tip, font(50, "Bold"), box[2] - box[0] - 140, 6):
+        d.text((x0, y), ln, font=font(50, "Bold"), fill="#1E1E1E"); y += 76
+    key = _org(job).split()[-1] if _org(job) else ""
+    cy = box[3] - 300
+    d.rounded_rectangle((x0, cy, box[2] - 70, cy + 230), 36, fill=pal[0])
+    d.text((W / 2, cy + 62), "지원 링크 · 전체 공고 정리는", font=font(40, "SemiBold"), fill="#555", anchor="mm")
+    d.text((W / 2, cy + 128), "프로필 링크 → 블로그", font=font(54, "ExtraBold"), fill=pal[2], anchor="mm")
+    if key:
+        d.text((W / 2, cy + 188), f"블로그에서 '{key}' 검색", font=font(36, "SemiBold"), fill="#777", anchor="mm")
     _sparkle(d, box[2] - 95, box[1] + 150, 26, pal[1])
     pages.append((img, d, pal))
     total = len(pages) + 1
