@@ -227,6 +227,11 @@ def main() -> None:
             print("\n####", j.key, j.org, "|", j.title, "|", j.location, "|", j.start_date, "~", j.deadline, "|", j.employment_type)
             print("   ", {k: j.extra.get(k) for k in ("address", "recrutNope", "work_hours", "pay_type", "detail_url")})
             print("    본문:", (j.extra.get("site_text") or "")[:600])
+    elif cmd == "gojobstest":  # 디버그: 나라일터 수집 시험
+        from .sources import gojobs
+        for j in gojobs.fetch(max_per_kw=5):
+            print("\n####", j.key, "|", j.org, "|", j.title, "|", j.location, "|", j.start_date, "~", j.deadline)
+            print("    본문:", (j.extra.get("site_text") or "")[:700])
     elif cmd == "backlog":  # 대기열 보기: python -m src.main backlog [날짜]
         for j in backlog(day):
             print(f"{j.key} | {j.org} | {j.job_role or j.title[:30]} | {j.location} | ~{j.deadline}")
