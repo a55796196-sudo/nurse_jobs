@@ -15,10 +15,12 @@ BASE = "https://www.korea.kr"
 LIST = BASE + "/archive/recruitInfoList.do"
 # 목록(제목+기관)에서 먼저 거르는 단어 → 상세 본문에 '간호'가 있어야 최종 채택
 HINT = re.compile(r"간호|보건소|보건지소|보건진료|치매안심|방문건강|정신건강|건강증진|감염병|예방접종|모자보건")
-EXCLUDE = re.compile(r"합격자|결과\s*공고|면접시험|서류전형|시험\s*일정|청소|조리|미화|운전")
+EXCLUDE = re.compile(r"합격자|결과|면접시험|면접심사|서류전형|시험\s*일정|청소|조리|미화|운전")
 AREAS = ("서울", "경기", "인천", "부산", "대구", "광주", "대전", "울산", "세종", "강원", "충북", "충남",
          "전북", "전남", "경북", "경남", "제주", "충청북도", "충청남도", "전라북도", "전북특별자치도",
          "전라남도", "경상북도", "경상남도", "강원특별자치도", "제주특별자치도")
+SHORT = {"충청북도": "충북", "충청남도": "충남", "전라북도": "전북", "전북특별자치도": "전북", "전라남도": "전남",
+         "경상북도": "경북", "경상남도": "경남", "강원특별자치도": "강원", "제주특별자치도": "제주"}
 
 
 def _d(s: str) -> str | None:
@@ -89,13 +91,16 @@ def fetch(days: int = 2, max_pages: int = 40) -> list[Job]:
             if "간호" not in c["title"] + body[:6000]:
                 continue
             orgs = c["org"] or ""
-            loc = next((a for a in AREAS if a in orgs + " " + c["title"]), None)
-            city = re.search(r"(\S+[시군구])(?:\s|보건|$)", orgs)
+            loc = next((a for a in sorted(AREAS, key=len, reverse=True) if a in orgs + " " + c["title"]), None)
+            toks = [t for t in orgs.split() if not re.search(r"(특별|광역|자치)", t)]
+            city = next((t for t in reversed(toks) if re.fullmatch(r"\S+[시군구]", t)), None)
             last = orgs.split()[-1] if orgs else "지자체"
+            if last == "보건소" and city:
+                last = city + "보건소"
             jobs.append(Job(
                 source="gojobs", source_id=sid, title=c["title"], url=url,
                 org=last, deadline=c["deadline"], start_date=c["posted"],
-                location=" ".join(x for x in (loc, city.group(1) if city else None) if x) or None,
+                location=" ".join(x for x in (SHORT.get(loc, loc), city) if x) or None,
                 employment_type="기간제" if "기간제" in c["title"] + body[:3000] else None,
                 raw_text=(c["title"] + " " + body)[:3000],
                 extra={"site_text": body[:8000], "detail_url": url, "org_path": orgs},
