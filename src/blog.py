@@ -231,3 +231,47 @@ def post_html(job: Job, today: date) -> str:
 def picks(jobs: list[Job]) -> list[Job]:
     """오늘 개별 글로 올릴 공고 (마감 빠른 순)."""
     return sorted([j for j in jobs if j.is_target and j.blog_pick], key=lambda j: j.deadline or "9999")
+
+
+# ---------- 매일 '진행 중 공고 전체 정리' 글 (주간 채용 총정리 카테고리) ----------
+SUMMARY_CATEGORY = "주간 채용 총정리"
+CAT_ORDER = [("공공", "🏛️ 공공기관·공기업"), ("학교", "🏫 보건교사"), ("기업", "🏭 산업간호사·기업"), ("연구", "🔬 임상연구")]
+
+
+def summary_title(jobs: list[Job], today: date) -> str:
+    return f"[{today.month}/{today.day}] 탈임상 간호사 채용공고 총정리 (진행 중 {len(jobs)}건)"
+
+
+def _link(job: Job) -> str:
+    return job.extra.get("alio_url") or job.url or ""
+
+
+def summary_html(jobs: list[Job], today: date) -> str:
+    jobs = sorted(jobs, key=lambda j: j.deadline or "9999")
+    soon = [j for j in jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3]
+    out = [f"<p>{today.month}월 {today.day}일 기준, 지금 지원할 수 있는 <b>탈임상 간호사 채용공고 {len(jobs)}건</b>을 한 번에 정리했어요."
+           + (f" 이 중 <b>{len(soon)}건은 3일 안에 마감</b>되니 먼저 확인하세요." if soon else "") + "</p><p>&nbsp;</p>"]
+    for cat, name in CAT_ORDER:
+        group = [j for j in jobs if j.category == cat]
+        if not group:
+            continue
+        out.append(f"<h2>{name} ({len(group)}건)</h2>")
+        out.append('<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">')
+        out.append('<tr style="background:#f5f5f5"><td><b>마감</b></td><td><b>기관 · 직무</b></td><td><b>근무지</b></td></tr>')
+        merged: dict[tuple, list[Job]] = {}
+        for j in group:  # 같은 기관·직무·지역·마감은 한 줄로
+            role = " ".join(x for x in (j.department, j.job_role) if x) or j.title
+            merged.setdefault((_org(j), role, j.location, j.deadline), []).append(j)
+        for (_, role, _, _), same in merged.items():
+            j = same[0]
+            label, dl = d_label(j.deadline, today)
+            when = f"{dl.month}/{dl.day} ({label})" if dl else "상시"
+            if len(same) > 1:
+                role += f" ({len(same)}건)"
+            out.append(f'<tr><td>{_e(when)}</td><td><a href="{_e(_link(j))}">{_e(_org(j))}</a><br>{_e(role)}</td>'
+                       f'<td>{_e((j.location or "-").replace(",", " · "))}</td></tr>')
+        out.append("</table><p>&nbsp;</p>")
+    out.append("<p>기관명을 누르면 공고 원문으로 이동해요. 공고별 자세한 정리(급여·자격·전형)는 <b>탈임상 채용공고</b> 카테고리에서 볼 수 있어요.</p>")
+    out.append("<p>※ 마감일은 공고 기준이며, 조기 마감될 수 있으니 원문을 꼭 확인해주세요.</p><p>&nbsp;</p>")
+    out.append("<p>#탈임상 #탈임상간호사 #간호사채용 #간호사이직 #간호사채용공고 #공공기관채용 #보건교사채용 #채용공고총정리</p>")
+    return "\n".join(out)

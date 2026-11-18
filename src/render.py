@@ -309,3 +309,23 @@ def thumb(org: str, role: str, deadline: str | None, deadline_time: str | None, 
         d.text((P + 220, y + 34), wrap(d, v, font(48, "Bold"), S - P * 2 - 220, 1)[0], font=font(48, "Bold"), fill=c, anchor="lm")
         y += 92
     return img
+
+
+def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: int) -> Image.Image:
+    """'전체 공고 정리' 글 썸네일."""
+    S, P = 1080, 90
+    img = Image.new("RGB", (S, S), BG)
+    d = ImageDraw.Draw(img)
+    t = font(100, "Title")
+    d.text((P, 130), f"{today.month}월 {today.day}일", font=t, fill=INK)
+    d.text((P, 258), "탈임상 채용공고", font=t, fill=INK)
+    _marked(d, P, 386, "총정리", t)
+    rows = [("진행 중", f"{total}건", INK), ("분야", "  ".join(f"{k} {v}" for k, v in counts if v) or "-", INK),
+            ("마감 임박", f"3일 이내 {soon}건", RED)]
+    y = S - 130 - 3 * 92
+    d.line([(P, y - 40), (S - P, y - 40)], fill=LINE, width=3)
+    for k, v, c in rows:
+        d.text((P, y + 34), k, font=font(38, "Medium"), fill=MUTED, anchor="lm")
+        d.text((P + 220, y + 34), v, font=font(48, "Bold"), fill=c, anchor="lm")
+        y += 92
+    return img

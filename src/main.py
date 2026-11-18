@@ -66,6 +66,17 @@ def mark_posted(jobs: list[Job], day: str) -> None:
     POSTED_FILE.write_text(json.dumps(posted, ensure_ascii=False, indent=0, sort_keys=True), encoding="utf-8")
 
 
+def open_targets(day: str, today_targets: list[Job]) -> list[Job]:
+    """오늘 기준 마감 전인 탈임상 공고 전체 (지난 날짜 파일 + 오늘)."""
+    out, keys = [], set()
+    for j in today_targets + [j for f in sorted((DATA / "jobs").glob("*.json"), reverse=True) for j in read_jobs(f)]:
+        if not j.is_target or j.key in keys or (j.deadline and j.deadline < day):
+            continue
+        keys.add(j.key)
+        out.append(j)
+    return out
+
+
 def backlog(day: str) -> list[Job]:
     """아직 블로그에 안 올린, 마감 전(내일 이후) 탈임상 공고. 수도권 → 마감 빠른 순."""
     posted, seen_keys, out = load_posted(), set(), []
@@ -168,7 +179,7 @@ def build(path: Path, day: str, archive: bool = True) -> None:
     if targets:
         out = DOCS / day
         cards = render_all(targets, d, out)
-        build_day(targets, d, DOCS, cards)
+        build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets))
         print(f"완료: docs/{day}/index.html (카드 {len(cards)}장)")
     else:
         print("오늘은 탈임상 공고가 없어 페이지를 만들지 않습니다.")

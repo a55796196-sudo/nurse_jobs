@@ -13,8 +13,8 @@ from pathlib import Path
 
 from .models import CATEGORIES, Job
 from .render import d_day
-from .blog import BLOG_CATEGORY, _emp, _org, blog_tags, picks, post_html, post_title
-from .render import thumb
+from .blog import BLOG_CATEGORY, SUMMARY_CATEGORY, _emp, _org, blog_tags, picks, post_html, post_title, summary_html, summary_title
+from .render import summary_thumb, thumb
 
 STYLE = """
 :root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb}
@@ -107,7 +107,7 @@ def ig_caption(jobs: list[Job], today: date, limit: int = 9) -> str:
     return "\n".join(lines)
 
 
-def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) -> Path:
+def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], all_open: list[Job] | None = None) -> Path:
     day_dir = docs / today.isoformat()
     day_dir.mkdir(parents=True, exist_ok=True)
     title = blog_title(jobs, today)
@@ -131,6 +131,10 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
 <button onclick="copyText('tg{n}',this)">태그 복사</button></div>
 <div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb-{n:02d}.png" download><img src="thumb-{n:02d}.png" alt="썸네일 {n}" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
 <span class="muted">썸네일: 이미지를 눌러 저장 후 글 맨 위에 넣으세요</span></div></div>""")
+    open_jobs = all_open if all_open is not None else [j for j in jobs if j.is_target]
+    cats = [("공공", "공공"), ("학교", "학교"), ("기업", "기업"), ("연구", "연구")]
+    soon_n = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
+    summary_thumb(today, len(open_jobs), [(n, sum(1 for j in open_jobs if j.category == c)) for c, n in cats], soon_n).save(day_dir / "thumb-summary.png")
     posts_html = "".join(posts) or '<div class="box"><p class="muted">오늘은 개별 글로 올릴 공고가 없어요.</p></div>'
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{today.isoformat()} 탈임상 공고</title>
@@ -141,21 +145,23 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path]) 
 <h2>📝 오늘 올릴 블로그 글 {len(picks(jobs))}개</h2>
 {posts_html}
 
+<h2>📋 진행 중 공고 전체 정리 (1개)</h2>
+<div class="box"><div class="row"><b>전체 정리 글</b><span class="muted">카테고리: {SUMMARY_CATEGORY}</span></div>
+<div class="row" style="margin-top:8px"><pre id="st" style="flex:1;margin:0">{_e(summary_title(open_jobs, today))}</pre>
+<button onclick="copyText('st',this)">제목 복사</button></div>
+<details><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기</summary>
+<div id="sb" class="post">{summary_html(open_jobs, today)}</div></details>
+<div class="row"><span class="muted">이 글은 매일 새로 올리거나, 기존 글을 수정해서 갱신해도 돼요</span>
+<button onclick="copyHtml('sb',this)">본문 복사</button></div>
+<div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb-summary.png" download><img src="thumb-summary.png" alt="정리 썸네일" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
+<span class="muted">썸네일: 이미지를 눌러 저장</span></div></div>
+
 <div class="box"><div class="row"><b>📷 인스타 카드뉴스</b><span class="muted">이미지를 눌러 저장</span></div>
 <div class="cards">{imgs}</div></div>
 
 <div class="box"><div class="row"><b>📷 인스타 캡션</b><button onclick="copyText('cap',this)">캡션 복사</button></div>
 <pre id="cap">{_e(ig_caption(jobs, today))}</pre></div>
 
-<details><summary class="muted" style="margin:24px 0 8px;cursor:pointer">(지금은 안 써도 돼요) 하루치 모음 글 보기</summary>
-<div class="box"><div class="row"><b>① 하루치 모음 글 제목 (선택)</b><button onclick="copyText('t',this)">제목 복사</button></div>
-<pre id="t">{_e(title)}</pre></div>
-
-<div class="box"><div class="row"><b>② 하루치 모음 글 본문 (선택)</b><button onclick="copyHtml('post',this)">본문 복사</button></div>
-<p class="muted">복사 후 네이버 블로그 글쓰기 화면에 붙여넣기(Ctrl+V)만 하면 돼요.</p>
-<div id="post">{blog_html(jobs, today)}</div></div>
-
-</details>
 </main><script>{SCRIPT}</script></body></html>"""
     (day_dir / "index.html").write_text(page, encoding="utf-8")
     (day_dir / "caption.txt").write_text(ig_caption(jobs, today), encoding="utf-8")
