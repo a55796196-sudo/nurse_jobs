@@ -424,12 +424,110 @@ def ig_post(job: Job, today: date) -> Image.Image:
     return img
 
 
-def ig_posts(jobs: list[Job], today: date, out_dir: Path) -> list[Path]:
-    """블로그 글로 고른 공고마다 인스타 게시물 1장 (ig-01.jpg …)."""
+def ig_posts(jobs: list[Job], today: date, out_dir: Path) -> list[list[Path]]:
+    """블로그 글로 고른 공고마다 인스타 게시물 1개 (ig-01-1.jpg 표지, ig-01-2.jpg … 상세)."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    paths = []
+    posts = []
     for n, j in enumerate(jobs, start=1):
-        p = out_dir / f"ig-{n:02d}.jpg"
-        ig_post(j, today).save(p, quality=93)
-        paths.append(p)
-    return paths
+        paths = []
+        for k, im in enumerate(ig_slides(j, today), start=1):
+            pth = out_dir / f"ig-{n:02d}-{k}.jpg"
+            im.save(pth, quality=93)
+            paths.append(pth)
+        posts.append(paths)
+    return posts
+
+
+# ---------- 인스타 상세 장 (표지 뒤에 넘겨보는 장) ----------
+def _ig_frame(job: Job):
+    bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
+    img = Image.new("RGB", (W, H), bg)
+    d = ImageDraw.Draw(img)
+    for i in range(0, W + 80, 120):
+        for j in range(0, H + 80, 120):
+            if (i // 120 + j // 120) % 2 == 0:
+                d.ellipse((i - 7, j - 7, i + 7, j + 7), fill=mark)
+    box = (80, 110, W - 80, H - 150)
+    d.rounded_rectangle((box[0], box[1] + 12, box[2], box[3] + 12), 56, fill=mark)
+    d.rounded_rectangle(box, 56, fill="white")
+    return img, d, box, (bg, mark, pt)
+
+
+def _ig_footer(d, job, pal, page: int, total: int) -> None:
+    src = IG_SOURCE.get(job.source, "")
+    d.text((W / 2, H - 85), BRAND + (f"  ·  출처 {src}" if src else ""), font=font(30, "SemiBold"), fill=pal[2], anchor="mm")
+    d.text((W - 110, 160), f"{page}/{total}", font=font(30, "Bold"), fill="#B0B0B0", anchor="ra")
+
+
+def _ig_heading(d, x, y, text, pal) -> int:
+    ft = font(64, "Title")
+    tw = d.textlength(text, font=ft)
+    d.rounded_rectangle((x - 8, y + 36, x + tw + 8, y + 70), 10, fill=pal[1])
+    d.text((x, y), text, font=ft, fill="#1E1E1E")
+    return y + 120
+
+
+def _ig_page(job: Job, sections: list[tuple[str, list[tuple[str, str]]]]):
+    """한 장에 섹션 여러 개. 공간이 모자라면 남은 항목은 생략 (자세한 건 블로그)."""
+    img, d, box, pal = _ig_frame(job)
+    fv, fl = font(42, "Medium"), font(36, "Bold")
+    x0, ylim = box[0] + 70, box[3] - 60
+    maxw = box[2] - box[0] - 140
+    y = box[1] + 110
+    for si, (title, rows) in enumerate(sections):
+        if si:
+            y += 40
+        if y + 150 > ylim:
+            break
+        y = _ig_heading(d, x0, y, title, pal)
+        for label, val in rows:
+            tx = x0 + (180 if label else 40)
+            lines = wrap(d, val, fv, maxw - (tx - x0), 4)
+            if y + len(lines) * 58 > ylim:
+                break
+            if label:
+                d.text((x0, y + 4), label, font=fl, fill=pal[2])
+            else:
+                d.ellipse((x0 + 4, y + 21, x0 + 20, y + 37), fill=pal[1])
+            for ln in lines:
+                d.text((tx, y), ln, font=fv, fill="#2A2A2A"); y += 58
+            y += 22
+    return img, d, pal
+
+
+def ig_slides(job: Job, today: date) -> list[Image.Image]:
+    """표지 + 상세 장(근무 조건 / 지원 자격·전형 / 복리후생 / 리브의 한마디)."""
+    cond = [(k, v) for k, v in (
+        ("급여", job.salary or ""), ("근무", job.work_hours or ""), ("계약", job.contract_period or ""),
+        ("인원", job.headcount or ""), ("근무지", job.address or job.location or ""),
+        ("고용", job.employment_type or "")) if v]
+    cond += [("", s) for s in (job.salary_detail or [])[:3]]
+    qual = [("", q) for q in (job.qualifications or job.requirements or [])[:6]]
+    groups = [
+        [("근무 조건", cond)],
+        [("지원 자격", qual), ("우대 사항", [("", p) for p in (job.preferred or [])[:3]])],
+        [("전형 절차", [("", job.process)] if job.process else []), ("복리후생", [("", b) for b in (job.benefits or [])[:7]])],
+    ]
+    pages = []
+    for g in groups:
+        g = [(t, r) for t, r in g if r]
+        if g:
+            pages.append(_ig_page(job, g))
+    # 마지막 장: 리브의 한마디 + 저장·블로그 안내
+    img, d, box, pal = _ig_frame(job)
+    x0 = box[0] + 70
+    y = _ig_heading(d, x0, box[1] + 110, "리브의 한마디", pal)
+    for ln in wrap(d, job.blog_comment or job.summary or "", font(44, "Medium"), box[2] - box[0] - 140, 9):
+        d.text((x0, y), ln, font=font(44, "Medium"), fill="#2A2A2A"); y += 66
+    cy = box[3] - 260
+    d.rounded_rectangle((x0, cy, box[2] - 70, cy + 190), 36, fill=pal[0])
+    d.text((W / 2, cy + 62), "자세한 조건 · 지원 링크는", font=font(40, "SemiBold"), fill="#555", anchor="mm")
+    d.text((W / 2, cy + 128), "프로필 링크(블로그)에서!", font=font(52, "Title"), fill=pal[2], anchor="mm")
+    _sparkle(d, box[2] - 95, box[1] + 150, 26, pal[1])
+    pages.append((img, d, pal))
+    total = len(pages) + 1
+    out = [ig_post(job, today)]
+    for n, (img, d, pal) in enumerate(pages, start=2):
+        _ig_footer(d, job, pal, n, total)
+        out.append(img)
+    return out

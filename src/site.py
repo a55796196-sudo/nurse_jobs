@@ -98,7 +98,8 @@ def ig_caption(job: Job, today: date) -> str:
     dl = d_day(job.deadline, today).split(" ·")[0]
     when = f"{int(job.deadline[5:7])}/{int(job.deadline[8:10])}" + (f" {job.deadline_time}" if job.deadline_time else "") if job.deadline else "상시"
     role = " ".join(x for x in (job.department, job.job_role) if x)
-    lines = [f"📌 {_org(job)} {role} 채용", ""]
+    import re
+    lines = [f"📌 {re.sub(r'^\(.*?\)\s*', '', post_title(job))}", ""]
     lines.append(f"📍 근무지: {job.location or '공고 확인'}")
     lines.append(f"⏰ 마감: {when}까지 ({dl})")
     if job.salary:
@@ -116,17 +117,17 @@ def ig_caption(job: Job, today: date) -> str:
     return "\n".join(lines)
 
 
-def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], all_open: list[Job] | None = None) -> Path:
+def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None) -> Path:
     day_dir = docs / today.isoformat()
     day_dir.mkdir(parents=True, exist_ok=True)
     title = blog_title(jobs, today)
     ig = []
-    for n, (j, p) in enumerate(zip(picks(jobs), card_paths), start=1):
-        ig.append(f"""<div class="box"><div class="row" style="align-items:flex-start">
-<a href="{p.name}" download><img src="{p.name}" alt="인스타 {n}" style="width:200px;border-radius:8px;border:1px solid var(--line)"></a>
-<div style="flex:1;min-width:0"><b>인스타 {n}. {_e(j.org)}</b>
+    for n, (j, ps) in enumerate(zip(picks(jobs), card_paths), start=1):
+        imgs = "".join(f'<a href="{p.name}" download><img src="{p.name}" alt="인스타 {n}-{k}" style="width:150px;border-radius:8px;border:1px solid var(--line);margin:0 6px 6px 0"></a>' for k, p in enumerate(ps, start=1))
+        ig.append(f"""<div class="box"><div style="display:flex;flex-wrap:wrap">{imgs}</div>
+<div><b>인스타 {n}. {_e(j.org)}</b> <span class="muted">({len(ps)}장 · 순서대로 올리세요)</span>
 <pre id="ic{n}" style="margin:8px 0">{_e(ig_caption(j, today))}</pre>
-<button onclick="copyText('ic{n}',this)">캡션 복사</button></div></div></div>""")
+<button onclick="copyText('ic{n}',this)">캡션 복사</button></div></div>""")
     ig_html = ("<h2>📷 인스타 게시물 (공고 1개 = 1장)</h2>\n" + "".join(ig)) if ig else ""
     posts = []
     for n, j in enumerate(picks(jobs), start=1):
