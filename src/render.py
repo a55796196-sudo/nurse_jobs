@@ -489,39 +489,42 @@ def _ig_page(job: Job, sections: list[tuple[str, list[tuple[str, str]]]]):
 
 
 def ig_slides(job: Job, today: date) -> list[Image.Image]:
-    """인스타 4장: 표지 / 핵심 조건 / 핵심 자격 3개 / 한줄 TIP + 블로그 안내.
-    판단에 필요한 정보만 인스타에, 우대·전형·복지·지원 링크는 블로그로."""
+    """표지 / 근무 조건 / 지원 자격·우대 / (주요 업무) / 한줄 TIP + 블로그에 있는 것.
+    판단에 필요한 정보는 인스타에 충분히, 지원 링크·전형·복리후생은 블로그로."""
     from .blog import _org
     cond = [(k, v) for k, v in (
         ("급여", job.salary or ""), ("근무", job.work_hours or ""), ("계약", job.contract_period or ""),
-        ("근무지", job.location or ""), ("인원", job.headcount or "")) if v]
-    qual = [("", q) for q in (job.requirements or job.qualifications or [])[:3]]
+        ("고용", job.employment_type or ""), ("근무지", job.address or job.location or ""),
+        ("인원", job.headcount or ""), ("학력", job.education or "")) if v]
+    cond += [("", x) for x in (job.salary_detail or [])[:2]]
+    qual = [("", q) for q in (job.qualifications or job.requirements or [])[:5]]
+    pref = [("", q) for q in (job.preferred or [])[:2]]
+    duties = [("", q) for q in (job.duties or [])[:6]]
     pages = []
     if cond:
-        pages.append(_ig_page(job, [("핵심 조건", cond)]))
-    if qual:
-        img, d, pal = _ig_page(job, [("핵심 자격", qual)])
-        more = [x for x, v in (("우대 사항", job.preferred), ("전형", job.process), ("복리후생", job.benefits)) if v]
-        if more:
-            box = (80, 110, W - 80, H - 150)
-            cy = box[3] - 200
-            d.rounded_rectangle((box[0] + 70, cy, box[2] - 70, cy + 120), 30, fill=pal[0])
-            d.text((W / 2, cy + 60), " · ".join(more) + "은 블로그 참고", font=font(36, "SemiBold"), fill=pal[2], anchor="mm")
-        pages.append((img, d, pal))
-    # 마지막 장: 한줄 TIP + 블로그 찾는 법
+        pages.append(_ig_page(job, [("근무 조건", cond)]))
+    if qual or pref:
+        pages.append(_ig_page(job, [(t, r) for t, r in (("지원 자격", qual), ("우대 사항", pref)) if r]))
+    if len(duties) >= 2:
+        pages.append(_ig_page(job, [("주요 업무", duties)]))
+    # 마지막 장: 한줄 TIP + 블로그에 정리된 것
     img, d, box, pal = _ig_frame(job)
     x0 = box[0] + 70
     y = _ig_heading(d, x0, box[1] + 110, "한줄 TIP", pal)
     tip = job.ig_tip or (job.summary or "").split(". ")[0]
-    for ln in wrap(d, tip, font(50, "Bold"), box[2] - box[0] - 140, 6):
+    for ln in wrap(d, tip, font(50, "Bold"), box[2] - box[0] - 140, 5):
         d.text((x0, y), ln, font=font(50, "Bold"), fill="#1E1E1E"); y += 76
+    on_blog = [x for x, v in (("지원 링크", True), ("전형 절차", job.process), ("복리후생", job.benefits),
+                              ("급여 세부", job.salary_detail), ("직무 상세", job.duties)) if v]
+    cy = box[3] - 400
+    d.rounded_rectangle((x0, cy, box[2] - 70, box[3] - 60), 36, fill=pal[0])
+    d.text((x0 + 40, cy + 40), "블로그에 정리해둔 것", font=font(40, "Bold"), fill="#555")
+    fx = font(42, "SemiBold")
+    for i, x in enumerate(on_blog[:4]):
+        tx, ty = x0 + 40 + (i % 2) * 400, cy + 110 + (i // 2) * 64
+        d.text((tx, ty), "✓ " + x, font=fx, fill=pal[2])
     key = _org(job).split()[-1] if _org(job) else ""
-    cy = box[3] - 300
-    d.rounded_rectangle((x0, cy, box[2] - 70, cy + 230), 36, fill=pal[0])
-    d.text((W / 2, cy + 62), "지원 링크 · 전체 공고 정리는", font=font(40, "SemiBold"), fill="#555", anchor="mm")
-    d.text((W / 2, cy + 128), "프로필 링크 → 블로그", font=font(54, "ExtraBold"), fill=pal[2], anchor="mm")
-    if key:
-        d.text((W / 2, cy + 188), f"블로그에서 '{key}' 검색", font=font(36, "SemiBold"), fill="#777", anchor="mm")
+    d.text((x0 + 40, box[3] - 120), "프로필 링크 → 블로그" + (f"에서 '{key}' 검색" if key else ""), font=font(38, "Bold"), fill="#1E1E1E")
     _sparkle(d, box[2] - 95, box[1] + 150, 26, pal[1])
     pages.append((img, d, pal))
     total = len(pages) + 1
