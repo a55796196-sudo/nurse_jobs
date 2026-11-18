@@ -63,6 +63,15 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 9. 결과를 한 줄로 보고: 전체 N건 중 탈임상 M건 (카테고리별 개수), 작업실 페이지 주소
    https://a55796196-sudo.github.io/nurse_jobs/YYYY-MM-DD/
 
+## 사용자가 공고 캡처를 보냈을 때 (직접 올리고 싶은 공고)
+1. 캡처 이미지에서 **보이는 내용만** 읽어 공고 1개를 JSON으로 만든다 (안 보이는 값은 `null`, 추정 금지).
+   필드: `title, org, department, job_role, category, location, deadline(YYYY-MM-DD), deadline_time, employment_type, url`(보이면),
+   위 3번의 블로그 필드 전부(`intro, salary, salary_detail, work_hours, contract_period, headcount, education, qualifications, preferred, process, benefits, duties, requirements, summary, tags, blog_comment, ig_tip`),
+   `extra: {"source_name": "출처 이름(예: 사람인, 기관 홈페이지)"}`. 마감일이 안 보이면 사용자에게 물어본다.
+2. 파일로 저장 후 `python -m src.main manual YYYY-MM-DD 파일.json` (날짜 = 올릴 날, 보통 오늘).
+   그날 inbox가 있으면 거기에 추가되고, 이미 만든 날이면 작업실 페이지를 바로 다시 만든다.
+3. 커밋·푸시 후 작업실 페이지 주소를 알려준다. 사용자가 보낸 공고는 그날 개수(3~5개)와 별도로 추가해도 된다.
+
 ## 주의
 - **사용량 절약**: 탈임상이 아닌 공고는 is_target만 판단하고 나머지 필드는 비워둔다. 7번(카드 눈으로 확인)은 생략한다. 보고는 2~3줄.
 - 이 환경에서는 국내 채용 사이트에 직접 접속이 안 된다. 수집은 GitHub Actions 담당이므로 직접 수집하려 하지 말 것.

@@ -245,6 +245,26 @@ def main() -> None:
         have = {j.key for j in cur}
         write_jobs(inbox_file, cur + [j for j in add if j.key not in have])
         print(f"{len(add)}건 추가 → {inbox_file} (blog_pick=true, intro·급여 등 블로그 필드를 채울 것)")
+    elif cmd == "manual":  # 사용자가 보낸 캡처 공고 추가: python -m src.main manual 날짜 공고.json
+        import hashlib
+        items = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
+        items = items if isinstance(items, list) else [items]
+        new = []
+        for it in items:
+            it.setdefault("source", "manual")
+            it.setdefault("source_id", hashlib.md5((it.get("org", "") + it.get("title", "")).encode()).hexdigest()[:10])
+            it.setdefault("url", "")
+            it.update(is_target=True, blog_pick=True)
+            new.append(Job(**{k: v for k, v in it.items() if k in Job.__dataclass_fields__}))
+        done = DATA / "jobs" / f"{day}.json"
+        target = inbox_file if (inbox_file.exists() or not done.exists()) else done
+        cur = read_jobs(target) if target.exists() else []
+        have = {j.key for j in cur}
+        write_jobs(target, cur + [j for j in new if j.key not in have])
+        print(f"{len(new)}건 추가 → {target}")
+        if target == done:  # 이미 만든 날이면 바로 다시 만들기
+            build(done, day, archive=False)
+            mark_posted(new, day)
     elif cmd == "enrich":  # inbox 공고들의 채용사이트 상세를 다시 읽고, 미수집 공고를 최신 inbox에 추가
         from .sources import sites
         seen = load_seen()

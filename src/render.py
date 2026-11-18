@@ -412,7 +412,7 @@ def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
     label = "접수 마감" + (f" {job.deadline_time}까지" if job.deadline_time else "")
     d.text((x0 + 70, y1 - 225), label, font=font(36, "SemiBold"), fill="#8C8C8C")
     d.text((x0 + 70, y1 - 175), when, font=font(70, "ExtraBold"), fill="#1E1E1E")
-    src = IG_SOURCE.get(job.source, "")
+    src = IG_SOURCE.get(job.source) or str((job.extra or {}).get("source_name") or "")
     d.text((W / 2, h - 65 if sq else H - 85), BRAND + (f"  ·  출처 {src}" if src else ""), font=font(30, "SemiBold"), fill=pt, anchor="mm")
     return img
 
@@ -447,7 +447,7 @@ def _ig_frame(job: Job):
 
 
 def _ig_footer(d, job, pal, page: int, total: int) -> None:
-    src = IG_SOURCE.get(job.source, "")
+    src = IG_SOURCE.get(job.source) or str((job.extra or {}).get("source_name") or "")
     d.text((W / 2, H - 85), BRAND + (f"  ·  출처 {src}" if src else ""), font=font(30, "SemiBold"), fill=pal[2], anchor="mm")
     d.text((W - 110, 160), f"{page}/{total}", font=font(30, "Bold"), fill="#B0B0B0", anchor="ra")
 
