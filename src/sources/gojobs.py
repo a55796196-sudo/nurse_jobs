@@ -95,3 +95,19 @@ def fetch(max_per_kw: int = 15) -> list[Job]:
         b.close()
     print(f"[gojobs] 간호 관련 {len(found)}건")
     return list(found.values())
+
+
+def debug() -> None:
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        b = p.chromium.launch()
+        page = b.new_page()
+        page.goto(LIST, wait_until="networkidle", timeout=60000)
+        page.wait_for_timeout(2000)
+        print("URL0", page.url, "| frames", [f.url for f in page.frames])
+        print("INPUTS", page.eval_on_selector_all("input,select,button", "els => els.map(e => [e.tagName, e.name, e.id, e.type, e.title, e.placeholder, e.offsetParent!==null, (e.innerText||'').slice(0,15)])"))
+        print("FORMS", page.eval_on_selector_all("form", "els => els.map(e => [e.id, e.name, e.action])"))
+        print("BODY0", " ".join(page.inner_text("body").split())[:1500])
+        a = page.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,40), e.getAttribute('href'), e.getAttribute('onclick')])")
+        print("ANCH", [x for x in a if x[0]][:60])
+        b.close()

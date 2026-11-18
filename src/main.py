@@ -229,6 +229,7 @@ def main() -> None:
             print("    본문:", (j.extra.get("site_text") or "")[:600])
     elif cmd == "gojobstest":  # 디버그: 나라일터 수집 시험
         from .sources import gojobs
+        gojobs.debug()
         for j in gojobs.fetch(max_per_kw=5):
             print("\n####", j.key, "|", j.org, "|", j.title, "|", j.location, "|", j.start_date, "~", j.deadline)
             print("    본문:", (j.extra.get("site_text") or "")[:700])
