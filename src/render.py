@@ -354,6 +354,32 @@ def _sparkle(d: ImageDraw.ImageDraw, x: float, y: float, r: float, col: str) -> 
     d.polygon(pts, fill=col)
 
 
+def _title_block(d: ImageDraw.ImageDraw, job: Job, X: int, y: int, maxw: int, big: int, mark: str, pt: str) -> int:
+    """기관(작게) → 직무(크게, 형광펜) → 고용형태·채용(중간, 포인트색). 끝난 y를 돌려줌."""
+    from .blog import _emp, _org
+    role = job.job_role or "간호사"
+    emp = "" if "강사" in role else _emp(job)
+    if emp and emp in role:
+        emp = ""
+    org = " ".join(x for x in (_org(job), job.department or "") if x)
+    fo = font(int(big * 0.45), "Bold")
+    for ln in wrap(d, org, fo, maxw, 2):
+        d.text((X, y), ln, font=fo, fill="#6B6B6B"); y += int(big * 0.6)
+    y += int(big * 0.12)
+    for size in (big, int(big * 0.88), int(big * 0.76), int(big * 0.66)):
+        fr = font(size, "Title")
+        lines = wrap(d, role, fr, maxw, 2)
+        if len(lines) == 1 or size == int(big * 0.66):
+            break
+    for ln in lines:
+        tw = d.textlength(ln, font=fr)
+        d.rounded_rectangle((X - 8, y + size * 0.55, X + tw + 8, y + size * 1.05), 12, fill=mark)
+        d.text((X, y), ln, font=fr, fill="#1E1E1E"); y += int(size * 1.2)
+    fe = font(int(big * 0.5), "ExtraBold")
+    d.text((X, y + 4), " ".join(f"{emp} 채용".split()), font=fe, fill=pt)
+    return y + int(big * 0.7)
+
+
 def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
     """h=1350 인스타 표지, h=1080 블로그 썸네일(정사각형)."""
     sq = h < H
@@ -388,25 +414,8 @@ def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
         d.rounded_rectangle((cx, y0 + 70, cx + tw + 52, y0 + 136), 33, fill=fill)
         d.text((cx + 26, y0 + 103), txt, font=f, fill=col, anchor="lm")
         cx += tw + 52 + 16
-    # 제목: 기관 / 부서 / 직무 단위 줄바꿈, 첫 줄 형광펜
-    maxw = x1 - x0 - 140
-    nmax = 4 if sq else 5
-    for size in ((84, 74, 66, 58) if sq else (94, 84, 74, 66)):
-        ft = font(size, "Title")
-        lines: list[str] = []
-        for sg in segs:
-            lines += wrap(d, sg, ft, maxw, 3)
-        if len(lines) <= nmax:
-            break
-    lines = lines[:nmax]
-    lh = int(size * 1.3)
-    y = y0 + (180 if sq else 200) + (nmax - len(lines)) * lh // 2 - 20
-    for i, ln in enumerate(lines):
-        if i == 0:
-            tw = d.textlength(ln, font=ft)
-            d.rounded_rectangle((x0 + 62, y + size * 0.55, x0 + 78 + tw, y + size * 1.05), 10, fill=mark)
-        d.text((x0 + 70, y), ln, font=ft, fill="#1E1E1E")
-        y += lh
+    # 제목: 기관(작게) / 직무(크게) / 고용형태
+    _title_block(d, job, x0 + 70, y0 + (190 if sq else 220), x1 - x0 - 140, 120 if sq else 140, mark, pt)
     _sparkle(d, x1 - 95, y0 + 210, 26, mark)
     _sparkle(d, x1 - 140, y0 + 260, 14, mark)
     # 마감: 날짜 + D-day 스티커 (3일 이내면 '마감임박' 꼬리표)
@@ -557,23 +566,13 @@ def blog_thumb(job: Job, today: date) -> Image.Image:
     d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
     d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
     X = x0 + 70
-    for size in (120, 108, 96, 86, 78):
-        ft = font(size, "Title")
-        lines: list[str] = []
-        for sg in segs:
-            lines += wrap(d, sg, ft, x1 - X - 60, 3)
-        if len(lines) <= 4:
-            break
-    lines = lines[:4]
-    lh = int(size * 1.25)
-    y = y0 + 90
-    for i, ln in enumerate(lines):
-        if i == 0:
-            tw = d.textlength(ln, font=ft)
-            d.rounded_rectangle((X - 8, y + size * 0.55, X + tw + 8, y + size * 1.05), 12, fill=mark)
-        d.text((X, y), ln, font=ft, fill="#1E1E1E")
-        y += lh
-    _sparkle(d, x1 - 80, y0 + 90, 34, mark)
+    # 제목 묶음 높이를 재서 위쪽 영역 가운데에 배치
+    probe = ImageDraw.Draw(Image.new("RGB", (S, S)))
+    hgt = _title_block(probe, job, X, 0, x1 - X - 60, 165, mark, pt)
+    top = y0 + 70 + max(0, (S - 50 - 230 - (y0 + 70) - hgt) // 2)
+    _title_block(d, job, X, top, x1 - X - 60, 165, mark, pt)
+    _sparkle(d, x1 - 90, y1 - 260, 34, mark)
+    _sparkle(d, x1 - 140, y1 - 220, 18, mark)
     # 하단: 마감일(크게) + 지역
     when = f"~{dl.month}/{dl.day}({WEEK[dl.weekday()]})" if dl else "상시 채용"
     loc = (job.location or "").split(",")[0].replace("특별시", "").replace("광역시", "").strip()
