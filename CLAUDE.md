@@ -5,13 +5,13 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 
 ## 매일 할 일
 1. `git pull origin main`
-2. `ls data/inbox/` — 파일이 없으면 "오늘 새 공고 없음"이라고 보고하고 끝.
+2. `ls data/inbox/` — 파일이 없으면 "오늘 새 공고 없음"이라고 보고하고 끝. (단, **토·일요일이면 아래 '주말 탈임상 가이드'를 먼저 하고** 끝)
 3. 파일마다(오래된 날짜부터) 각 공고 객체에 아래 필드를 채워 **같은 파일에 저장**:
    - `is_target` (bool): 간호사 면허 소지자가 지원 가능한 **탈임상(병원 밖·비임상)** 공고면 true
      - 병동/외래/수술실/응급실/중환자실/요양병원 등 환자 직접 간호 = false
      - 병원 소속이어도 보험심사·QI·연구간호사·CRC처럼 비임상 = true
      - 간호사와 무관(일반사무, 의사·약사 전용 등) = false
-   - `category`: `"공공"`(공기업·공무원·보건소·군무원) / `"학교"`(보건교사) / `"기업"`(산업간호사·제약·보험심사·헬스케어) / `"연구"`(CRC·CRA·연구간호사·연구기관). is_target=false면 `null`
+   - `category`: `"기업"`(산업간호사·보건관리자·제약·보험심사·헬스케어) / `"공공"`(공기업·공무원·보건소·군무원) / `"연구"`(CRC·CRA·연구간호사·연구기관) / `"학교"`(보건교사·학교 보건실) / `"기타"`(미군부대 간호사 등 간호사 면허로 가는 비임상인데 위 4개에 안 맞는 것). is_target=false면 `null`
    - `job_role`: 짧은 직무명 (예: 산업간호사, CRC, 요양직, 보건교사, 보험심사) — 14자 이내
    - `summary`: 지원자 관점 2~3문장 한국어 요약 (카드에 5줄까지 들어감, 120자 안팎)
    - `requirements`: 핵심 자격요건 최대 3개, 각각 짧게 (예: "간호사 면허", "임상경력 2년 이상")
@@ -34,29 +34,58 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
      - `benefits`: 복리후생 — 원문에 있을 때만, 없으면 빈 배열
      - `duties`: 직무내용 (직무기술서·공고문에 있을 때, 최대 10개)
      - `tags`: 이 공고용 태그 단어 4~6개 (기관명채용·직무명 등). 공통 태그는 자동으로 붙음
-     - `blog_comment`: 리브의 한마디 2~3문장. 이 공고만의 포인트(누구에게 맞는지, 눈여겨볼 조건)를 친근한 말투로. 매번 다른 표현으로 쓸 것. 원문에 없는 사실은 쓰지 말 것.
+     - `ig_tip`: 블로그 글과 인스타 마지막 장에 들어가는 '한줄 TIP' (40~70자). 원문에 없는 사실은 쓰지 말 것. (`blog_comment`는 더 이상 쓰지 않음) **간결체**로, ~해요체·감탄사 금지. 누구에게 맞는지 + 눈여겨볼 조건 1개.
+       예: "교대 없는 상근직을 찾는 임상 2년 차 이상에게 추천합니다. 운전면허 필수." / "CRC로 첫 이직을 준비하는 신규~3년 차에게 적합. 정규직 전환형."
    - **기관 채용 사이트 정보**: `extra.site_text`(사이트 본문), `extra.site_ocr`(공고 이미지 글자인식 — 오타 많음), `extra.site_images`(공고 이미지 파일 경로)가 있으면 반드시 참고한다.
      급여·근무시간·복리후생은 대부분 이미지 안에 있다. **사용량 절약**: 먼저 `site_ocr`로 채우고, 급여 숫자가 OCR에서 깨져 확실하지 않을 때만 해당 `site_images` 1~2장을 Read로 연다 (전부 열지 말 것).
      한 공고문에 여러 분야가 있으면 **그 공고 직무에 해당하는 행의 급여만** 쓴다.
    - `source: "sen"`(서울교육청)·`"goe"`(경기교육청) 공고는 보건교사 공고. `extra.site_text`에 근무시간·보수·자격이 있으니 참고. category는 `"학교"`.
      게시판 접수기간과 공고문 속 실제 원서접수 기간이 다를 수 있다 (예: 정규교사 공채는 원서접수가 이미 끝나고 1차 합격자 서류만 받는 경우). **공고문상 원서접수가 끝났으면 제외.**
+   - `source: "gojobs"` 공고는 나라일터 공고(정책브리핑 채용정보에서 수집)로 보건소·치매안심센터·정신건강복지센터·방문건강관리 등 지자체 공고. category는 `"공공"`.
+     주간 상근 기간제·임기제(방문건강관리, 모자보건, 결핵관리, 암검진, 정신건강 등)는 탈임상 true. 국립병원 간호직(병동)·교대근무는 false.
+     세부 내용은 대부분 첨부파일(hwpx/pdf)에 있어 수집되지 않는다 → `extra.site_text`에 있는 정보만 쓰고 급여 등은 없으면 `null`.
    - `source: "site"` 공고는 잡알리오에 없고 기관 채용 사이트에서 찾은 공고(상시공고 등). 분류 기준은 같다. 사이트 본문에 "마감되었습니다"라고 적힌 분야는 제외.
    - 외래 상근직 등 환자 직접 간호는 상근이어도 탈임상이 아니다 (`is_target: false`).
    - **3교대·2교대 등 교대근무 자리는 환자를 직접 보지 않아도 제외** (예: 응급의료상황실 3교대) — `is_target: false`.
    - **원문(`raw_text`, `title`, `extra`)에 없는 정보는 절대 지어내지 말 것** (연봉, 마감일, 경력 등)
    - 공고가 많으면 Python 스크립트로 JSON을 읽고 쓰되, 판단 자체는 네가 직접 한다.
-3-1. **글이 3개 미만이면 대기열에서 채우기**: `python -m src.main backlog YYYY-MM-DD` 로 아직 안 올린 마감 전 공고를 보고(수도권→마감순으로 정렬됨),
+3-1. **글이 5개 미만이면 대기열에서 채우기**: `python -m src.main backlog YYYY-MM-DD` 로 아직 안 올린 마감 전 공고를 보고(수도권→마감순으로 정렬됨),
    부족한 만큼 골라 `python -m src.main backlog-add YYYY-MM-DD KEY1 KEY2` 로 오늘 inbox 에 추가한 뒤, 그 공고들의 블로그 필드(intro·급여 등)를 채운다.
-   목표는 **하루 3개**(좋은 공고가 많은 날만 최대 5개). 대기열에도 없으면 있는 만큼만.
+   목표는 **하루 최소 3개, 많으면 5개** (밀린 공고를 소진하는 동안은 5개를 채우는 쪽으로). 대기열에도 없으면 있는 만큼만.
 4. `python -m src.main check YYYY-MM-DD` → `OK` 나올 때까지 수정
 5. `pip install -q -r requirements.txt` (폰트는 저장소 fonts/ 에 포함되어 있음)
 6. `python -m src.main build YYYY-MM-DD` (inbox 파일은 `data/jobs/`로 자동 이동)
-7. 카드 1~2장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/card-01.jpg`)
+7. 인스타 이미지 1장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/ig-01-1.jpg`)
 8. 커밋 & 푸시:
    `git add -A data docs && git commit -m "분류·콘텐츠 생성 YYYY-MM-DD" && git push origin main`
    (push가 네트워크 오류로 실패하면 2·4·8·16초 간격으로 재시도)
 9. 결과를 한 줄로 보고: 전체 N건 중 탈임상 M건 (카테고리별 개수), 작업실 페이지 주소
    https://a55796196-sudo.github.io/nurse_jobs/YYYY-MM-DD/
+
+## 사용자가 공고 캡처를 보냈을 때 (직접 올리고 싶은 공고)
+1. 캡처 이미지에서 **보이는 내용만** 읽어 공고 1개를 JSON으로 만든다 (안 보이는 값은 `null`, 추정 금지).
+   필드: `title, org, department, job_role, category, location, deadline(YYYY-MM-DD), deadline_time, employment_type, url`(보이면),
+   위 3번의 블로그 필드 전부(`intro, salary, salary_detail, work_hours, contract_period, headcount, education, qualifications, preferred, process, benefits, duties, requirements, summary, tags, ig_tip`),
+   `extra: {"source_name": "출처 이름(예: 사람인, 기관 홈페이지)"}`. 마감일이 안 보이면 사용자에게 물어본다.
+2. 파일로 저장 후 `python -m src.main manual YYYY-MM-DD 파일.json` (날짜 = 올릴 날, 보통 오늘).
+   그날 inbox가 있으면 거기에 추가되고, 이미 만든 날이면 작업실 페이지를 바로 다시 만든다.
+3. 커밋·푸시 후 작업실 페이지 주소를 알려준다. 사용자가 보낸 공고는 그날 개수(3~5개)와 별도로 추가해도 된다.
+
+## 주말 탈임상 가이드 (주 1회, 블로그 글 + 인스타 카드뉴스)
+**토요일**(KST) 세션에서 쓴다. 토요일에 못 썼으면 일요일에 쓴다. 이번 주 토·일 날짜의 `data/guides/YYYY-MM-DD.json`이 이미 있으면 건너뛴다.
+1. `data/guides/topics.md`에서 주제를 고른다: "직접 던진 주제"의 첫 `- [ ]` → 없으면 "기본 주제"의 첫 `- [ ]`. 기본 주제도 다 썼으면 비슷한 결의 새 주제를 정해 추가한다.
+2. `data/guides/YYYY-MM-DD.json` 작성 (형식은 `data/guides/2026-11-21.json` 참고):
+   - `category`: `"자소서/면접"` 또는 `"병원 밖 업무 스킬"` (자격증 글은 병원 밖 업무 스킬)
+   - `title`: 블로그 제목 (검색될 단어를 넣어서). `cover`: 표지·썸네일 1~3줄 (한 줄 10자 이내, 마지막 줄 형광펜). `subtitle`: 표지 한 줄 설명
+   - `intro`: 도입 2~3문장. `sections` 3~7개: `emoji`, `heading`, `paragraphs`, `bullets`, `tip`(선택), `card_title`(카드 제목 16자 이내), `card`(카드 문장 1~4개, 각 42자 이내)
+   - `comment`: 마무리 한마디 (2~3문장). `closing`: 마지막 카드 문장. `links`: 공식 확인처 (확실한 주소만). `tags`: 4~6개. `caption_hook`: 인스타 첫 줄
+   - **정확성**: 시험 일정·응시료·합격률·연봉 숫자·법 조항 번호처럼 바뀌거나 틀리기 쉬운 정보는 쓰지 말고 "공식 사이트에서 확인"으로 안내한다. 확실하지 않은 기관명·제도는 빼거나 일반적으로 표현한다. 이 환경에서는 국내 사이트 확인이 안 되므로 확실히 아는 내용만 쓴다.
+   - 말투는 공고 글과 같은 친근한 존댓말(~요). `data/jobs/`의 최근 공고(자격요건·우대사항)를 근거로 쓰면 좋다.
+3. `python -m src.main guide-check YYYY-MM-DD` → OK 나올 때까지 수정 → `python -m src.main guide-build YYYY-MM-DD`
+4. `topics.md`에서 쓴 주제를 `- [x] 주제 (YYYY-MM-DD)`로 바꾼다.
+5. 커밋에 `data/guides` 포함: `git add -A data docs && git commit -m "탈임상 가이드 YYYY-MM-DD" && git push origin main`
+6. 보고에 한 줄 추가: 가이드 주제 + https://a55796196-sudo.github.io/nurse_jobs/guides/YYYY-MM-DD/
+- 인스타 업로드: Actions → "인스타 업로드" → 날짜 칸에 `guides/YYYY-MM-DD` 입력
 
 ## 주의
 - **사용량 절약**: 탈임상이 아닌 공고는 is_target만 판단하고 나머지 필드는 비워둔다. 7번(카드 눈으로 확인)은 생략한다. 보고는 2~3줄.

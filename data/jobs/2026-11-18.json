@@ -253,7 +253,8 @@
   "contract_period": "2026.11.16~2026.11.27",
   "address": "서울특별시 종로구 낙산길 250 (창신동)",
   "deadline_time": null,
-  "education": "학력무관 (보건교사 자격 필요)"
+  "education": "학력무관 (보건교사 자격 필요)",
+  "ig_tip": "바로 근무 가능한 보건교사 자격 소지자에게 추천합니다. 11/27까지 단기, 전화 접수."
  },
  {
   "source": "sen",
@@ -356,7 +357,8 @@
   "contract_period": "2026.11.24~2026.12.31",
   "address": null,
   "deadline_time": null,
-  "education": null
+  "education": null,
+  "ig_tip": "다음 학기 채용 전 학교 경력을 쌓고 싶은 보건교사 자격 소지자에게 적합. 이메일·방문 접수."
  },
  {
   "source": "site",
@@ -489,7 +491,8 @@
   "contract_period": "임용일로부터 1년",
   "address": null,
   "deadline_time": "17:00",
-  "education": "학력무관"
+  "education": "학력무관",
+  "ig_tip": "교대 없는 상근직으로 공단 직영병원 경력을 쌓고 싶은 임상 2년 차 이상에게 추천합니다. 1년 기간제, 운전면허 필수."
  },
  {
   "source": "site",

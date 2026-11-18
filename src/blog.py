@@ -22,6 +22,7 @@ BLOG_CATEGORY = {
     "학교": "탈임상 채용공고 > 보건교사",
     "기업": "탈임상 채용공고 > 산업간호사·기업",
     "연구": "탈임상 채용공고 > 임상연구",
+    "기타": "탈임상 채용공고 > 기타",
 }
 
 
@@ -209,8 +210,9 @@ def post_html(job: Job, today: date) -> str:
     if steps:
         out.append("<h2>🧭 전형 절차</h2><ol>" + "".join(f"<li>{_e(x)}</li>" for x in steps[:8]) + "</ol><p>&nbsp;</p>")
 
-    if job.blog_comment:
-        out.append(f"<h2>💬 {AUTHOR}의 한마디</h2><p>{_e(job.blog_comment)}</p><p>&nbsp;</p>")
+    tip = job.ig_tip or job.blog_comment
+    if tip:
+        out.append(f"<h2>💡 한줄 TIP</h2><p>{_e(tip)}</p><p>&nbsp;</p>")
 
     out.append("<h2>🔗 지원하기</h2><ul>")
     alio = job.extra.get("alio_url") or (f"https://job.alio.go.kr/recruitview.do?idx={job.source_id}" if job.source == "alio" else "")
@@ -235,7 +237,7 @@ def picks(jobs: list[Job]) -> list[Job]:
 
 # ---------- 매일 '진행 중 공고 전체 정리' 글 (주간 채용 총정리 카테고리) ----------
 SUMMARY_CATEGORY = "주간 채용 총정리"
-CAT_ORDER = [("공공", "🏛️ 공공기관·공기업"), ("학교", "🏫 보건교사"), ("기업", "🏭 산업간호사·기업"), ("연구", "🔬 임상연구")]
+CAT_ORDER = [("기업", "🏭 산업간호사·기업"), ("공공", "🏛️ 공공기관·공기업"), ("연구", "🔬 임상연구"), ("학교", "🏫 보건교사·학교 보건실"), ("기타", "🌏 기타")]
 
 
 def summary_title(jobs: list[Job], today: date) -> str:

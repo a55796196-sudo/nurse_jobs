@@ -14,7 +14,7 @@ from pathlib import Path
 from .models import CATEGORIES, Job
 from .render import d_day
 from .blog import BLOG_CATEGORY, SUMMARY_CATEGORY, _emp, _org, blog_tags, picks, post_html, post_title, summary_html, summary_title
-from .render import summary_thumb, thumb
+from .render import blog_thumb, summary_thumb, thumb
 
 STYLE = """
 :root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb}
@@ -93,31 +93,48 @@ def blog_html(jobs: list[Job], today: date) -> str:
     return "\n".join(out)
 
 
-def ig_caption(jobs: list[Job], today: date, limit: int = 9) -> str:
-    lines = [f"📌 {today.month}/{today.day} 오늘의 탈임상 간호사 공고 {len(jobs)}건", ""]
-    for j in jobs[:limit]:
-        meta = CATEGORIES.get(j.category or "", {"emoji": "•"})
-        lines.append(f"{meta['emoji']} {j.org} | {j.job_role} ({d_day(j.deadline, today).split(' ·')[0]})")
-    if len(jobs) > limit:
-        lines.append(f"…외 {len(jobs) - limit}건")
-    lines += ["", "🔗 전체 공고와 원문 링크는 프로필 링크(블로그)에서 확인하세요!", "💾 저장해두고 지원 마감 놓치지 마세요", ""]
-    tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", "간호사", "간호사취업",
-            "보건교사", "산업간호사", "CRC", "간호직공무원", "공기업채용"]
-    lines.append(" ".join("#" + t for t in tags))
+def ig_caption(job: Job, today: date) -> str:
+    """인스타 게시물 1개(공고 1개)용 캡션."""
+    dl = d_day(job.deadline, today).split(" ·")[0]
+    when = f"{int(job.deadline[5:7])}/{int(job.deadline[8:10])}" + (f" {job.deadline_time}" if job.deadline_time else "") if job.deadline else "상시"
+    role = " ".join(x for x in (job.department, job.job_role) if x)
+    import re
+    lines = [f"📌 {re.sub(r'^\(.*?\)\s*', '', post_title(job))}", ""]
+    lines.append(f"📍 근무지: {job.location or '공고 확인'}")
+    lines.append(f"⏰ 마감: {when}까지 ({dl})")
+    if job.salary:
+        lines.append(f"💰 급여: {job.salary}")
+    if job.work_hours:
+        lines.append(f"🕘 근무: {job.work_hours}")
+    if job.requirements:
+        lines.append("✅ 자격: " + " / ".join(job.requirements[:3]))
+    if job.ig_tip or job.summary:
+        lines += ["", "💡 " + (job.ig_tip or job.summary)]
+    lines += ["", "🔗 우대 사항·전형·지원 링크는 프로필 링크(블로그)에서", "💾 저장해두고 마감 체크", ""]
+    tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", "간호사취업"]
+    tags += [t.replace(" ", "") for t in (job.tags or [])][:6]
+    lines.append(" ".join("#" + t for t in dict.fromkeys(tags)))
     return "\n".join(lines)
 
 
-def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], all_open: list[Job] | None = None) -> Path:
+def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None, post_day: date | None = None) -> Path:
     day_dir = docs / today.isoformat()
     day_dir.mkdir(parents=True, exist_ok=True)
     title = blog_title(jobs, today)
-    imgs = "".join(f'<a href="{p.name}" download><img src="{p.name}" alt="카드 {i}"></a>' for i, p in enumerate(card_paths))
+    ig = []
+    for n, (j, ps) in enumerate(zip(picks(jobs), card_paths), start=1):
+        imgs = "".join(f'<a href="{p.name}" download><img src="{p.name}" alt="인스타 {n}-{k}" style="width:150px;border-radius:8px;border:1px solid var(--line);margin:0 6px 6px 0"></a>' for k, p in enumerate(ps, start=1))
+        ig.append(f"""<div class="box"><div style="display:flex;flex-wrap:wrap">{imgs}</div>
+<div><b>인스타 {n}. {_e(j.org)}</b> <span class="muted">({len(ps)}장 · 순서대로 올리세요)</span>
+<pre id="ic{n}" style="margin:8px 0">{_e(ig_caption(j, post_day or today))}</pre>
+<button onclick="copyText('ic{n}',this)">캡션 복사</button></div></div>""")
+    ig_html = ("<h2>📷 인스타 게시물 (공고 1개 = 1장)</h2>\n" + "".join(ig)) if ig else ""
     posts = []
     for n, j in enumerate(picks(jobs), start=1):
         role = " ".join(x for x in (j.department, j.job_role) if x)
         loc = (j.location or "").replace(",", " · ")
         emp_txt = _emp(j) + (" (상근)" if (j.work_hours or "").startswith("상근") else "")
-        thumb(_org(j), role, j.deadline, j.deadline_time, loc, emp_txt).save(day_dir / f"thumb-{n:02d}.png")
+        blog_thumb(j, post_day or today).save(day_dir / f"thumb-{n:02d}.png")  # 인스타 표지와 같은 색·형광펜
         tags = " ".join("#" + t for t in blog_tags(j))
         posts.append(f"""<div class="box"><div class="row"><b>글 {n}. {_e(j.org)} · {_e(j.job_role)}</b>
 <span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>
@@ -132,7 +149,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], 
 <div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb-{n:02d}.png" download><img src="thumb-{n:02d}.png" alt="썸네일 {n}" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
 <span class="muted">썸네일: 이미지를 눌러 저장 후 글 맨 위에 넣으세요</span></div></div>""")
     open_jobs = all_open if all_open is not None else [j for j in jobs if j.is_target]
-    cats = [("공공", "공공"), ("학교", "학교"), ("기업", "기업"), ("연구", "연구")]
+    cats = [(c, c) for c in CATEGORIES]
     soon_n = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
     summary_thumb(today, len(open_jobs), [(n, sum(1 for j in open_jobs if j.category == c)) for c, n in cats], soon_n).save(day_dir / "thumb-summary.png")
     posts_html = "".join(posts) or '<div class="box"><p class="muted">오늘은 개별 글로 올릴 공고가 없어요.</p></div>'
@@ -156,15 +173,10 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], 
 <div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb-summary.png" download><img src="thumb-summary.png" alt="정리 썸네일" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
 <span class="muted">썸네일: 이미지를 눌러 저장</span></div></div>
 
-<div class="box"><div class="row"><b>📷 인스타 카드뉴스</b><span class="muted">이미지를 눌러 저장</span></div>
-<div class="cards">{imgs}</div></div>
-
-<div class="box"><div class="row"><b>📷 인스타 캡션</b><button onclick="copyText('cap',this)">캡션 복사</button></div>
-<pre id="cap">{_e(ig_caption(jobs, today))}</pre></div>
+{ig_html}
 
 </main><script>{SCRIPT}</script></body></html>"""
     (day_dir / "index.html").write_text(page, encoding="utf-8")
-    (day_dir / "caption.txt").write_text(ig_caption(jobs, today), encoding="utf-8")
     (day_dir / "jobs.json").write_text(json.dumps([j.to_dict() for j in jobs], ensure_ascii=False, indent=1), encoding="utf-8")
     return day_dir
 
@@ -178,10 +190,15 @@ def build_index(docs: Path) -> None:
         except (OSError, ValueError):
             n = "?"
         items.append(f'<li><a href="{d}/">{d}</a> <span class="muted">· {n}건</span></li>')
+    from .guide import index_items
+    guides = index_items(docs)
+    guide_box = f'<h2>💡 탈임상 가이드 (주 1회)</h2><div class="box"><ul class="days">{"".join(guides)}</ul></div>' if guides else ""
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>탈임상 공고 작업실</title>
 <style>{STYLE}</style></head><body><main><h1>탈임상 공고 작업실</h1>
 <p class="muted">매일 아침 자동으로 업데이트됩니다. 날짜를 눌러 블로그 글과 카드뉴스를 확인하세요.</p>
+{guide_box}
+<h2>📅 날짜별 공고</h2>
 <div class="box"><ul class="days">{''.join(items) or '<li>아직 데이터가 없어요</li>'}</ul></div>
 </main></body></html>"""
     (docs / "index.html").write_text(page, encoding="utf-8")

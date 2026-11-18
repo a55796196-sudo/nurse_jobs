@@ -311,21 +311,331 @@ def thumb(org: str, role: str, deadline: str | None, deadline_time: str | None, 
     return img
 
 
-def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: int) -> Image.Image:
-    """'전체 공고 정리' 글 썸네일."""
-    S, P = 1080, 90
-    img = Image.new("RGB", (S, S), BG)
+# ---------- 인스타 게시물 (공고 1개 = 1장, 1080x1350): 파스텔 + 형광펜 ----------
+# (배경, 형광펜·장식, 포인트색, 칩 이름) — 주로 나오는 기업·공공이 분홍·노랑
+IG_PAL = {
+    "기업": ("#FDE1E4", "#FFC2CB", "#E0556D", "기업"),
+    "공공": ("#FFF1C9", "#FFE07A", "#E08A1E", "공공기관"),
+    "연구": ("#DCEEFB", "#B3DAF7", "#2F86C8", "임상연구"),
+    "학교": ("#DDF0E6", "#B8E6CF", "#2E9E6E", "학교 보건실"),
+    "기타": ("#EEEBE4", "#DCD5C8", "#857760", "기타"),
+}
+SUMMARY_PAL = ("#E6E3FA", "#CFC7FF", "#6C5CE0")  # 총정리 글 전용 보라
+IG_SOURCE = {"alio": "잡알리오", "sen": "서울시교육청 교육일자리포털", "goe": "경기도교육청 구인정보",
+             "gojobs": "나라일터", "site": "기관 채용 홈페이지", "saramin": "사람인"}
+
+
+def _sparkle(d: ImageDraw.ImageDraw, x: float, y: float, r: float, col: str) -> None:
+    import math
+    pts = []
+    for i in range(8):
+        a = math.pi / 4 * i - math.pi / 2
+        rr = r if i % 2 == 0 else r * 0.32
+        pts.append((x + rr * math.cos(a), y + rr * math.sin(a)))
+    d.polygon(pts, fill=col)
+
+
+def _title_block(d: ImageDraw.ImageDraw, job: Job, X: int, y: int, maxw: int, big: int, mark: str, pt: str) -> int:
+    """기관·부서·직무는 같은 크기(첫 줄 형광펜), 고용형태·채용만 포인트색으로 구분. 끝난 y를 돌려줌."""
+    from .blog import _emp, _org
+    role = job.job_role or "간호사"
+    emp = "" if "강사" in role else _emp(job)
+    if emp and emp in role:
+        emp = ""
+    segs = [x for x in (_org(job), job.department or "", role) if x]
+    for size in (big, int(big * 0.9), int(big * 0.8), int(big * 0.72), int(big * 0.65)):
+        ft = font(size, "Title")
+        lines: list[str] = []
+        for sg in segs:
+            lines += wrap(d, sg, ft, maxw, 3)
+        if len(lines) <= 4:
+            break
+    lines = lines[:4]
+    for i, ln in enumerate(lines):
+        if i == 0:
+            tw = d.textlength(ln, font=ft)
+            d.rounded_rectangle((X - 8, y + size * 0.55, X + tw + 8, y + size * 1.05), 12, fill=mark)
+        d.text((X, y), ln, font=ft, fill="#1E1E1E"); y += int(size * 1.25)
+    fe = font(int(size * 0.62), "ExtraBold")
+    d.text((X, y + 6), " ".join(f"{emp} 채용".split()), font=fe, fill=pt)
+    return y + int(size * 0.9)
+
+
+def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
+    """h=1350 인스타 표지, h=1080 블로그 썸네일(정사각형)."""
+    sq = h < H
+    from .blog import _emp, _org  # 순환 import 방지
+    bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
+    role = job.job_role or ""
+    emp = "" if "강사" in role else _emp(job)
+    segs = [_org(job), job.department or "", " ".join(f"{role} {emp if emp not in role else ''} 채용".split())]
+    segs = [s for s in segs if s]
+    dl = date.fromisoformat(job.deadline) if job.deadline else None
+    left = (dl - today).days if dl else None
+    when = f"~{dl.month}/{dl.day}({WEEK[dl.weekday()]})" if dl else "상시 채용"
+    dd = ("D-DAY" if left == 0 else f"D-{left}") if dl else "상시"
+    loc = (job.location or "").split(",")[0].replace("특별시", "").replace("광역시", "").strip()
+
+    img = Image.new("RGB", (W, h), bg)
     d = ImageDraw.Draw(img)
-    t = font(100, "Title")
-    d.text((P, 130), f"{today.month}월 {today.day}일", font=t, fill=INK)
-    d.text((P, 258), "탈임상 채용공고", font=t, fill=INK)
-    _marked(d, P, 386, "총정리", t)
-    rows = [("진행 중", f"{total}건", INK), ("분야", "  ".join(f"{k} {v}" for k, v in counts if v) or "-", INK),
-            ("마감 임박", f"3일 이내 {soon}건", RED)]
-    y = S - 130 - 3 * 92
-    d.line([(P, y - 40), (S - P, y - 40)], fill=LINE, width=3)
-    for k, v, c in rows:
-        d.text((P, y + 34), k, font=font(38, "Medium"), fill=MUTED, anchor="lm")
-        d.text((P + 220, y + 34), v, font=font(48, "Bold"), fill=c, anchor="lm")
-        y += 92
+    for i in range(0, W + 80, 120):  # 물방울 무늬
+        for j in range(0, h + 80, 120):
+            if (i // 120 + j // 120) % 2 == 0:
+                d.ellipse((i - 7, j - 7, i + 7, j + 7), fill=mark)
+    x0, y0, x1, y1 = (80, 100, W - 80, h - 130) if sq else (80, 150, W - 80, H - 150)
+    d.rounded_rectangle((x0, y0 + 12, x1, y1 + 12), 56, fill=mark)
+    d.rounded_rectangle((x0, y0, x1, y1), 56, fill="white")
+    # 칩: 카테고리 / 지역
+    f = font(38, "Bold")
+    cx = x0 + 70
+    for txt, fill, col in ((lab, pt, "white"), (loc, bg, pt)):
+        if not txt:
+            continue
+        tw = d.textlength(txt, font=f)
+        d.rounded_rectangle((cx, y0 + 70, cx + tw + 52, y0 + 136), 33, fill=fill)
+        d.text((cx + 26, y0 + 103), txt, font=f, fill=col, anchor="lm")
+        cx += tw + 52 + 16
+    # 제목: 기관(작게) / 직무(크게) / 고용형태
+    _title_block(d, job, x0 + 70, y0 + (190 if sq else 220), x1 - x0 - 140, 84 if sq else 96, mark, pt)
+    _sparkle(d, x1 - 95, y0 + 210, 26, mark)
+    _sparkle(d, x1 - 140, y0 + 260, 14, mark)
+    # 마감: 날짜 + D-day 스티커 (3일 이내면 '마감임박' 꼬리표)
+    scx, scy, r = x1 - 150, y1 - 170, (100 if sq else 112)
+    d.ellipse((scx - r + 8, scy - r + 10, scx + r + 8, scy + r + 10), fill=mark)
+    d.ellipse((scx - r, scy - r, scx + r, scy + r), fill=pt)
+    d.text((scx, scy - 4), dd, font=font(68 if len(dd) <= 4 else 56, "Title"), fill="white", anchor="mm")
+    if left is not None and left <= 3:
+        ft2 = font(30, "ExtraBold")
+        tw = d.textlength("마감임박", font=ft2)
+        d.rounded_rectangle((scx - tw / 2 - 20, scy - r - 30, scx + tw / 2 + 20, scy - r + 18), 24, fill="#1E1E1E")
+        d.text((scx, scy - r - 6), "마감임박", font=ft2, fill="white", anchor="mm")
+    label = "접수 마감" + (f" {job.deadline_time}까지" if job.deadline_time else "")
+    d.text((x0 + 70, y1 - 225), label, font=font(36, "SemiBold"), fill="#8C8C8C")
+    d.text((x0 + 70, y1 - 175), when, font=font(70, "ExtraBold"), fill="#1E1E1E")
+    src = IG_SOURCE.get(job.source) or str((job.extra or {}).get("source_name") or "")
+    d.text((W / 2, h - 65 if sq else H - 85), BRAND + (f"  ·  출처 {src}" if src else ""), font=font(30, "SemiBold"), fill=pt, anchor="mm")
+    return img
+
+
+def ig_posts(jobs: list[Job], today: date, out_dir: Path) -> list[list[Path]]:
+    """블로그 글로 고른 공고마다 인스타 게시물 1개 (ig-01-1.jpg 표지, ig-01-2.jpg … 상세)."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    posts = []
+    for n, j in enumerate(jobs, start=1):
+        paths = []
+        for k, im in enumerate(ig_slides(j, today), start=1):
+            pth = out_dir / f"ig-{n:02d}-{k}.jpg"
+            im.save(pth, quality=93)
+            paths.append(pth)
+        posts.append(paths)
+    return posts
+
+
+# ---------- 인스타 상세 장 (표지 뒤에 넘겨보는 장) ----------
+def _ig_frame(job: Job):
+    bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
+    img = Image.new("RGB", (W, H), bg)
+    d = ImageDraw.Draw(img)
+    for i in range(0, W + 80, 120):
+        for j in range(0, H + 80, 120):
+            if (i // 120 + j // 120) % 2 == 0:
+                d.ellipse((i - 7, j - 7, i + 7, j + 7), fill=mark)
+    box = (80, 110, W - 80, H - 150)
+    d.rounded_rectangle((box[0], box[1] + 12, box[2], box[3] + 12), 56, fill=mark)
+    d.rounded_rectangle(box, 56, fill="white")
+    return img, d, box, (bg, mark, pt)
+
+
+def _ig_footer(d, job, pal, page: int, total: int) -> None:
+    src = IG_SOURCE.get(job.source) or str((job.extra or {}).get("source_name") or "")
+    d.text((W / 2, H - 85), BRAND + (f"  ·  출처 {src}" if src else ""), font=font(30, "SemiBold"), fill=pal[2], anchor="mm")
+    d.text((W - 110, 160), f"{page}/{total}", font=font(30, "Bold"), fill="#B0B0B0", anchor="ra")
+
+
+def _ig_heading(d, x, y, text, pal) -> int:
+    ft = font(64, "Title")
+    tw = d.textlength(text, font=ft)
+    d.rounded_rectangle((x - 8, y + 36, x + tw + 8, y + 70), 10, fill=pal[1])
+    d.text((x, y), text, font=ft, fill="#1E1E1E")
+    return y + 120
+
+
+def _ig_page(job: Job, sections: list[tuple[str, list[tuple[str, str]]]], compact: bool = False):
+    """한 장에 섹션 여러 개. 공간이 모자라면 남은 항목은 생략 (자세한 건 블로그)."""
+    img, d, box, pal = _ig_frame(job)
+    fv, fl = (font(42, "SemiBold"), font(38, "Bold")) if compact else (font(50, "SemiBold"), font(42, "Bold"))
+    LH, GAP = (56, 22) if compact else (68, 40)
+    x0, ylim = box[0] + 70, box[3] - (30 if compact else 60)
+    maxw = box[2] - box[0] - 140
+    y = box[1] + 110
+    for si, (title, rows) in enumerate(sections):
+        if si:
+            y += 12 if compact else 40
+        first = wrap(d, rows[0][1], fv, maxw - (200 if rows[0][0] else 44), 4) if rows else []
+        if y + (100 if compact else 120) + len(first) * LH > ylim:
+            break
+        y = _ig_heading(d, x0, y, title, pal) - (20 if compact else 0)
+        for label, val in rows:
+            tx = x0 + (200 if label else 44)
+            lines = wrap(d, val, fv, maxw - (tx - x0), 4)
+            if y + len(lines) * LH > ylim:
+                break
+            if label:
+                d.text((x0, y + 6), label, font=fl, fill=pal[2])
+            else:
+                d.ellipse((x0 + 4, y + 24, x0 + 24, y + 44), fill=pal[1])
+            for ln in lines:
+                d.text((tx, y), ln, font=fv, fill="#2A2A2A"); y += LH
+            y += GAP
+    return img, d, pal
+
+
+def ig_slides(job: Job, today: date) -> list[Image.Image]:
+    """표지 / 근무 조건 / 지원 자격·우대 / (주요 업무) / 한줄 TIP + 블로그에 있는 것.
+    판단에 필요한 정보는 인스타에 충분히, 지원 링크·전형·복리후생은 블로그로."""
+    from .blog import _org
+    from .blog import _emp
+    emp = _emp(job) or job.employment_type or ""
+    career = str((job.extra or {}).get("recrutSeNm") or "")
+    cond = [(k, v) for k, v in (
+        ("급여", job.salary or ""), ("근무", job.work_hours or ""), ("계약", job.contract_period or ""),
+        ("고용", emp), ("경력", career), ("근무지", job.address or job.location or ""),
+        ("인원", job.headcount or ""), ("학력", job.education or "")) if v]
+    cond += [("", x) for x in (job.salary_detail or [])[:2]]
+    qual = [("", q) for q in (job.qualifications or job.requirements or [])[:5]]
+    pref = [("", q) for q in (job.preferred or [])[:3]]
+    duties = [("", q) for q in (job.duties or [])[:6]]
+    pages = []
+    if len(cond) <= 3:  # 조건이 적으면 자격과 한 장에
+        pages.append(_ig_page(job, [(t, r) for t, r in (("근무 조건", cond), ("지원 자격", qual), ("우대 사항", pref)) if r], compact=True))
+    else:
+        pages.append(_ig_page(job, [("근무 조건", cond)]))
+        if qual or pref:
+            pages.append(_ig_page(job, [(t, r) for t, r in (("지원 자격", qual), ("우대 사항", pref)) if r]))
+    if len(duties) >= 2:
+        pages.append(_ig_page(job, [("주요 업무", duties)]))
+    # 마지막 장: 한줄 TIP + 블로그에 정리된 것
+    img, d, box, pal = _ig_frame(job)
+    x0 = box[0] + 70
+    y = _ig_heading(d, x0, box[1] + 110, "한줄 TIP", pal)
+    tip = job.ig_tip or (job.summary or "").split(". ")[0]
+    for ln in wrap(d, tip, font(50, "Bold"), box[2] - box[0] - 140, 5):
+        d.text((x0, y), ln, font=font(50, "Bold"), fill="#1E1E1E"); y += 76
+    on_blog = [x for x, v in (("지원 링크", True), ("전형 절차", job.process), ("복리후생", job.benefits),
+                              ("급여 세부", job.salary_detail), ("직무 상세", job.duties)) if v][:4]
+    key = _org(job).split()[-1] if _org(job) else ""
+    bx0, bx1, by1 = x0, box[2] - 70, box[3] - 70
+    by0 = by1 - 290
+    d.rounded_rectangle((bx0, by0, bx1, by1), 36, fill=pal[0])
+    cxm = (bx0 + bx1) / 2
+    d.text((cxm, by0 + 58), "블로그에서 더 볼 수 있어요", font=font(36, "SemiBold"), fill="#777", anchor="mm")
+    def fit(txt, size, weight, maxw):
+        while size > 26 and d.textlength(txt, font=font(size, weight)) > maxw:
+            size -= 2
+        return font(size, weight)
+    checks = "   ".join("✓ " + x for x in on_blog)
+    d.text((cxm, by0 + 128), checks, font=fit(checks, 40, "Bold", bx1 - bx0 - 80), fill="#1E1E1E", anchor="mm")
+    d.line((bx0 + 60, by0 + 185, bx1 - 60, by0 + 185), fill=pal[1], width=3)
+    cta = "프로필 링크에서 바로 확인하세요"
+    d.text((cxm, by0 + 238), cta, font=fit(cta, 40, "ExtraBold", bx1 - bx0 - 80), fill=pal[2], anchor="mm")
+    _sparkle(d, box[2] - 95, box[1] + 150, 26, pal[1])
+    pages.append((img, d, pal))
+    total = len(pages) + 1
+    out = [ig_post(job, today)]
+    for n, (img, d, pal) in enumerate(pages, start=2):
+        _ig_footer(d, job, pal, n, total)
+        out.append(img)
+    return out
+
+
+def blog_thumb(job: Job, today: date) -> Image.Image:
+    """블로그 목록용 정사각형 썸네일: 인스타 표지와 같은 색·형광펜, 목록 크기에서도 읽히게 제목을 크게."""
+    from .blog import _emp, _org
+    S = 1080
+    bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
+    role = job.job_role or ""
+    emp = "" if "강사" in role else _emp(job)
+    segs = [s for s in (_org(job), job.department or "", " ".join(f"{role} {emp if emp not in role else ''} 채용".split())) if s]
+    dl = date.fromisoformat(job.deadline) if job.deadline else None
+    img = Image.new("RGB", (S, S), bg)
+    d = ImageDraw.Draw(img)
+    x0, y0, x1, y1 = 50, 50, S - 50, S - 50
+    d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
+    d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
+    X = x0 + 70
+    # 제목 묶음 높이를 재서 위쪽 영역 가운데에 배치
+    probe = ImageDraw.Draw(Image.new("RGB", (S, S)))
+    avail = (y1 - 190 - 30) - (y0 + 160)
+    for big in (112, 100, 90, 80, 72):
+        hgt = _title_block(probe, job, X, 0, x1 - X - 60, big, mark, pt)
+        if hgt <= avail:
+            break
+    top = y0 + 160 + max(0, (avail - hgt) // 2)
+    _title_block(d, job, X, top, x1 - X - 60, big, mark, pt)
+    _sparkle(d, x1 - 90, y0 + 90, 30, mark)
+    fc = font(44, "Bold")
+    cw = d.textlength(lab, font=fc)
+    d.rounded_rectangle((X - 6, y0 + 60, X + cw + 46, y0 + 132), 36, fill=pt)
+    d.text((X + 20, y0 + 96), lab, font=fc, fill="white", anchor="lm")
+    # 하단: 마감일(크게) + 지역
+    when = f"~{dl.month}/{dl.day}({WEEK[dl.weekday()]})" if dl else "상시 채용"
+    loc = (job.location or "").split(",")[0].replace("특별시", "").replace("광역시", "").strip()
+    fb = font(76, "ExtraBold")
+    tw = d.textlength(when, font=fb)
+    by = y1 - 190
+    d.rounded_rectangle((X - 10, by, X + tw + 50, by + 120), 60, fill=pt)
+    d.text((X + 20, by + 60), when + " 마감", font=fb, fill="white", anchor="lm") if False else d.text((X + 20, by + 60), when, font=fb, fill="white", anchor="lm")
+    left = (dl - today).days if dl else None
+    if left is not None:
+        dd = "D-DAY" if left == 0 else f"D-{left}"
+        d.text((x1 - 70, by + 60), dd, font=font(96, "Title"), fill="#E5383B" if left <= 3 else pt, anchor="rm")
+    if loc:
+        lw = d.textlength(loc, font=font(44, "Bold"))
+        lx = X + d.textlength(lab, font=font(44, "Bold")) + 66
+        d.rounded_rectangle((lx, y0 + 60, lx + lw + 52, y0 + 132), 36, fill=bg)
+        d.text((lx + 26, y0 + 96), loc, font=font(44, "Bold"), fill=pt, anchor="lm")
+    return img
+
+
+def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: int) -> Image.Image:
+    """'진행 중 공고 전체 정리' 글 썸네일: 보라색(총정리 전용) + 분야별 색 칩."""
+    S = 1080
+    bg, mark, pt = SUMMARY_PAL
+    img = Image.new("RGB", (S, S), bg)
+    d = ImageDraw.Draw(img)
+    x0, y0, x1, y1 = 50, 50, S - 50, S - 50
+    d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
+    d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
+    X = x0 + 70
+    fc = font(44, "Bold")
+    lab = f"{today.month}/{today.day} 기준"
+    cw = d.textlength(lab, font=fc)
+    d.rounded_rectangle((X - 6, y0 + 60, X + cw + 46, y0 + 132), 36, fill=pt)
+    d.text((X + 20, y0 + 96), lab, font=fc, fill="white", anchor="lm")
+    _sparkle(d, x1 - 90, y0 + 90, 30, mark)
+    t = font(112, "Title")
+    y = y0 + 190
+    for i, ln in enumerate(("탈임상 간호사", "채용공고 총정리")):
+        if i == 1:
+            tw = d.textlength(ln, font=t)
+            d.rounded_rectangle((X - 8, y + 112 * 0.55, X + tw + 8, y + 112 * 1.05), 12, fill=mark)
+        d.text((X, y), ln, font=t, fill="#1E1E1E"); y += 140
+    d.text((X, y + 10), f"진행 중 {total}건", font=font(70, "ExtraBold"), fill=pt)
+    # 분야별 칩 (카테고리 색)
+    names = {"기업": "기업", "공공": "공공", "연구": "연구", "학교": "학교", "기타": "기타"}
+    cx, cy = X, y1 - 250
+    fchip = font(42, "Bold")
+    for k, v in counts:
+        if not v:
+            continue
+        c = IG_PAL.get(k, IG_PAL["기타"])
+        txt = f"{names.get(k, k)} {v}"
+        w = d.textlength(txt, font=fchip) + 52
+        if cx + w > x1 - 60:
+            break
+        d.rounded_rectangle((cx, cy, cx + w, cy + 76), 38, fill=c[0])
+        d.text((cx + 26, cy + 38), txt, font=fchip, fill=c[2], anchor="lm")
+        cx += w + 14
+    if soon:
+        d.text((X, y1 - 120), f"3일 안에 마감 {soon}건", font=font(52, "ExtraBold"), fill="#E5383B", anchor="lm")
     return img
