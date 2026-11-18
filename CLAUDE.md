@@ -85,7 +85,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 4. `topics.md`에서 쓴 주제를 `- [x] 주제 (YYYY-MM-DD)`로 바꾼다.
 5. 커밋에 `data/guides` 포함: `git add -A data docs && git commit -m "탈임상 가이드 YYYY-MM-DD" && git push origin main`
 6. 보고에 한 줄 추가: 가이드 주제 + https://a55796196-sudo.github.io/nurse_jobs/guides/YYYY-MM-DD/
-- 인스타 업로드: Actions → "인스타 업로드" → 날짜 칸에 `guides/YYYY-MM-DD` 입력
+- 인스타 업로드: 예약 업로드(IG_AUTO_POST=true)면 토요일 이후 자동으로 올라감. 수동이면 Actions → "인스타 업로드" → target 칸에 `guides/YYYY-MM-DD` 입력
 
 ## 주의
 - **사용량 절약**: 탈임상이 아닌 공고는 is_target만 판단하고 나머지 필드는 비워둔다. 7번(카드 눈으로 확인)은 생략한다. 보고는 2~3줄.

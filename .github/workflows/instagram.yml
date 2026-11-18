@@ -1,31 +1,61 @@
 name: 인스타 업로드
 
-# 1) Actions 탭에서 수동 실행 (승인 버튼)
-# 2) 저장소 변수 IG_AUTO_POST=true 이면 새 카드뉴스가 올라올 때 자동 실행
+# 1) 예약 업로드: 저장소 변수 IG_AUTO_POST=true 이면 하루 4번(KST 08·12·18·21시 무렵) 아직 안 올린 게시물을 1개씩 올림
+# 2) 수동 실행: Actions 탭 → Run workflow
+#      비우면 다음 게시물 1개 / YYYY-MM-DD 면 그날 전부 / guides/YYYY-MM-DD 면 가이드 카드뉴스
+# 올린 기록은 data/ig_posted.json 에 저장되어 같은 게시물을 두 번 올리지 않음
 on:
-  push:
-    branches: [main]
-    paths: ["docs/20*/card-00.jpg"]
+  schedule:
+    - cron: "7 23 * * *"   # 08:07 KST
+    - cron: "7 3 * * *"    # 12:07 KST
+    - cron: "7 9 * * *"    # 18:07 KST
+    - cron: "7 12 * * *"   # 21:07 KST
   workflow_dispatch:
     inputs:
-      day:
-        description: "업로드할 날짜 (YYYY-MM-DD, 비우면 오늘)"
+      target:
+        description: "비우면 다음 1개 / YYYY-MM-DD / guides/YYYY-MM-DD"
         required: false
+      dry_run:
+        description: "시험 실행 (실제로 올리지 않고 목록·캡션만 출력)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram
+  cancel-in-progress: false
 
 jobs:
   post:
     if: github.event_name == 'workflow_dispatch' || vars.IG_AUTO_POST == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install requests
-      - env:
+      - run: pip install -q -r requirements.txt
+      - name: 업로드
+        env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           PAGES_BASE_URL: ${{ vars.PAGES_BASE_URL }}
-          DAY_INPUT: ${{ inputs.day }}
-        run: python -m src.instagram "${DAY_INPUT:-$(TZ=Asia/Seoul date +%F)}"
+          TARGET: ${{ inputs.target }}
+          DRY: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: python -m src.instagram "${TARGET:-next}" $DRY
+      - name: 올린 기록 저장
+        if: always()
+        run: |
+          git config user.name "nurse-jobs-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/ig_posted.json 2>/dev/null || exit 0
+          git diff --cached --quiet && exit 0
+          git commit -m "인스타 업로드 기록 $(TZ=Asia/Seoul date '+%F %H:%M')"
+          for i in 1 2 3 4; do
+            git pull --rebase -q origin main && git push && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

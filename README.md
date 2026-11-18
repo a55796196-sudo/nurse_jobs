@@ -40,16 +40,30 @@ Settings → **Pages** → Source: *Deploy from a branch* → Branch: `main`, �
 **Actions** 탭 → "매일 탈임상 공고 수집" → **Run workflow**
 
 ### 4) 인스타 자동 업로드 (선택)
-1. 인스타 앱 → 설정 → 계정 유형 및 도구 → **프로페셔널 계정으로 전환**(비즈니스)
-2. 페이스북 페이지를 만들고 인스타 계정과 연결
-3. developers.facebook.com 에서 앱 생성 → Instagram Graph API 추가 → `instagram_content_publish` 권한으로 **장기 액세스 토큰** 발급
-4. `IG_USER_ID`, `IG_ACCESS_TOKEN` 를 Secrets에 등록
-5. 업로드: Actions → "인스타 업로드 (수동 승인)" → Run workflow (GitHub 모바일 앱에서도 가능)
+**준비 (한 번만, 약 20분)** — 페이스북 페이지 없이 "인스타 로그인" 방식으로 합니다.
+1. 인스타 앱 → 설정 → 계정 유형 및 도구 → **프로페셔널 계정으로 전환** (크리에이터 또는 비즈니스)
+2. developers.facebook.com → 로그인 → **앱 만들기** → 사용 사례에서 **"Instagram에서 메시지와 콘텐츠 관리"** 선택
+3. 앱 대시보드 → Instagram → **"Instagram 로그인으로 API 설정"** → **계정 추가**에서 내 인스타 계정 로그인
+   - 권한: `instagram_business_basic`, `instagram_business_content_publish`, `instagram_business_manage_insights`(나중에 계정 분석용)
+4. 같은 화면의 **토큰 생성** → 나온 토큰(IG로 시작)과 **Instagram 계정 ID** 복사
+5. GitHub 저장소 → Settings → Secrets and variables → Actions
+   - Secrets: `IG_ACCESS_TOKEN` = 토큰, `IG_USER_ID` = 계정 ID
+   - Variables: `PAGES_BASE_URL` = `https://a55796196-sudo.github.io/nurse_jobs`
+6. **시험 실행**: Actions → "인스타 업로드" → Run workflow → `dry_run` 체크 → 올라갈 사진·캡션이 로그에 나오면 OK
+7. 실제 1개 올려보기: 같은 화면에서 `dry_run` 체크 없이 Run workflow → 인스타에서 확인
+8. 문제없으면 Variables에 `IG_AUTO_POST` = `true` → **매일 08·12·18·21시 무렵 1개씩 자동 업로드**
+
+**알아둘 것**
+- 공고 1개 = 게시물 1개 (표지 + 상세 장). 오늘 것부터, 어제 남은 것 순서로 올리고 마감 지난 공고·3일 지난 게시물은 건너뜀
+- 토요일 가이드 카드뉴스도 같은 대기열에 들어가 자동으로 올라감
+- 올린 기록은 `data/ig_posted.json` (같은 게시물을 두 번 올리지 않음)
+- 토큰은 **60일마다 만료** → 4번에서 다시 발급해 `IG_ACCESS_TOKEN`만 바꿔 넣기
+- 수동 업로드: Run workflow의 target 칸에 `YYYY-MM-DD`(그날 전부) 또는 `guides/YYYY-MM-DD`
 
 ## 매일 할 일 (2분)
 1. 작업실 페이지에서 오늘 날짜 클릭
 2. **제목 복사 → 본문 복사** → 네이버 블로그에 붙여넣기 → 발행
-3. 카드뉴스 확인 후 인스타 업로드 버튼 (또는 자동)
+3. 인스타는 자동 업로드 (IG_AUTO_POST=true일 때) — 아니면 Actions에서 Run workflow
 
 ## 로컬에서 테스트
 ```bash
