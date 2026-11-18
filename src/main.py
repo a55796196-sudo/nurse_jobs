@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .models import CATEGORIES, Job
-from .render import render_all
+from .render import ig_posts
 from .site import build_day, build_index
 from .sources import alio, saramin
 
@@ -178,9 +178,10 @@ def build(path: Path, day: str, archive: bool = True) -> None:
     d = date.fromisoformat(day)
     if targets:
         out = DOCS / day
-        cards = render_all(targets, d, out)
+        from .blog import picks
+        cards = ig_posts(picks(targets), d, out)
         build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets))
-        print(f"완료: docs/{day}/index.html (카드 {len(cards)}장)")
+        print(f"완료: docs/{day}/index.html (인스타 {len(cards)}장)")
     else:
         print("오늘은 탈임상 공고가 없어 페이지를 만들지 않습니다.")
     build_index(DOCS)

@@ -93,17 +93,26 @@ def blog_html(jobs: list[Job], today: date) -> str:
     return "\n".join(out)
 
 
-def ig_caption(jobs: list[Job], today: date, limit: int = 9) -> str:
-    lines = [f"📌 {today.month}/{today.day} 오늘의 탈임상 간호사 공고 {len(jobs)}건", ""]
-    for j in jobs[:limit]:
-        meta = CATEGORIES.get(j.category or "", {"emoji": "•"})
-        lines.append(f"{meta['emoji']} {j.org} | {j.job_role} ({d_day(j.deadline, today).split(' ·')[0]})")
-    if len(jobs) > limit:
-        lines.append(f"…외 {len(jobs) - limit}건")
-    lines += ["", "🔗 전체 공고와 원문 링크는 프로필 링크(블로그)에서 확인하세요!", "💾 저장해두고 지원 마감 놓치지 마세요", ""]
-    tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", "간호사", "간호사취업",
-            "보건교사", "산업간호사", "CRC", "간호직공무원", "공기업채용"]
-    lines.append(" ".join("#" + t for t in tags))
+def ig_caption(job: Job, today: date) -> str:
+    """인스타 게시물 1개(공고 1개)용 캡션."""
+    dl = d_day(job.deadline, today).split(" ·")[0]
+    when = f"{int(job.deadline[5:7])}/{int(job.deadline[8:10])}" + (f" {job.deadline_time}" if job.deadline_time else "") if job.deadline else "상시"
+    role = " ".join(x for x in (job.department, job.job_role) if x)
+    lines = [f"📌 {_org(job)} {role} 채용", ""]
+    lines.append(f"📍 근무지: {job.location or '공고 확인'}")
+    lines.append(f"⏰ 마감: {when}까지 ({dl})")
+    if job.salary:
+        lines.append(f"💰 급여: {job.salary}")
+    if job.work_hours:
+        lines.append(f"🕘 근무: {job.work_hours}")
+    if job.requirements:
+        lines.append("✅ 자격: " + " / ".join(job.requirements[:3]))
+    if job.summary:
+        lines += ["", job.summary]
+    lines += ["", "🔗 자세한 조건과 지원 링크는 프로필 링크(블로그)에서 확인하세요!", "💾 저장해두고 마감 놓치지 마세요", ""]
+    tags = ["탈임상", "탈임상간호사", "간호사채용", "간호사이직", "간호사취업"]
+    tags += [t.replace(" ", "") for t in (job.tags or [])][:6]
+    lines.append(" ".join("#" + t for t in dict.fromkeys(tags)))
     return "\n".join(lines)
 
 
@@ -111,7 +120,14 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], 
     day_dir = docs / today.isoformat()
     day_dir.mkdir(parents=True, exist_ok=True)
     title = blog_title(jobs, today)
-    imgs = "".join(f'<a href="{p.name}" download><img src="{p.name}" alt="카드 {i}"></a>' for i, p in enumerate(card_paths))
+    ig = []
+    for n, (j, p) in enumerate(zip(picks(jobs), card_paths), start=1):
+        ig.append(f"""<div class="box"><div class="row" style="align-items:flex-start">
+<a href="{p.name}" download><img src="{p.name}" alt="인스타 {n}" style="width:200px;border-radius:8px;border:1px solid var(--line)"></a>
+<div style="flex:1;min-width:0"><b>인스타 {n}. {_e(j.org)}</b>
+<pre id="ic{n}" style="margin:8px 0">{_e(ig_caption(j, today))}</pre>
+<button onclick="copyText('ic{n}',this)">캡션 복사</button></div></div></div>""")
+    ig_html = ("<h2>📷 인스타 게시물 (공고 1개 = 1장)</h2>\n" + "".join(ig)) if ig else ""
     posts = []
     for n, j in enumerate(picks(jobs), start=1):
         role = " ".join(x for x in (j.department, j.job_role) if x)
@@ -132,7 +148,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], 
 <div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb-{n:02d}.png" download><img src="thumb-{n:02d}.png" alt="썸네일 {n}" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
 <span class="muted">썸네일: 이미지를 눌러 저장 후 글 맨 위에 넣으세요</span></div></div>""")
     open_jobs = all_open if all_open is not None else [j for j in jobs if j.is_target]
-    cats = [("공공", "공공"), ("학교", "학교"), ("기업", "기업"), ("연구", "연구")]
+    cats = [(c, c) for c in CATEGORIES]
     soon_n = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
     summary_thumb(today, len(open_jobs), [(n, sum(1 for j in open_jobs if j.category == c)) for c, n in cats], soon_n).save(day_dir / "thumb-summary.png")
     posts_html = "".join(posts) or '<div class="box"><p class="muted">오늘은 개별 글로 올릴 공고가 없어요.</p></div>'
@@ -156,15 +172,10 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[Path], 
 <div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb-summary.png" download><img src="thumb-summary.png" alt="정리 썸네일" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
 <span class="muted">썸네일: 이미지를 눌러 저장</span></div></div>
 
-<div class="box"><div class="row"><b>📷 인스타 카드뉴스</b><span class="muted">이미지를 눌러 저장</span></div>
-<div class="cards">{imgs}</div></div>
-
-<div class="box"><div class="row"><b>📷 인스타 캡션</b><button onclick="copyText('cap',this)">캡션 복사</button></div>
-<pre id="cap">{_e(ig_caption(jobs, today))}</pre></div>
+{ig_html}
 
 </main><script>{SCRIPT}</script></body></html>"""
     (day_dir / "index.html").write_text(page, encoding="utf-8")
-    (day_dir / "caption.txt").write_text(ig_caption(jobs, today), encoding="utf-8")
     (day_dir / "jobs.json").write_text(json.dumps([j.to_dict() for j in jobs], ensure_ascii=False, indent=1), encoding="utf-8")
     return day_dir
 

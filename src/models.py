@@ -4,12 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from typing import Optional
 
-# 탈임상 카테고리 4개 (인스타 가독성을 위해 고정)
+# 탈임상 카테고리 (순서 = 화면·정리글에 나오는 순서, 주된 관심사가 위)
 CATEGORIES = {
-    "공공": {"emoji": "🏛️", "color": "#2563EB", "desc": "공기업·공무원·보건소·군무원"},
-    "학교": {"emoji": "🏫", "color": "#16A34A", "desc": "보건교사"},
-    "기업": {"emoji": "🏭", "color": "#EA580C", "desc": "산업간호사·제약·보험심사·헬스케어"},
-    "연구": {"emoji": "🔬", "color": "#9333EA", "desc": "CRC·CRA·연구간호사·연구기관"},
+    "기업": {"emoji": "🏭", "color": "#E0556D", "desc": "산업간호사·보건관리자·제약·보험심사·헬스케어"},
+    "공공": {"emoji": "🏛️", "color": "#E08A1E", "desc": "공기업·공무원·보건소·군무원"},
+    "연구": {"emoji": "🔬", "color": "#2F86C8", "desc": "CRC·CRA·연구간호사·연구기관"},
+    "학교": {"emoji": "🏫", "color": "#2E9E6E", "desc": "보건교사·학교 보건실"},
+    "기타": {"emoji": "🌏", "color": "#6C5CE0", "desc": "미군부대 등 위 4개에 안 맞는 비임상"},
 }
 
 

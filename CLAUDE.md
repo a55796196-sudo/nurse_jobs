@@ -11,7 +11,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
      - 병동/외래/수술실/응급실/중환자실/요양병원 등 환자 직접 간호 = false
      - 병원 소속이어도 보험심사·QI·연구간호사·CRC처럼 비임상 = true
      - 간호사와 무관(일반사무, 의사·약사 전용 등) = false
-   - `category`: `"공공"`(공기업·공무원·보건소·군무원) / `"학교"`(보건교사) / `"기업"`(산업간호사·제약·보험심사·헬스케어) / `"연구"`(CRC·CRA·연구간호사·연구기관). is_target=false면 `null`
+   - `category`: `"기업"`(산업간호사·보건관리자·제약·보험심사·헬스케어) / `"공공"`(공기업·공무원·보건소·군무원) / `"연구"`(CRC·CRA·연구간호사·연구기관) / `"학교"`(보건교사·학교 보건실) / `"기타"`(미군부대 간호사 등 간호사 면허로 가는 비임상인데 위 4개에 안 맞는 것). is_target=false면 `null`
    - `job_role`: 짧은 직무명 (예: 산업간호사, CRC, 요양직, 보건교사, 보험심사) — 14자 이내
    - `summary`: 지원자 관점 2~3문장 한국어 요약 (카드에 5줄까지 들어감, 120자 안팎)
    - `requirements`: 핵심 자격요건 최대 3개, 각각 짧게 (예: "간호사 면허", "임상경력 2년 이상")
@@ -54,7 +54,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 4. `python -m src.main check YYYY-MM-DD` → `OK` 나올 때까지 수정
 5. `pip install -q -r requirements.txt` (폰트는 저장소 fonts/ 에 포함되어 있음)
 6. `python -m src.main build YYYY-MM-DD` (inbox 파일은 `data/jobs/`로 자동 이동)
-7. 카드 1~2장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/card-01.jpg`)
+7. 인스타 이미지 1장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/ig-01.jpg`)
 8. 커밋 & 푸시:
    `git add -A data docs && git commit -m "분류·콘텐츠 생성 YYYY-MM-DD" && git push origin main`
    (push가 네트워크 오류로 실패하면 2·4·8·16초 간격으로 재시도)
