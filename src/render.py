@@ -536,7 +536,7 @@ def ig_slides(job: Job, today: date) -> list[Image.Image]:
     checks = "   ".join("✓ " + x for x in on_blog)
     d.text((cxm, by0 + 128), checks, font=fit(checks, 40, "Bold", bx1 - bx0 - 80), fill="#1E1E1E", anchor="mm")
     d.line((bx0 + 60, by0 + 185, bx1 - 60, by0 + 185), fill=pal[1], width=3)
-    cta = "프로필 링크 → 블로그" + (f"에서 '{key}' 검색" if key else "")
+    cta = "프로필 링크에서 바로 확인하세요"
     d.text((cxm, by0 + 238), cta, font=fit(cta, 40, "ExtraBold", bx1 - bx0 - 80), fill=pal[2], anchor="mm")
     _sparkle(d, box[2] - 95, box[1] + 150, 26, pal[1])
     pages.append((img, d, pal))
