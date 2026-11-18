@@ -34,8 +34,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
      - `benefits`: 복리후생 — 원문에 있을 때만, 없으면 빈 배열
      - `duties`: 직무내용 (직무기술서·공고문에 있을 때, 최대 10개)
      - `tags`: 이 공고용 태그 단어 4~6개 (기관명채용·직무명 등). 공통 태그는 자동으로 붙음
-     - `blog_comment`: 리브의 한마디 2~3문장. 이 공고만의 포인트(누구에게 맞는지, 눈여겨볼 조건)를 친근한 말투로. 매번 다른 표현으로 쓸 것. 원문에 없는 사실은 쓰지 말 것.
-     - `ig_tip`: 인스타 마지막 장 '한줄 TIP' (40~70자). **간결체**로, ~해요체·감탄사 금지. 누구에게 맞는지 + 눈여겨볼 조건 1개.
+     - `ig_tip`: 블로그 글과 인스타 마지막 장에 들어가는 '한줄 TIP' (40~70자). 원문에 없는 사실은 쓰지 말 것. (`blog_comment`는 더 이상 쓰지 않음) **간결체**로, ~해요체·감탄사 금지. 누구에게 맞는지 + 눈여겨볼 조건 1개.
        예: "교대 없는 상근직을 찾는 임상 2년 차 이상에게 추천합니다. 운전면허 필수." / "CRC로 첫 이직을 준비하는 신규~3년 차에게 적합. 정규직 전환형."
    - **기관 채용 사이트 정보**: `extra.site_text`(사이트 본문), `extra.site_ocr`(공고 이미지 글자인식 — 오타 많음), `extra.site_images`(공고 이미지 파일 경로)가 있으면 반드시 참고한다.
      급여·근무시간·복리후생은 대부분 이미지 안에 있다. **사용량 절약**: 먼저 `site_ocr`로 채우고, 급여 숫자가 OCR에서 깨져 확실하지 않을 때만 해당 `site_images` 1~2장을 Read로 연다 (전부 열지 말 것).
@@ -66,7 +65,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 ## 사용자가 공고 캡처를 보냈을 때 (직접 올리고 싶은 공고)
 1. 캡처 이미지에서 **보이는 내용만** 읽어 공고 1개를 JSON으로 만든다 (안 보이는 값은 `null`, 추정 금지).
    필드: `title, org, department, job_role, category, location, deadline(YYYY-MM-DD), deadline_time, employment_type, url`(보이면),
-   위 3번의 블로그 필드 전부(`intro, salary, salary_detail, work_hours, contract_period, headcount, education, qualifications, preferred, process, benefits, duties, requirements, summary, tags, blog_comment, ig_tip`),
+   위 3번의 블로그 필드 전부(`intro, salary, salary_detail, work_hours, contract_period, headcount, education, qualifications, preferred, process, benefits, duties, requirements, summary, tags, ig_tip`),
    `extra: {"source_name": "출처 이름(예: 사람인, 기관 홈페이지)"}`. 마감일이 안 보이면 사용자에게 물어본다.
 2. 파일로 저장 후 `python -m src.main manual YYYY-MM-DD 파일.json` (날짜 = 올릴 날, 보통 오늘).
    그날 inbox가 있으면 거기에 추가되고, 이미 만든 날이면 작업실 페이지를 바로 다시 만든다.

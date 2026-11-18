@@ -117,7 +117,7 @@ def ig_caption(job: Job, today: date) -> str:
     return "\n".join(lines)
 
 
-def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None) -> Path:
+def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None, post_day: date | None = None) -> Path:
     day_dir = docs / today.isoformat()
     day_dir.mkdir(parents=True, exist_ok=True)
     title = blog_title(jobs, today)
@@ -126,7 +126,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
         imgs = "".join(f'<a href="{p.name}" download><img src="{p.name}" alt="인스타 {n}-{k}" style="width:150px;border-radius:8px;border:1px solid var(--line);margin:0 6px 6px 0"></a>' for k, p in enumerate(ps, start=1))
         ig.append(f"""<div class="box"><div style="display:flex;flex-wrap:wrap">{imgs}</div>
 <div><b>인스타 {n}. {_e(j.org)}</b> <span class="muted">({len(ps)}장 · 순서대로 올리세요)</span>
-<pre id="ic{n}" style="margin:8px 0">{_e(ig_caption(j, today))}</pre>
+<pre id="ic{n}" style="margin:8px 0">{_e(ig_caption(j, post_day or today))}</pre>
 <button onclick="copyText('ic{n}',this)">캡션 복사</button></div></div>""")
     ig_html = ("<h2>📷 인스타 게시물 (공고 1개 = 1장)</h2>\n" + "".join(ig)) if ig else ""
     posts = []
@@ -134,7 +134,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
         role = " ".join(x for x in (j.department, j.job_role) if x)
         loc = (j.location or "").replace(",", " · ")
         emp_txt = _emp(j) + (" (상근)" if (j.work_hours or "").startswith("상근") else "")
-        blog_thumb(j, today).save(day_dir / f"thumb-{n:02d}.png")  # 인스타 표지와 같은 색·형광펜
+        blog_thumb(j, post_day or today).save(day_dir / f"thumb-{n:02d}.png")  # 인스타 표지와 같은 색·형광펜
         tags = " ".join("#" + t for t in blog_tags(j))
         posts.append(f"""<div class="box"><div class="row"><b>글 {n}. {_e(j.org)} · {_e(j.job_role)}</b>
 <span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>

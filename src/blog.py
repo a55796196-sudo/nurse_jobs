@@ -210,8 +210,9 @@ def post_html(job: Job, today: date) -> str:
     if steps:
         out.append("<h2>🧭 전형 절차</h2><ol>" + "".join(f"<li>{_e(x)}</li>" for x in steps[:8]) + "</ol><p>&nbsp;</p>")
 
-    if job.blog_comment:
-        out.append(f"<h2>💬 {AUTHOR}의 한마디</h2><p>{_e(job.blog_comment)}</p><p>&nbsp;</p>")
+    tip = job.ig_tip or job.blog_comment
+    if tip:
+        out.append(f"<h2>💡 한줄 TIP</h2><p>{_e(tip)}</p><p>&nbsp;</p>")
 
     out.append("<h2>🔗 지원하기</h2><ul>")
     alio = job.extra.get("alio_url") or (f"https://job.alio.go.kr/recruitview.do?idx={job.source_id}" if job.source == "alio" else "")

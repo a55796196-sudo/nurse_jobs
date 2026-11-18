@@ -158,8 +158,8 @@ def check(path: Path) -> list[str]:
             errors.append(f"#{i} 잘못된 category '{j.category}': {j.title}")
         elif j.is_target and not (j.summary and j.job_role):
             errors.append(f"#{i} summary/job_role 비어있음: {j.title}")
-        elif j.blog_pick and not (j.is_target and (j.qualifications or j.requirements) and j.blog_comment and j.intro):
-            errors.append(f"#{i} 블로그 글 필드(qualifications/blog_comment/intro) 비어있음: {j.title}")
+        elif j.blog_pick and not (j.is_target and (j.qualifications or j.requirements) and (j.ig_tip or j.blog_comment) and j.intro):
+            errors.append(f"#{i} 블로그 글 필드(qualifications/ig_tip/intro) 비어있음: {j.title}")
     return errors
 
 
@@ -179,8 +179,10 @@ def build(path: Path, day: str, archive: bool = True) -> None:
     if targets:
         out = DOCS / day
         from .blog import picks
-        cards = ig_posts(picks(targets), d, out)
-        build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets))
+        # 인스타·썸네일의 D-day는 올리는 날(오늘) 기준 — 지난 날짜 페이지를 다시 만들 때도
+        post_day = max(d, date.fromisoformat(today_kst()))
+        cards = ig_posts(picks(targets), post_day, out)
+        build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets), post_day=post_day)
         print(f"완료: docs/{day}/index.html (인스타 {len(cards)}개)")
     else:
         print("오늘은 탈임상 공고가 없어 페이지를 만들지 않습니다.")
