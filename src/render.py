@@ -355,29 +355,29 @@ def _sparkle(d: ImageDraw.ImageDraw, x: float, y: float, r: float, col: str) -> 
 
 
 def _title_block(d: ImageDraw.ImageDraw, job: Job, X: int, y: int, maxw: int, big: int, mark: str, pt: str) -> int:
-    """기관(작게) → 직무(크게, 형광펜) → 고용형태·채용(중간, 포인트색). 끝난 y를 돌려줌."""
+    """기관·부서·직무는 같은 크기(첫 줄 형광펜), 고용형태·채용만 포인트색으로 구분. 끝난 y를 돌려줌."""
     from .blog import _emp, _org
     role = job.job_role or "간호사"
     emp = "" if "강사" in role else _emp(job)
     if emp and emp in role:
         emp = ""
-    org = " ".join(x for x in (_org(job), job.department or "") if x)
-    fo = font(int(big * 0.45), "Bold")
-    for ln in wrap(d, org, fo, maxw, 2):
-        d.text((X, y), ln, font=fo, fill="#6B6B6B"); y += int(big * 0.6)
-    y += int(big * 0.12)
-    for size in (big, int(big * 0.88), int(big * 0.76), int(big * 0.66)):
-        fr = font(size, "Title")
-        lines = wrap(d, role, fr, maxw, 2)
-        if len(lines) == 1 or size == int(big * 0.66):
+    segs = [x for x in (_org(job), job.department or "", role) if x]
+    for size in (big, int(big * 0.9), int(big * 0.8), int(big * 0.72), int(big * 0.65)):
+        ft = font(size, "Title")
+        lines: list[str] = []
+        for sg in segs:
+            lines += wrap(d, sg, ft, maxw, 3)
+        if len(lines) <= 4:
             break
-    for ln in lines:
-        tw = d.textlength(ln, font=fr)
-        d.rounded_rectangle((X - 8, y + size * 0.55, X + tw + 8, y + size * 1.05), 12, fill=mark)
-        d.text((X, y), ln, font=fr, fill="#1E1E1E"); y += int(size * 1.2)
-    fe = font(int(big * 0.5), "ExtraBold")
-    d.text((X, y + 4), " ".join(f"{emp} 채용".split()), font=fe, fill=pt)
-    return y + int(big * 0.7)
+    lines = lines[:4]
+    for i, ln in enumerate(lines):
+        if i == 0:
+            tw = d.textlength(ln, font=ft)
+            d.rounded_rectangle((X - 8, y + size * 0.55, X + tw + 8, y + size * 1.05), 12, fill=mark)
+        d.text((X, y), ln, font=ft, fill="#1E1E1E"); y += int(size * 1.25)
+    fe = font(int(size * 0.62), "ExtraBold")
+    d.text((X, y + 6), " ".join(f"{emp} 채용".split()), font=fe, fill=pt)
+    return y + int(size * 0.9)
 
 
 def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
@@ -415,7 +415,7 @@ def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
         d.text((cx + 26, y0 + 103), txt, font=f, fill=col, anchor="lm")
         cx += tw + 52 + 16
     # 제목: 기관(작게) / 직무(크게) / 고용형태
-    _title_block(d, job, x0 + 70, y0 + (190 if sq else 220), x1 - x0 - 140, 120 if sq else 140, mark, pt)
+    _title_block(d, job, x0 + 70, y0 + (190 if sq else 220), x1 - x0 - 140, 84 if sq else 96, mark, pt)
     _sparkle(d, x1 - 95, y0 + 210, 26, mark)
     _sparkle(d, x1 - 140, y0 + 260, 14, mark)
     # 마감: 날짜 + D-day 스티커 (3일 이내면 '마감임박' 꼬리표)
@@ -568,11 +568,18 @@ def blog_thumb(job: Job, today: date) -> Image.Image:
     X = x0 + 70
     # 제목 묶음 높이를 재서 위쪽 영역 가운데에 배치
     probe = ImageDraw.Draw(Image.new("RGB", (S, S)))
-    hgt = _title_block(probe, job, X, 0, x1 - X - 60, 165, mark, pt)
-    top = y0 + 70 + max(0, (S - 50 - 230 - (y0 + 70) - hgt) // 2)
-    _title_block(d, job, X, top, x1 - X - 60, 165, mark, pt)
-    _sparkle(d, x1 - 90, y1 - 260, 34, mark)
-    _sparkle(d, x1 - 140, y1 - 220, 18, mark)
+    avail = (y1 - 190 - 30) - (y0 + 160)
+    for big in (112, 100, 90, 80, 72):
+        hgt = _title_block(probe, job, X, 0, x1 - X - 60, big, mark, pt)
+        if hgt <= avail:
+            break
+    top = y0 + 160 + max(0, (avail - hgt) // 2)
+    _title_block(d, job, X, top, x1 - X - 60, big, mark, pt)
+    _sparkle(d, x1 - 90, y0 + 90, 30, mark)
+    fc = font(44, "Bold")
+    cw = d.textlength(lab, font=fc)
+    d.rounded_rectangle((X - 6, y0 + 60, X + cw + 46, y0 + 132), 36, fill=pt)
+    d.text((X + 20, y0 + 96), lab, font=fc, fill="white", anchor="lm")
     # 하단: 마감일(크게) + 지역
     when = f"~{dl.month}/{dl.day}({WEEK[dl.weekday()]})" if dl else "상시 채용"
     loc = (job.location or "").split(",")[0].replace("특별시", "").replace("광역시", "").strip()
@@ -581,6 +588,13 @@ def blog_thumb(job: Job, today: date) -> Image.Image:
     by = y1 - 190
     d.rounded_rectangle((X - 10, by, X + tw + 50, by + 120), 60, fill=pt)
     d.text((X + 20, by + 60), when + " 마감", font=fb, fill="white", anchor="lm") if False else d.text((X + 20, by + 60), when, font=fb, fill="white", anchor="lm")
+    left = (dl - today).days if dl else None
+    if left is not None:
+        dd = "D-DAY" if left == 0 else f"D-{left}"
+        d.text((x1 - 70, by + 60), dd, font=font(96, "Title"), fill="#E5383B" if left <= 3 else pt, anchor="rm")
     if loc:
-        d.text((x1 - 70, by + 60), loc, font=font(58, "Bold"), fill=pt, anchor="rm")
+        lw = d.textlength(loc, font=font(44, "Bold"))
+        lx = X + d.textlength(lab, font=font(44, "Bold")) + 66
+        d.rounded_rectangle((lx, y0 + 60, lx + lw + 52, y0 + 132), 36, fill=bg)
+        d.text((lx + 26, y0 + 96), loc, font=font(44, "Bold"), fill=pt, anchor="lm")
     return img
