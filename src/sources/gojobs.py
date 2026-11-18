@@ -98,24 +98,21 @@ def fetch(max_per_kw: int = 15) -> list[Job]:
 
 def debug() -> None:
     from playwright.sync_api import sync_playwright
+    UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
     with sync_playwright() as p:
         b = p.chromium.launch()
-        ctx = b.new_context()
-        page = ctx.new_page()
-        reqs = []
-        page.on("request", lambda r: reqs.append(r.method + " " + r.url) if r.resource_type in ("xhr", "fetch", "document") else None)
-        page.goto(LIST, wait_until="networkidle", timeout=60000)
-        page.wait_for_timeout(3000)
-        t = " ".join(page.inner_text("body").split())
-        print("LEN", len(t)); print("TAIL", t[-1500:])
-        print("REQS", reqs[:30])
-        for label in ("기존 모집공고 바로가기", "국가공무원 채용시스템 바로가기"):
+        page = b.new_context(user_agent=UA, locale="ko-KR").new_page()
+        page.goto(LIST, wait_until="networkidle", timeout=60000); page.wait_for_timeout(3000)
+        print("GOJOBS_UA_LEN", len(page.inner_text("body")))
+        for u in ("https://www.korea.kr/archive/recruitInfoList.do",
+                  "https://www.korea.kr/archive/recruitInfoList.do?srchKeyword=%EA%B0%84%ED%98%B8"):
             try:
-                page.goto(LIST, wait_until="networkidle", timeout=60000)
-                with ctx.expect_page(timeout=8000) as pop:
-                    page.click(f"text={label}", timeout=5000)
-                np_ = pop.value; np_.wait_for_load_state("networkidle")
-                print("POP", label, np_.url, " ".join(np_.inner_text("body").split())[:1200])
+                page.goto(u, wait_until="networkidle", timeout=60000); page.wait_for_timeout(2000)
+                t = " ".join(page.inner_text("body").split())
+                print("KR", u, len(t), t[:2500])
+                a = page.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,50), e.getAttribute('href')]).filter(x => x[1] && x[1].includes('recruitInfoView'))")
+                print("KRA", a[:15])
+                print("KRIN", page.eval_on_selector_all("input", "els => els.filter(e=>e.type!='hidden').map(e => [e.name, e.id, e.type, e.title])"))
             except Exception as e:  # noqa: BLE001
-                print("NOPOP", label, page.url, str(e)[:100], " ".join(page.inner_text("body").split())[:800])
+                print("KRERR", u, str(e)[:200])
         b.close()
