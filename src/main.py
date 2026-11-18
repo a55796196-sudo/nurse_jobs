@@ -20,7 +20,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .models import CATEGORIES, Job
-from .render import render_all
+from .render import ig_posts
 from .site import build_day, build_index
 from .sources import alio, saramin
 
@@ -108,8 +108,8 @@ def collect() -> Path | None:
     today = today_kst()
     seen = load_seen()
     jobs: list[Job] = []
-    from .sources import edu
-    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch), ("edu", edu.fetch)):
+    from .sources import edu, gojobs
+    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch), ("edu", edu.fetch), ("gojobs", gojobs.fetch)):
         try:
             jobs += fn()
         except Exception as e:  # 한 출처가 실패해도 나머지는 계속
@@ -160,8 +160,8 @@ def check(path: Path) -> list[str]:
             errors.append(f"#{i} 잘못된 category '{j.category}': {j.title}")
         elif j.is_target and not (j.summary and j.job_role):
             errors.append(f"#{i} summary/job_role 비어있음: {j.title}")
-        elif j.blog_pick and not (j.is_target and (j.qualifications or j.requirements) and j.blog_comment and j.intro):
-            errors.append(f"#{i} 블로그 글 필드(qualifications/blog_comment/intro) 비어있음: {j.title}")
+        elif j.blog_pick and not (j.is_target and (j.qualifications or j.requirements) and (j.ig_tip or j.blog_comment) and j.intro):
+            errors.append(f"#{i} 블로그 글 필드(qualifications/ig_tip/intro) 비어있음: {j.title}")
     return errors
 
 
@@ -180,9 +180,12 @@ def build(path: Path, day: str, archive: bool = True) -> None:
     d = date.fromisoformat(day)
     if targets:
         out = DOCS / day
-        cards = render_all(targets, d, out)
-        build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets))
-        print(f"완료: docs/{day}/index.html (카드 {len(cards)}장)")
+        from .blog import picks
+        # 인스타·썸네일의 D-day는 올리는 날(오늘) 기준 — 지난 날짜 페이지를 다시 만들 때도
+        post_day = max(d, date.fromisoformat(today_kst()))
+        cards = ig_posts(picks(targets), post_day, out)
+        build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets), post_day=post_day)
+        print(f"완료: docs/{day}/index.html (인스타 {len(cards)}개)")
     else:
         print("오늘은 탈임상 공고가 없어 페이지를 만들지 않습니다.")
     build_index(DOCS)
@@ -229,6 +232,11 @@ def main() -> None:
             print("\n####", j.key, j.org, "|", j.title, "|", j.location, "|", j.start_date, "~", j.deadline, "|", j.employment_type)
             print("   ", {k: j.extra.get(k) for k in ("address", "recrutNope", "work_hours", "pay_type", "detail_url")})
             print("    본문:", (j.extra.get("site_text") or "")[:600])
+    elif cmd == "gojobstest":  # 디버그: 나라일터 수집 시험
+        from .sources import gojobs
+        for j in gojobs.fetch(days=7):
+            print("\n####", j.key, "|", j.org, "|", j.title, "|", j.location, "|", j.start_date, "~", j.deadline)
+            print("    본문:", (j.extra.get("site_text") or "")[:700])
     elif cmd == "backlog":  # 대기열 보기: python -m src.main backlog [날짜]
         for j in backlog(day):
             print(f"{j.key} | {j.org} | {j.job_role or j.title[:30]} | {j.location} | ~{j.deadline}")
@@ -241,6 +249,26 @@ def main() -> None:
         have = {j.key for j in cur}
         write_jobs(inbox_file, cur + [j for j in add if j.key not in have])
         print(f"{len(add)}건 추가 → {inbox_file} (blog_pick=true, intro·급여 등 블로그 필드를 채울 것)")
+    elif cmd == "manual":  # 사용자가 보낸 캡처 공고 추가: python -m src.main manual 날짜 공고.json
+        import hashlib
+        items = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
+        items = items if isinstance(items, list) else [items]
+        new = []
+        for it in items:
+            it.setdefault("source", "manual")
+            it.setdefault("source_id", hashlib.md5((it.get("org", "") + it.get("title", "")).encode()).hexdigest()[:10])
+            it.setdefault("url", "")
+            it.update(is_target=True, blog_pick=True)
+            new.append(Job(**{k: v for k, v in it.items() if k in Job.__dataclass_fields__}))
+        done = DATA / "jobs" / f"{day}.json"
+        target = inbox_file if (inbox_file.exists() or not done.exists()) else done
+        cur = read_jobs(target) if target.exists() else []
+        have = {j.key for j in cur}
+        write_jobs(target, cur + [j for j in new if j.key not in have])
+        print(f"{len(new)}건 추가 → {target}")
+        if target == done:  # 이미 만든 날이면 바로 다시 만들기
+            build(done, day, archive=False)
+            mark_posted(new, day)
     elif cmd == "enrich":  # inbox 공고들의 채용사이트 상세를 다시 읽고, 미수집 공고를 최신 inbox에 추가
         from .sources import sites
         seen = load_seen()

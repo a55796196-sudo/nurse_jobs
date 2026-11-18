@@ -90,7 +90,7 @@ def post_html(g: dict) -> str:
         if s.get("tip"):
             out.append(f"<p>💡 <b>TIP</b> {_e(s['tip'])}</p>")
         out.append("<p>&nbsp;</p>")
-    out.append(f"<h2>💬 {AUTHOR}의 한마디</h2><p>{_e(g['comment'])}</p><p>&nbsp;</p>")
+    out.append(f"<h2>💬 마무리 한마디</h2><p>{_e(g['comment'])}</p><p>&nbsp;</p>")
     if g.get("links"):
         out.append("<h2>🔗 공식 정보 확인하기</h2><ul>")
         out += [f'<li><a href="{_e(l["url"])}">{_e(l["name"])}</a>' + (f" — {_e(l['desc'])}" if l.get("desc") else "") + "</li>"
