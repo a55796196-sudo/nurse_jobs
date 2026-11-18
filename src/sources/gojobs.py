@@ -100,24 +100,22 @@ def debug() -> None:
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         b = p.chromium.launch()
-        page = b.new_page()
+        ctx = b.new_context()
+        page = ctx.new_page()
+        reqs = []
+        page.on("request", lambda r: reqs.append(r.method + " " + r.url) if r.resource_type in ("xhr", "fetch", "document") else None)
         page.goto(LIST, wait_until="networkidle", timeout=60000)
-        page.wait_for_timeout(2000)
-        print("URL0", page.url, "| frames", [f.url for f in page.frames])
-        print("INPUTS", page.eval_on_selector_all("input,select,button", "els => els.map(e => [e.tagName, e.name, e.id, e.type, e.title, e.placeholder, e.offsetParent!==null, (e.innerText||'').slice(0,15)])"))
-        print("FORMS", page.eval_on_selector_all("form", "els => els.map(e => [e.id, e.name, e.action])"))
-        print("BODY0", " ".join(page.inner_text("body").split())[:1500])
-        a = page.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,40), e.getAttribute('href'), e.getAttribute('onclick')])")
-        page.on("dialog", lambda d: (print("DIALOG", d.message), d.accept()))
-        print("SRCHBTN", [x for x in a if '검색' in (x[0] or '')])
-        print("BODY0FULL", " ".join(page.inner_text("body").split())[1400:4000])
-        box = page.query_selector("#searchKeyword"); box.fill("간호"); box.press("Enter")
-        page.wait_for_timeout(5000)
-        print("URL1", page.url)
-        print("BODY1", " ".join(page.inner_text("body").split())[:3000])
-        page.goto(LIST + "?searchKeyword=%EA%B0%84%ED%98%B8", wait_until="networkidle", timeout=60000)
-        page.wait_for_timeout(2000)
-        print("BODY2", " ".join(page.inner_text("body").split())[1400:4000])
-        a = page.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim().slice(0,40), e.getAttribute('href'), e.getAttribute('onclick')])")
-        print("ANCH2", [x for x in a if x[0] and 'gfn_menu_move' not in (x[1] or '')][:40])
+        page.wait_for_timeout(3000)
+        t = " ".join(page.inner_text("body").split())
+        print("LEN", len(t)); print("TAIL", t[-1500:])
+        print("REQS", reqs[:30])
+        for label in ("기존 모집공고 바로가기", "국가공무원 채용시스템 바로가기"):
+            try:
+                page.goto(LIST, wait_until="networkidle", timeout=60000)
+                with ctx.expect_page(timeout=8000) as pop:
+                    page.click(f"text={label}", timeout=5000)
+                np_ = pop.value; np_.wait_for_load_state("networkidle")
+                print("POP", label, np_.url, " ".join(np_.inner_text("body").split())[:1200])
+            except Exception as e:  # noqa: BLE001
+                print("NOPOP", label, page.url, str(e)[:100], " ".join(page.inner_text("body").split())[:800])
         b.close()
