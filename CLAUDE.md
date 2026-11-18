@@ -54,7 +54,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 4. `python -m src.main check YYYY-MM-DD` → `OK` 나올 때까지 수정
 5. `pip install -q -r requirements.txt` (폰트는 저장소 fonts/ 에 포함되어 있음)
 6. `python -m src.main build YYYY-MM-DD` (inbox 파일은 `data/jobs/`로 자동 이동)
-7. 인스타 이미지 1장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/ig-01.jpg`)
+7. 인스타 이미지 1장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/ig-01-1.jpg`)
 8. 커밋 & 푸시:
    `git add -A data docs && git commit -m "분류·콘텐츠 생성 YYYY-MM-DD" && git push origin main`
    (push가 네트워크 오류로 실패하면 2·4·8·16초 간격으로 재시도)
