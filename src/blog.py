@@ -223,7 +223,9 @@ def post_html(job: Job, today: date) -> str:
     elif _is_site_home(job.url):
         out.append(f'<li><a href="{_e(job.url)}">{_e(_org(job))} 채용 홈페이지</a> → 공고 목록에서 <b>"{_e(job.title)}"</b>을 찾아 지원하세요</li>')
     else:
-        out.append(f'<li><a href="{_e(job.url)}">기관 채용 홈페이지에서 바로 지원</a></li>')
+        out.append(f'<li><a href="{_e(job.url)}">{"공고 원문 보기" if job.source == "gojobs" else "기관 채용 홈페이지에서 바로 지원"}</a></li>')
+    if job.extra.get("apply"):
+        out.append(f'<li>접수 방법: {_e(job.extra["apply"])}</li>')
     out.append("</ul><p>※ 공고 내용을 요약한 글이에요. 지원 전 원문 공고문을 꼭 확인해주세요.</p><p>&nbsp;</p>")
 
     out.append("<p>" + " ".join(f"#{_e(t)}" for t in blog_tags(job)) + "</p>")
