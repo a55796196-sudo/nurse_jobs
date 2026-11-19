@@ -72,6 +72,12 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
    그날 inbox가 있으면 거기에 추가되고, 이미 만든 날이면 작업실 페이지를 바로 다시 만든다.
 3. 커밋·푸시 후 작업실 페이지 주소를 알려준다. 사용자가 보낸 공고는 그날 개수(3~5개)와 별도로 추가해도 된다.
 
+## 사용자가 '안 고른 공고'에서 번호를 골랐을 때
+작업실 페이지의 "이번에 안 고른 공고"에 번호(`source:source_id`)가 나온다. 사용자가 번호를 주며 추가해 달라고 하면:
+그 공고가 있는 `data/jobs/YYYY-MM-DD.json`(또는 inbox)에서 `blog_pick: true`로 바꾸고 블로그 필드를 3번 규칙대로 채운 뒤,
+이미 만든 날이면 `python -c "from pathlib import Path; from src.main import build; build(Path('data/jobs/YYYY-MM-DD.json'), 'YYYY-MM-DD', archive=False)"`로 다시 만들고 커밋·푸시.
+(제외된 공고도 사용자가 원하면 `is_target: true`로 바꿔서 같은 방법으로 추가)
+
 ## 주말 탈임상 가이드 (주 1회, 블로그 글 + 인스타 카드뉴스)
 **토요일**(KST) 세션에서 쓴다. 토요일에 못 썼으면 일요일에 쓴다. 이번 주 토·일 날짜의 `data/guides/YYYY-MM-DD.json`이 이미 있으면 건너뛴다.
 1. `data/guides/topics.md`에서 주제를 고른다: "직접 던진 주제"의 첫 `- [ ]` → 없으면 "기본 주제"의 첫 `- [ ]`. 기본 주제도 다 썼으면 비슷한 결의 새 주제를 정해 추가한다.

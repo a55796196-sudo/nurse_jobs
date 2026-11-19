@@ -184,7 +184,8 @@ def build(path: Path, day: str, archive: bool = True) -> None:
         # 인스타·썸네일의 D-day는 올리는 날(오늘) 기준 — 지난 날짜 페이지를 다시 만들 때도
         post_day = max(d, date.fromisoformat(today_kst()))
         cards = ig_posts(picks(targets), post_day, out)
-        build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets), post_day=post_day)
+        build_day(targets, d, DOCS, cards, all_open=open_targets(day, targets), post_day=post_day,
+                  excluded=[j for j in jobs if not j.is_target])
         print(f"완료: docs/{day}/index.html (인스타 {len(cards)}개)")
     else:
         print("오늘은 탈임상 공고가 없어 페이지를 만들지 않습니다.")
