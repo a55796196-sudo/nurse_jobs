@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import html
 import json
+import os
 from datetime import date
 from pathlib import Path
 
@@ -76,30 +77,41 @@ def tags(g: dict) -> list[str]:
 
 # ---------- 블로그 ----------
 
-def post_html(g: dict) -> str:
-    out = [f"<p>{_e(g['intro'])}</p><p>&nbsp;</p>"]
-    secs = g["sections"]
-    if len(secs) >= 4:  # 목차
-        out.append("<p><b>📚 이 글의 순서</b><br>" + "<br>".join(f"{i}. {_e(s['heading'])}" for i, s in enumerate(secs, 1)) + "</p><p>&nbsp;</p>")
-    for s in secs:
-        out.append(f"<h2>{_e(s.get('emoji', '📌'))} {_e(s['heading'])}</h2>")
+PAGES = (os.environ.get("PAGES_BASE_URL") or "https://a55796196-sudo.github.io/nurse_jobs").rstrip("/")
+C = 'style="text-align:center"'
+
+
+def _br(text: str) -> str:
+    """줄바꿈(\n)을 살린 가운데 정렬 문단. 한 줄에 한 문장씩 짧게."""
+    return f"<p {C}>" + "<br>".join(_e(x) for x in str(text).split("\n")) + "</p>"
+
+
+def _gap() -> str:
+    return f"<p {C}>&nbsp;</p>"
+
+
+def post_html(g: dict, day: str = "") -> str:
+    """네이버 블로그용 본문. 가운데 정렬 · 짧은 줄 · 인용구 소제목 · 구분선 · 카드 이미지 사이사이."""
+    img = (lambda n: f'<p {C}><img src="{PAGES}/guides/{day}/card-{n:02d}.jpg" width="540" alt="카드 {n}"></p>') if day else (lambda n: "")
+    out = [img(0), _gap(), _br(g["intro"]), _gap(), "<hr>"]
+    for n, s in enumerate(g["sections"], 1):
+        out.append(f'<blockquote {C}><p {C}><b>{_e(s["heading"])}</b></p></blockquote>')
+        out.append(img(n))
         for p in s.get("paragraphs") or []:
-            out.append(f"<p>{_e(p)}</p>")
+            out += [_br(p), _gap()]
         if s.get("bullets"):
-            out.append("<ul>" + "".join(f"<li>{_e(b)}</li>" for b in s["bullets"]) + "</ul>")
+            out += [f"<p {C}>" + "<br>".join("✔️ " + _e(b) for b in s["bullets"]) + "</p>", _gap()]
         if s.get("tip"):
-            out.append(f"<p>💡 <b>TIP</b> {_e(s['tip'])}</p>")
-        out.append("<p>&nbsp;</p>")
-    out.append(f"<h2>💬 마무리 한마디</h2><p>{_e(g['comment'])}</p><p>&nbsp;</p>")
+            out += [f"<p {C}>(💡 {_e(s['tip'])})</p>", _gap()]
+        out.append("<hr>")
+    out += [_br(g["comment"]), _gap()]
     if g.get("links"):
-        out.append("<h2>🔗 공식 정보 확인하기</h2><ul>")
-        out += [f'<li><a href="{_e(l["url"])}">{_e(l["name"])}</a>' + (f" — {_e(l['desc'])}" if l.get("desc") else "") + "</li>"
-                for l in g["links"]]
-        out.append("</ul>")
-    out.append("<p>※ 시험 일정·응시 자격·비용은 바뀔 수 있어요. 준비 전 공식 사이트에서 꼭 확인해주세요.</p><p>&nbsp;</p>")
-    out.append("<p>매일 올라오는 탈임상 채용공고는 <b>탈임상 채용공고</b> 카테고리에서 볼 수 있어요 :)</p><p>&nbsp;</p>")
-    out.append("<p>" + " ".join(f"#{_e(t)}" for t in tags(g)) + "</p>")
-    return "\n".join(out)
+        out.append(f"<p {C}><b>공식 정보 확인</b><br>" + "<br>".join(
+            f'<a href="{_e(l["url"])}">{_e(l["name"])}</a>' + (f" · {_e(l['desc'])}" if l.get("desc") else "") for l in g["links"]) + "</p>")
+        out.append(f"<p {C}>※ 시험 일정·응시 자격·비용은 바뀔 수 있으니 준비 전 공식 사이트에서 확인하시기 바랍니다.</p>")
+    out += ["<hr>", _br((g.get("next_teaser") + "\n" if g.get("next_teaser") else "") + "읽어주셔서 감사합니다."), _gap()]
+    out.append(f"<p {C}>" + " ".join(f"#{_e(t)}" for t in tags(g)) + "</p>")
+    return "\n".join(x for x in out if x)
 
 
 def caption(g: dict) -> str:
@@ -246,8 +258,8 @@ def build(path: Path, docs: Path) -> Path:
 <div class="row" style="margin-top:8px"><pre id="pt" style="flex:1;margin:0">{_e(g['title'])}</pre>
 <button onclick="copyText('pt',this)">제목 복사</button></div>
 <details open><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기 (접기)</summary>
-<div id="pb" class="post">{post_html(g)}</div></details>
-<div class="row"><span class="muted">네이버 글쓰기에 제목 → 본문 순서로 붙여넣으세요</span>
+<div id="pb" class="post">{post_html(g, day)}</div></details>
+<div class="row"><span class="muted">제목 → 본문 순서로 붙여넣기. 카드 이미지가 같이 안 붙으면 아래 카드뉴스를 저장해 그 자리에 넣고, 글꼴은 나눔마루부리로 바꾸세요</span>
 <button onclick="copyHtml('pb',this)">본문 복사</button></div>
 <div class="row" style="margin-top:10px"><pre id="tg" style="flex:1;margin:0">{_e(tg)}</pre>
 <button onclick="copyText('tg',this)">태그 복사</button></div>

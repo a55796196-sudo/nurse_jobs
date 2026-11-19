@@ -75,11 +75,13 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 ## 주말 탈임상 가이드 (주 1회, 블로그 글 + 인스타 카드뉴스)
 **토요일**(KST) 세션에서 쓴다. 토요일에 못 썼으면 일요일에 쓴다. 이번 주 토·일 날짜의 `data/guides/YYYY-MM-DD.json`이 이미 있으면 건너뛴다.
 1. `data/guides/topics.md`에서 주제를 고른다: "직접 던진 주제"의 첫 `- [ ]` → 없으면 "기본 주제"의 첫 `- [ ]`. 기본 주제도 다 썼으면 비슷한 결의 새 주제를 정해 추가한다.
-2. `data/guides/YYYY-MM-DD.json` 작성 (형식은 `data/guides/2026-11-21.json` 참고):
+2. **먼저 `data/guides/STYLE.md`(문체·줄바꿈 규칙)를 읽고** `data/guides/YYYY-MM-DD.json` 작성 (형식은 `data/guides/2026-11-21.json` 참고):
    - `category`: `"자소서/면접"` 또는 `"병원 밖 업무 스킬"` (자격증 글은 병원 밖 업무 스킬)
    - `title`: 블로그 제목 (검색될 단어를 넣어서). `cover`: 표지·썸네일 1~3줄 (한 줄 10자 이내, 마지막 줄 형광펜). `subtitle`: 표지 한 줄 설명
    - `intro`: 도입 2~3문장. `sections` 3~7개: `emoji`, `heading`, `paragraphs`, `bullets`, `tip`(선택), `card_title`(카드 제목 16자 이내), `card`(카드 문장 1~4개, 각 42자 이내)
-   - `comment`: 마무리 한마디 (2~3문장). `closing`: 마지막 카드 문장. `links`: 공식 확인처 (확실한 주소만). `tags`: 4~6개. `caption_hook`: 인스타 첫 줄
+   - `intro`·`paragraphs`·`comment`는 **한 줄에 한 문장씩 `\n`으로 끊고 문단 사이는 `\n\n`** (블로그에서 가운데 정렬로 나감)
+   - `next_teaser`: 다음 주 주제 예고 한 줄 (topics.md의 다음 `- [ ]` 주제, 예: "다음 주에는 ~로 찾아뵙겠습니다.")
+   - `comment`: 마무리 (2~4줄). `closing`: 마지막 카드 문장. `links`: 공식 확인처 (확실한 주소만). `tags`: 4~6개. `caption_hook`: 인스타 첫 줄
    - **정확성**: 시험 일정·응시료·합격률·연봉 숫자·법 조항 번호처럼 바뀌거나 틀리기 쉬운 정보는 쓰지 말고 "공식 사이트에서 확인"으로 안내한다. 확실하지 않은 기관명·제도는 빼거나 일반적으로 표현한다. 이 환경에서는 국내 사이트 확인이 안 되므로 확실히 아는 내용만 쓴다.
    - 말투는 공고 글과 같은 간결한 합니다체 (해요체 금지). `data/jobs/`의 최근 공고(자격요건·우대사항)를 근거로 쓰면 좋다.
 3. `python -m src.main guide-check YYYY-MM-DD` → OK 나올 때까지 수정 → `python -m src.main guide-build YYYY-MM-DD`
