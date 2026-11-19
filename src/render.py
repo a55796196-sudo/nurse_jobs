@@ -420,6 +420,8 @@ def ig_post(job: Job, today: date, h: int = H) -> Image.Image:
 def ig_posts(jobs: list[Job], today: date, out_dir: Path) -> list[list[Path]]:
     """블로그 글로 고른 공고마다 인스타 게시물 1개 (ig-01-1.jpg 표지, ig-01-2.jpg … 상세)."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    for old in out_dir.glob("ig-*.jpg"):  # 다시 만들 때 남은 예전 장 정리
+        old.unlink()
     posts = []
     for n, j in enumerate(jobs, start=1):
         paths = []

@@ -40,7 +40,10 @@ def _org(job: Job) -> str:
 
 def _emp(job: Job) -> str:
     """제목용 고용형태: 공고 제목에 쓰인 표현을 우선 (예: 대체인력 계약직)."""
-    words = [w for w in ("무기계약직", "정규직", "대체인력", "기간제", "계약직", "인턴") if w in job.title]
+    title = job.title.replace("비정규직", " ")  # '비정규직' 안의 '정규직'을 정규직으로 읽지 않게
+    words = [w for w in ("무기계약직", "정규직", "대체인력", "기간제", "계약직", "인턴") if w in title]
+    if "비정규직" in job.title and not any(w in words for w in ("기간제", "계약직", "무기계약직")):
+        words.append("비정규직")
     if "무기계약직" in words and "계약직" in words:
         words.remove("계약직")
     if words:
