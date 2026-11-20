@@ -194,7 +194,7 @@ def _closing(g: dict, total: int) -> Image.Image:
     for line in wrap(d, g.get("closing") or g["comment"], font(42, "Medium"), W - PAD * 2, 6):
         d.text((PAD, y), line, font=font(42, "Medium"), fill=SUB)
         y += 64
-    d.text((PAD, H - 140), "매일 탈임상 공고도 올라와요", font=font(40, "Title"), fill=INK, anchor="lm")
+    d.text((PAD, H - 140), "매일 탈임상 공고도 올라옵니다", font=font(40, "Title"), fill=INK, anchor="lm")
     d.text((PAD, H - 82), "프로필 링크에서 확인" + (f"  ·  @{HANDLE}" if HANDLE else ""), font=font(30, "Medium"), fill=MUTED, anchor="lm")
     return img
 
