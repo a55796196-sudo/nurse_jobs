@@ -77,6 +77,7 @@ def tags(g: dict) -> list[str]:
 
 # ---------- 블로그 ----------
 
+ASK = "이 밖에 더 궁금한 점이나\n다뤄줬으면 하는 주제가 있다면\n댓글로 남겨주세요.\n다음 글에서 다뤄보겠습니다."
 PAGES = (os.environ.get("PAGES_BASE_URL") or "https://a55796196-sudo.github.io/nurse_jobs").rstrip("/")
 C = 'style="text-align:center"'
 
@@ -110,11 +111,7 @@ def post_html(g: dict, day: str = "") -> str:
             f'<a href="{_e(l["url"])}">{_e(l["name"])}</a>' + (f" · {_e(l['desc'])}" if l.get("desc") else "") for l in g["links"]) + "</p>")
         out.append(f"<p {C}>※ 시험 일정·응시 자격·비용은 바뀔 수 있으니 준비 전 공식 사이트에서 확인하시기 바랍니다.</p>")
     out.append("<hr>")
-    if g.get("next_teaser"):
-        out += [_br(g["next_teaser"]), _gap()]
-    if g.get("ask"):  # 댓글 유도: 글마다 구체적인 질문 하나
-        out += [f"<p {C}><b>💬 {_e(g['ask'])}</b><br>댓글로 남겨주시면 다음 글에 반영하겠습니다.</p>", _gap()]
-    out += [_br("읽어주셔서 감사합니다."), _gap()]
+    out += [_br(ASK), _gap(), _br("읽어주셔서 감사합니다."), _gap()]
     out.append(f"<p {C}>" + " ".join(f"#{_e(t)}" for t in tags(g)) + "</p>")
     return "\n".join(x for x in out if x)
 
@@ -123,8 +120,7 @@ def caption(g: dict) -> str:
     lines = [f"💡 {g.get('caption_hook') or g['title']}", ""]
     for i, s in enumerate(g["sections"], 1):
         lines.append(f"{i}. {s.get('card_title') or s['heading']}")
-    if g.get("ask"):
-        lines += ["", f"💬 {g['ask']} 댓글로 남겨주세요"]
+    lines += ["", "💬 더 궁금한 점이나 다뤄줬으면 하는 주제가 있다면 댓글로 알려주세요"]
     lines += ["", "📌 자세한 내용은 프로필 링크(블로그)에서 확인하세요!", "💾 저장해두고 필요할 때 꺼내보세요", ""]
     lines.append(" ".join("#" + t for t in tags(g) + ["간호사", "간호사채용"]))
     return "\n".join(lines)
