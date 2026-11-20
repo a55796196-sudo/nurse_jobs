@@ -126,8 +126,20 @@ def _zip(data: bytes, depth: int = 0) -> list[tuple[str, str]]:
 def extract(name: str, data: bytes, depth: int = 0) -> list[tuple[str, str]]:
     """[(파일 이름, 글자)] — zip 이면 안의 파일들."""
     ext = (EXT.search(name) or re.search(r"$", "")).group(0).lower().lstrip(".")
-    if not ext:   # 이름에 확장자가 없으면 내용으로 판단
-        ext = "pdf" if data[:4] == b"%PDF" else "hwp" if data[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" else "zip" if data[:2] == b"PK" else ""
+    # 이름보다 실제 내용으로 판단 (확장자가 틀린 파일이 많음)
+    if data[:4] == b"%PDF":
+        ext = "pdf"
+    elif data[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
+        ext = "hwp"
+    elif data[:2] == b"PK":
+        ext = "zip"
+    elif data[:3] == b"\xff\xd8\xff":
+        ext = "jpg"
+    elif data[:8] == b"\x89PNG\r\n\x1a\n":
+        ext = "png"
+    elif data.lstrip()[:1] == b"<":
+        print(f"[attach] {name}: 파일이 아니라 웹페이지가 받아짐 ({data[:120]!r})")
+        return []
     try:
         if ext == "zip":
             if depth > 1:
@@ -198,13 +210,24 @@ def download_from_page(page, url: str, want: list[str] | None = None) -> list[tu
     if want:   # API 가 알려준 파일 이름과 맞는 링크를 우선
         named = [lb for lb in labels if any(w[:15] in lb for w in want if not SKIP.search(w))]
         chosen = choose(named) or chosen
+    uniq: dict[str, object] = {}
+    for lb, el in links:   # 같은 이름의 링크(PC·모바일용 등)는 보이는 것 하나만
+        try:
+            vis = el.is_visible()
+        except Exception:  # noqa: BLE001
+            vis = False
+        if lb not in uniq or vis:
+            uniq[lb] = (el, vis)
     out = []
-    for lb, el in links:
+    for lb, (el, vis) in uniq.items():
         if lb not in chosen or len(out) >= MAX_FILES:
             continue
         try:
             with page.expect_download(timeout=30000) as dl:
-                el.click()
+                if vis:
+                    el.click()
+                else:
+                    el.evaluate("e => e.click()")
             d = dl.value
             data = Path(d.path()).read_bytes()
             name = d.suggested_filename or lb
