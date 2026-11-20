@@ -160,7 +160,7 @@ def _cover(g: dict, total: int, h: int = H) -> Image.Image:
     img = Image.new("RGB", (W, h), G_BG)
     d = ImageDraw.Draw(img)
     X = 90
-    d.text((X, 130), "리브의 현직 노트", font=font(40, "ExtraBold"), fill=G_PT)
+    d.text((X, 130), "리브의 탈임상 노트", font=font(40, "ExtraBold"), fill=G_PT)
     d.text((X, 186), _label(g), font=font(40, "SemiBold"), fill=G_PT)
     d.line((X, 260, W - 90, 260), fill=G_PT, width=4)
     lines = [_t(x) for x in g["cover"]]
