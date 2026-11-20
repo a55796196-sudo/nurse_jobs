@@ -30,7 +30,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-BLOG_ID = os.environ.get("NAVER_BLOG_ID", "")
+BLOG_ID = os.environ.get("NAVER_BLOG_ID", "live_in_fact")
 PAGES = os.environ.get("PAGES_BASE_URL", "https://a55796196-sudo.github.io/nurse_jobs").rstrip("/")
 HOME = Path.home() / ".nurse_jobs_naver"
 PROFILE = HOME / "browser"
