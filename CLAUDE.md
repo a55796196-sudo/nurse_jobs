@@ -53,6 +53,14 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 3-1. **글이 5개 미만이면 대기열에서 채우기**: `python -m src.main backlog YYYY-MM-DD` 로 아직 안 올린 마감 전 공고를 보고(수도권→마감순으로 정렬됨),
    부족한 만큼 골라 `python -m src.main backlog-add YYYY-MM-DD KEY1 KEY2` 로 오늘 inbox 에 추가한 뒤, 그 공고들의 블로그 필드(intro·급여 등)를 채운다.
    목표는 **하루 최소 3개, 많으면 5개** (밀린 공고를 소진하는 동안은 5개를 채우는 쪽으로). 대기열에도 없으면 있는 만큼만.
+3-2. **첨부파일 읽기** (블로그 글 3~5개를 확정한 직후, 블로그 필드를 채우기 전에):
+   1. 분류·`blog_pick`까지 저장한 inbox 를 커밋·push: `git add -A data && git commit -m "분류 YYYY-MM-DD" && git push origin main`
+   2. GitHub MCP `actions_run_trigger`로 워크플로 `attach.yml` 실행 (ref `main`, inputs `{"day": "YYYY-MM-DD"}`)
+   3. `actions_list`로 실행 상태를 1~2분 간격으로 확인 (최대 15분). 끝나면 `git pull origin main`
+      — **기다리는 동안 inbox 파일을 수정하지 말 것** (pull 충돌)
+   4. 고른 공고의 `extra.attach_text`(첨부 공고문·직무기술서에서 뽑은 글자)를 **가장 먼저** 참고해 급여·근무시간·자격·우대·전형·복리후생·직무를 채운다.
+      `attach_text`가 `raw_text`/`site_text`와 다르면 첨부 공고문을 따른다. 한 공고문에 여러 분야가 있으면 그 직무 행만.
+   5. 실패하거나 15분이 넘으면 첨부 없이 그대로 진행하고 보고에 "첨부 읽기 실패"라고 한 줄 남긴다.
 4. `python -m src.main check YYYY-MM-DD` → `OK` 나올 때까지 수정
 5. `pip install -q -r requirements.txt` (폰트는 저장소 fonts/ 에 포함되어 있음)
 6. `python -m src.main build YYYY-MM-DD` (inbox 파일은 `data/jobs/`로 자동 이동)

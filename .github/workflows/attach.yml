@@ -1,0 +1,51 @@
+name: 첨부파일 읽기
+
+# 분류 세션(Claude)이 블로그 글로 고른 공고를 inbox 에 push 한 뒤 실행한다.
+# 고른 공고의 첨부파일(hwp·hwpx·pdf·zip)을 내려받아 글자를 뽑아 extra.attach_text 에 넣고 커밋.
+on:
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "날짜 (YYYY-MM-DD)"
+        required: true
+      keys:
+        description: "공고 KEY (공백 구분, 비우면 blog_pick 공고 전부)"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: attach
+  cancel-in-progress: false
+
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: 문서 읽기 도구 설치
+        run: sudo apt-get install -y -q poppler-utils tesseract-ocr tesseract-ocr-kor >/dev/null
+      - run: pip install -q -r requirements.txt playwright && python -m playwright install --with-deps chromium >/dev/null
+      - name: 첨부파일 읽기
+        env:
+          DAY: ${{ inputs.day }}
+          KEYS: ${{ inputs.keys }}
+        run: python -m src.main attach "$DAY" $KEYS
+      - name: 저장
+        run: |
+          git config user.name "nurse-jobs-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet && exit 0
+          git commit -m "첨부파일 읽기 ${{ inputs.day }}"
+          for i in 1 2 3 4; do
+            git pull --rebase -q origin main && git push && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

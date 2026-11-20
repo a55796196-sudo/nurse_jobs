@@ -289,6 +289,21 @@ def main() -> None:
             write_jobs(f, js) if js else f.unlink()
         save_seen(seen, today_kst())
         print(f"상세 읽기 완료: 기존 {len(all_jobs)}건, 새로 찾은 공고 {len(found)}건")
+    elif cmd == "attach":  # 블로그 글로 고른 공고(또는 지정한 KEY)의 첨부파일을 읽어 extra.attach_text 에 저장 (Actions 에서 실행)
+        from .sources import attach
+        path = inbox_file if inbox_file.exists() else DATA / "jobs" / f"{day}.json"
+        if not path.exists():
+            sys.exit(f"{day} 공고 파일이 없습니다.")
+        jobs = read_jobs(path)
+        keys = set(sys.argv[3:])
+        targets = [j for j in jobs if (j.key in keys if keys else j.blog_pick)]
+        targets = [j for j in targets if not j.extra.get("attach_text")]
+        print(f"첨부파일 읽을 공고 {len(targets)}건: {path.name}")
+        if targets:
+            attach.enrich(targets)
+            write_jobs(path, jobs)
+            ok = sum(1 for j in targets if j.extra.get("attach_text"))
+            print(f"완료: {ok}/{len(targets)}건 첨부 내용 추가")
     elif cmd == "sitetest":  # 디버그: python -m src.main sitetest URL [URL...]
         from .sources import sites
         tests = [Job(source="test", source_id=str(i), title="", org="", url=u) for i, u in enumerate(sys.argv[2:])]
