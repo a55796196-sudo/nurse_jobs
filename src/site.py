@@ -117,7 +117,22 @@ def ig_caption(job: Job, today: date) -> str:
     return "\n".join(lines)
 
 
-def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None, post_day: date | None = None) -> Path:
+def _job_rows(jobs: list[Job], show_role: bool = True) -> str:
+    rows = []
+    for j in sorted(jobs, key=lambda x: x.deadline or "9999"):
+        link = j.extra.get("alio_url") or j.url or ""
+        name = _e(j.org) + (f" · {_e(j.job_role)}" if show_role and j.job_role else "")
+        dl = f"~{int(j.deadline[5:7])}/{int(j.deadline[8:10])}" if j.deadline else "-"
+        title = f'<a href="{_e(link)}" target="_blank">{_e(j.title[:60])}</a>' if link else _e(j.title[:60])
+        rows.append(f"<tr><td>{dl}</td><td><b>{name}</b><br><span class='muted'>{title}</span></td>"
+                    f"<td>{_e(j.location or '')}</td><td class='muted' style='font-size:12px'>{_e(j.key)}</td></tr>")
+    return ('<table style="width:100%;border-collapse:collapse;font-size:14px">'
+            '<tr><th align=left>마감</th><th align=left>기관 · 공고</th><th align=left>근무지</th><th align=left>번호</th></tr>'
+            + "".join(rows) + "</table>")
+
+
+def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None, post_day: date | None = None,
+              excluded: list[Job] | None = None) -> Path:
     day_dir = docs / today.isoformat()
     day_dir.mkdir(parents=True, exist_ok=True)
     title = blog_title(jobs, today)
@@ -152,6 +167,16 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
     cats = [(c, c) for c in CATEGORIES]
     soon_n = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
     summary_thumb(today, len(open_jobs), [(n, sum(1 for j in open_jobs if j.category == c)) for c, n in cats], soon_n).save(day_dir / "thumb-summary.png")
+    not_picked = [j for j in jobs if j.is_target and not j.blog_pick]
+    others_html = ""
+    if not_picked or excluded:
+        others_html = '<h2>🗂️ 이번에 안 고른 공고</h2><div class="box">'
+        others_html += '<p class="muted">마음에 드는 공고가 있으면 번호와 함께 "이거 추가해줘"라고 말해주세요.</p>'
+        if not_picked:
+            others_html += f"<details open><summary><b>탈임상인데 글로 안 고른 공고 {len(not_picked)}건</b></summary>{_job_rows(not_picked)}</details>"
+        if excluded:
+            others_html += f'<details style="margin-top:12px"><summary><b>임상·교대근무 등으로 제외한 공고 {len(excluded)}건</b></summary>{_job_rows(excluded, False)}</details>'
+        others_html += "</div>"
     posts_html = "".join(posts) or '<div class="box"><p class="muted">오늘은 개별 글로 올릴 공고가 없어요.</p></div>'
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{today.isoformat()} 탈임상 공고</title>
@@ -161,6 +186,8 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
 
 <h2>📝 오늘 올릴 블로그 글 {len(picks(jobs))}개</h2>
 {posts_html}
+
+{others_html}
 
 <h2>📋 진행 중 공고 전체 정리 (1개)</h2>
 <div class="box"><div class="row"><b>전체 정리 글</b><span class="muted">카테고리: {SUMMARY_CATEGORY}</span></div>

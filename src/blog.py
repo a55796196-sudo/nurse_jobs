@@ -40,7 +40,10 @@ def _org(job: Job) -> str:
 
 def _emp(job: Job) -> str:
     """제목용 고용형태: 공고 제목에 쓰인 표현을 우선 (예: 대체인력 계약직)."""
-    words = [w for w in ("무기계약직", "정규직", "대체인력", "기간제", "계약직", "인턴") if w in job.title]
+    title = job.title.replace("비정규직", " ")  # '비정규직' 안의 '정규직'을 정규직으로 읽지 않게
+    words = [w for w in ("무기계약직", "정규직", "대체인력", "기간제", "계약직", "인턴") if w in title]
+    if "비정규직" in job.title and not any(w in words for w in ("기간제", "계약직", "무기계약직")):
+        words.append("비정규직")
     if "무기계약직" in words and "계약직" in words:
         words.remove("계약직")
     if words:
@@ -190,7 +193,7 @@ def post_html(job: Job, today: date) -> str:
             out.append(f"<li><b>무기계약직 평균보수</b> : {_manwon(ref['avg_mugi'])}</li>")
         if ref.get("tenure_months"):
             out.append(f"<li><b>정규직 평균 근속</b> : 약 {ref['tenure_months'] // 12}년 {ref['tenure_months'] % 12}개월</li>")
-        out.append("</ul><p>※ 기관 전체 기준 공시 금액이에요. 이 공고의 직무·고용형태 급여와는 다를 수 있어요.</p><p>&nbsp;</p>")
+        out.append("</ul><p>※ 기관 전체 기준 공시 금액입니다. 이 공고의 직무·고용형태 급여와 다를 수 있습니다.</p><p>&nbsp;</p>")
 
     if job.benefits:
         out.append("<h2>🎁 복리후생</h2><ul>" + "".join(f"<li>{_e(b)}</li>" for b in job.benefits) + "</ul><p>&nbsp;</p>")
@@ -223,8 +226,10 @@ def post_html(job: Job, today: date) -> str:
     elif _is_site_home(job.url):
         out.append(f'<li><a href="{_e(job.url)}">{_e(_org(job))} 채용 홈페이지</a> → 공고 목록에서 <b>"{_e(job.title)}"</b>을 찾아 지원하세요</li>')
     else:
-        out.append(f'<li><a href="{_e(job.url)}">기관 채용 홈페이지에서 바로 지원</a></li>')
-    out.append("</ul><p>※ 공고 내용을 요약한 글이에요. 지원 전 원문 공고문을 꼭 확인해주세요.</p><p>&nbsp;</p>")
+        out.append(f'<li><a href="{_e(job.url)}">{"공고 원문 보기" if job.source == "gojobs" else "기관 채용 홈페이지에서 바로 지원"}</a></li>')
+    if job.extra.get("apply"):
+        out.append(f'<li>접수 방법: {_e(job.extra["apply"])}</li>')
+    out.append("</ul><p>※ 공고 내용을 요약한 글입니다. 지원 전 원문 공고문을 꼭 확인하세요.</p><p>&nbsp;</p>")
 
     out.append("<p>" + " ".join(f"#{_e(t)}" for t in blog_tags(job)) + "</p>")
     return "\n".join(out)
@@ -251,7 +256,7 @@ def _link(job: Job) -> str:
 def summary_html(jobs: list[Job], today: date) -> str:
     jobs = sorted(jobs, key=lambda j: j.deadline or "9999")
     soon = [j for j in jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3]
-    out = [f"<p>{today.month}월 {today.day}일 기준, 지금 지원할 수 있는 <b>탈임상 간호사 채용공고 {len(jobs)}건</b>을 한 번에 정리했어요."
+    out = [f"<p>{today.month}월 {today.day}일 기준, 지금 지원할 수 있는 <b>탈임상 간호사 채용공고 {len(jobs)}건</b>을 한 번에 정리했습니다."
            + (f" 이 중 <b>{len(soon)}건은 3일 안에 마감</b>되니 먼저 확인하세요." if soon else "") + "</p><p>&nbsp;</p>"]
     for cat, name in CAT_ORDER:
         group = [j for j in jobs if j.category == cat]
@@ -273,7 +278,7 @@ def summary_html(jobs: list[Job], today: date) -> str:
             out.append(f'<tr><td>{_e(when)}</td><td><a href="{_e(_link(j))}">{_e(_org(j))}</a><br>{_e(role)}</td>'
                        f'<td>{_e((j.location or "-").replace(",", " · "))}</td></tr>')
         out.append("</table><p>&nbsp;</p>")
-    out.append("<p>기관명을 누르면 공고 원문으로 이동해요. 공고별 자세한 정리(급여·자격·전형)는 <b>탈임상 채용공고</b> 카테고리에서 볼 수 있어요.</p>")
-    out.append("<p>※ 마감일은 공고 기준이며, 조기 마감될 수 있으니 원문을 꼭 확인해주세요.</p><p>&nbsp;</p>")
+    out.append("<p>기관명을 누르면 공고 원문으로 이동합니다. 공고별 자세한 정리(급여·자격·전형)는 <b>탈임상 채용공고</b> 카테고리에 있습니다.</p>")
+    out.append("<p>※ 마감일은 공고 기준이며, 조기 마감될 수 있으니 원문을 꼭 확인하세요.</p><p>&nbsp;</p>")
     out.append("<p>#탈임상 #탈임상간호사 #간호사채용 #간호사이직 #간호사채용공고 #공공기관채용 #보건교사채용 #채용공고총정리</p>")
     return "\n".join(out)
