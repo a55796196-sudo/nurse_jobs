@@ -54,7 +54,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
    부족한 만큼 골라 `python -m src.main backlog-add YYYY-MM-DD KEY1 KEY2` 로 오늘 inbox 에 추가한 뒤, 그 공고들의 블로그 필드(intro·급여 등)를 채운다.
    목표는 **하루 최소 3개, 많으면 5개** (밀린 공고를 소진하는 동안은 5개를 채우는 쪽으로). 대기열에도 없으면 있는 만큼만.
 3-2. **첨부파일 읽기** (블로그 글 3~5개를 확정한 직후, 블로그 필드를 채우기 전에):
-   1. 분류·`blog_pick`까지 저장한 inbox 를 커밋·push: `git add -A data && git commit -m "분류 YYYY-MM-DD" && git push origin main`
+   1. 분류·`blog_pick`·`job_role`(고른 공고는 `department`도)까지 저장한 inbox 를 커밋·push: `git add -A data && git commit -m "분류 YYYY-MM-DD" && git push origin main`
    2. GitHub MCP `actions_run_trigger`로 워크플로 `attach.yml` 실행 (ref `main`, inputs `{"day": "YYYY-MM-DD"}`)
    3. `actions_list`로 실행 상태를 1~2분 간격으로 확인 (최대 15분). 끝나면 `git pull origin main`
       — **기다리는 동안 inbox 파일을 수정하지 말 것** (pull 충돌)

@@ -252,6 +252,18 @@ def page_url(job) -> str | None:
     return None   # goe 등 목록 페이지뿐인 출처
 
 
+def relevant(job, texts: list[tuple[str, str]]) -> list[tuple[str, str]]:
+    """zip 안에 여러 직무 파일이 있으면 공고문 + 이 공고 직무에 맞는 파일만 남김."""
+    if len(texts) <= MAX_FILES:
+        return texts
+    words = {w for w in re.findall(r"[가-힣A-Za-z]{2,}", " ".join(
+        str(x or "") for x in (job.title, job.job_role, job.department))) if w not in ("채용", "모집", "공고", "기간제", "계약직", "직원")}
+    words |= {w[i:i + 3] for w in list(words) if len(w) > 3 for i in range(len(w) - 2)}   # 외상코디네이터 → 코디네 …
+    main = [t for t in texts if re.search(r"공고", t[0])]
+    match = [t for t in texts if t not in main and any(w in t[0] for w in words)]
+    return (main + match)[:MAX_FILES] or texts[:MAX_FILES]
+
+
 def enrich(jobs: list) -> None:
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
@@ -274,6 +286,7 @@ def enrich(jobs: list) -> None:
                     t = tidy(t)
                     if t:
                         texts.append((n, t))
+            texts = relevant(j, texts)
             if not texts:
                 continue
             j.extra["attach_files"] = [n for n, _ in texts]
