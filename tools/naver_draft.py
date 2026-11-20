@@ -6,7 +6,7 @@
 처음 한 번:
     pip install playwright
     python -m playwright install chromium        (크롬이 깔려 있으면 생략 가능)
-    python tools/naver_draft.py login             → 열린 창에서 네이버 로그인 ('로그인 상태 유지' 체크) 후 창 닫기
+    python naver_draft.py login             → 열린 창에서 네이버 로그인 ('로그인 상태 유지' 체크) 후 창 닫기
 
 매일 (작업 스케줄러/launchd 로 예약하거나 직접):
     python tools/naver_draft.py                   오늘 글 전부 임시저장
@@ -105,7 +105,7 @@ def open_writer(ctx):
     page = ctx.new_page()
     page.goto(f"https://blog.naver.com/{BLOG_ID}?Redirect=Write", wait_until="domcontentloaded")
     if "nid.naver.com" in page.url:
-        raise RuntimeError("네이버 로그인이 필요합니다: python tools/naver_draft.py login")
+        raise RuntimeError("네이버 로그인이 필요합니다: python naver_draft.py login")
     fr = editor_frame(page)
     pause(2, 3)
     close_popups(fr)
@@ -200,6 +200,9 @@ def run(day: str, only: int | None, with_summary: bool) -> None:
     with sync_playwright() as p:
         ctx = launch(p)
         ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=PAGES.split("/nurse_jobs")[0])
+        if not logged_in(ctx):
+            ctx.close()
+            sys.exit("네이버 로그인이 필요합니다: python naver_draft.py login")
         work = ctx.pages[0] if ctx.pages else ctx.new_page()
         work.goto(f"{PAGES}/{day}/", wait_until="domcontentloaded")
         if work.locator("button[onclick^=\"copyText('pt\"]").count() == 0:
@@ -230,18 +233,33 @@ def run(day: str, only: int | None, with_summary: bool) -> None:
         ctx.close()
 
 
+def logged_in(ctx) -> bool:
+    names = {c["name"] for c in ctx.cookies("https://www.naver.com")}
+    return {"NID_AUT", "NID_SES"} <= names
+
+
 def login() -> None:
     from playwright.sync_api import sync_playwright
     with sync_playwright() as p:
         ctx = launch(p)
         page = ctx.pages[0] if ctx.pages else ctx.new_page()
-        page.goto("https://nid.naver.com/nidlogin.login")
-        print("열린 창에서 네이버에 로그인하세요 ('로그인 상태 유지' 체크). 로그인 후 창을 닫으면 끝납니다.")
-        try:
-            page.wait_for_event("close", timeout=0)
-        except Exception:
-            pass
+        if logged_in(ctx):
+            print("이미 로그인되어 있습니다.")
+        else:
+            page.goto("https://nid.naver.com/nidlogin.login")
+            print("열린 창에서 네이버에 로그인하세요 ('로그인 상태 유지' 체크). 창은 닫지 마세요 — 로그인되면 자동으로 닫힙니다.")
+            for _ in range(600):          # 최대 10분 대기
+                if logged_in(ctx):
+                    break
+                time.sleep(1)
+            else:
+                ctx.close()
+                sys.exit("10분 안에 로그인이 확인되지 않았습니다. 다시 실행해 주세요.")
+            print("로그인 확인! 저장 중...")
+            page.goto("https://blog.naver.com/" + BLOG_ID, wait_until="domcontentloaded")
+            time.sleep(5)                 # 쿠키가 디스크에 기록될 시간
         ctx.close()
+        print("완료. 이제 임시저장을 실행하세요.")
 
 
 if __name__ == "__main__":
