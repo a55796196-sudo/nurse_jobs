@@ -9,7 +9,7 @@
     python naver_draft.py login             → 열린 창에서 네이버 로그인 ('로그인 상태 유지' 체크) 후 창 닫기
 
 매일 (작업 스케줄러/launchd 로 예약하거나 직접):
-    python tools/naver_draft.py                   오늘 글 전부 임시저장
+    python tools/naver_draft.py                   어제·오늘 글 중 아직 안 한 것 전부 임시저장
     python tools/naver_draft.py 2026-11-20        특정 날짜
     python tools/naver_draft.py --only 1          글 1번만 (시험용)
     python tools/naver_draft.py --summary         전체 정리 글도 함께
@@ -269,5 +269,10 @@ if __name__ == "__main__":
     else:
         only = int(args[args.index("--only") + 1]) if "--only" in args else None
         pos = [a for a in args if not a.startswith("--") and not a.isdigit()]
-        day = pos[0] if pos else datetime.now(KST).date().isoformat()
-        run(day, only, "--summary" in args)
+        if pos:
+            days = [pos[0]]
+        else:   # 날짜를 안 주면 어제 + 오늘 (자정 실행 때 어제 글을 놓치지 않게)
+            t = datetime.now(KST).date()
+            days = [(t - timedelta(days=1)).isoformat(), t.isoformat()]
+        for day in days:
+            run(day, only, "--summary" in args)
