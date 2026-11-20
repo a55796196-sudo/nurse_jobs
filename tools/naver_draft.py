@@ -228,6 +228,7 @@ def run(day: str, only: int | None, with_summary: bool) -> None:
                 log(f"  오류: {e}")
                 fail += 1
             if i < len(jobs) - 1:
+                log("  다음 글까지 대기…")
                 pause(20, 50)   # 글 사이 간격
         log(f"끝: 임시저장 {ok}개, 실패 {fail}개")
         ctx.close()
@@ -262,7 +263,7 @@ def login() -> None:
         print("완료. 이제 임시저장을 실행하세요.")
 
 
-if __name__ == "__main__":
+def _main() -> None:
     args = sys.argv[1:]
     if args and args[0] == "login":
         login()
@@ -276,3 +277,17 @@ if __name__ == "__main__":
             days = [(t - timedelta(days=1)).isoformat(), t.isoformat()]
         for day in days:
             run(day, only, "--summary" in args)
+
+
+if __name__ == "__main__":
+    import faulthandler
+    import traceback
+    HOME.mkdir(parents=True, exist_ok=True)
+    _fh = open(HOME / "crash.txt", "a", encoding="utf-8")
+    faulthandler.enable(_fh)          # 파이썬 자체가 죽어도 기록
+    log(f"시작 (인자: {' '.join(sys.argv[1:]) or '없음'})")
+    try:
+        _main()
+    except BaseException as e:        # noqa: BLE001
+        log("비정상 종료:\n" + traceback.format_exc())
+        raise

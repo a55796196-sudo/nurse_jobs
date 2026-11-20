@@ -1,5 +1,6 @@
 @echo off
-rem 네이버 블로그 임시저장 (작업 스케줄러에서 이 파일을 실행)
 chcp 65001 >nul
+set PYTHONIOENCODING=utf-8
+set PYTHONUTF8=1
 cd /d "%~dp0"
-python naver_draft.py %*
+python naver_draft.py %* >> "%USERPROFILE%\.nurse_jobs_naver\run.txt" 2>&1
