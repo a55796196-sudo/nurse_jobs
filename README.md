@@ -51,7 +51,7 @@ Settings → **Pages** → Source: *Deploy from a branch* → Branch: `main`, �
    - Variables: `PAGES_BASE_URL` = `https://a55796196-sudo.github.io/nurse_jobs`
 6. **시험 실행**: Actions → "인스타 업로드" → Run workflow → `dry_run` 체크 → 올라갈 사진·캡션이 로그에 나오면 OK
 7. 실제 1개 올려보기: 같은 화면에서 `dry_run` 체크 없이 Run workflow → 인스타에서 확인
-8. 자동 업로드는 기본으로 켜져 있음 (매일 08·12·18·21시 무렵, 피드 1개 + 스토리 2개씩 간격 두고). 끄려면 Variables에 `IG_AUTO_POST` = `false`
+8. 자동 업로드는 기본으로 켜져 있음 (매일 08·12·18·21시 무렵, 피드 1개 + 스토리 1개씩 간격 두고). 끄려면 Variables에 `IG_AUTO_POST` = `false`
 
 **알아둘 것**
 - 공고 1개 = 게시물 1개 (표지 + 상세 장). 오늘 것부터, 어제 남은 것 순서로 올리고 마감 지난 공고·3일 지난 게시물은 건너뜀

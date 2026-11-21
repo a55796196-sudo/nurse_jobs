@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 POSTED = ROOT / "data" / "ig_posted.json"
 KST = timezone(timedelta(hours=9))
-STORY_PER_RUN = 2  # 한 번 실행에 올릴 스토리 수 (하루 4번 실행 → 최대 8개)
+STORY_PER_RUN = 1  # 한 번 실행에 올릴 스토리 수 (새 계정 보호용으로 1개씩, 하루 4번 실행 → 최대 4개)
 MAX_AGE_DAYS = 2   # 이보다 오래된 날짜의 게시물은 예약 업로드에서 건너뜀 (D-day가 안 맞음)
 
 
@@ -172,7 +172,17 @@ def publish_one(post: dict, dry: bool = False) -> None:
             _wait_container(cid)
         c = _post(f"{ig}/media", media_type="CAROUSEL", children=",".join(children), caption=post["caption"])
     _wait_container(c["id"])
-    res = _post(f"{ig}/media_publish", creation_id=c["id"])
+    try:
+        res = _post(f"{ig}/media_publish", creation_id=c["id"])
+    except RuntimeError:
+        # 인스타가 '행동이 차단되었습니다' 오류를 주면서도 실제로는 게시하는 경우가 있음 → 컨테이너 상태로 확인
+        import requests
+        time.sleep(10)
+        st = requests.get(f"{_graph()}/{c['id']}", params={"fields": "status_code", "access_token": os.environ["IG_ACCESS_TOKEN"]}, timeout=30).json().get("status_code")
+        if st != "PUBLISHED":
+            raise
+        res = {"id": f"container:{c['id']}"}
+        print("   (오류 응답을 받았지만 실제로는 게시됨)")
     _mark(post["id"], str(res.get("id")))
     print(f"   업로드 완료: media id {res.get('id')}")
 
