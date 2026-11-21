@@ -28,6 +28,21 @@ def _d(s: str) -> str | None:
     return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}" if m else None
 
 
+def _goto(page, url: str, tries: int = 4) -> None:
+    """정책브리핑이 빠르게 연달아 열면 빈 응답을 주므로, 쉬었다가 다시 시도."""
+    import time
+    for k in range(tries):
+        try:
+            page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_load_state("networkidle", timeout=30000)
+            time.sleep(1.5)
+            return
+        except Exception:  # noqa: BLE001
+            if k == tries - 1:
+                raise
+            time.sleep(8 * (k + 1))
+
+
 def _rows(page) -> list[dict]:
     return page.eval_on_selector_all(
         "a[href*='recruitInfoView']",
@@ -53,7 +68,7 @@ def fetch(days: int = 2, max_pages: int = 40) -> list[Job]:
         n = 0
         for n in range(1, max_pages + 1):
             try:
-                page.goto(f"{LIST}?pageIndex={n}", wait_until="networkidle", timeout=60000)
+                _goto(page, f"{LIST}?pageIndex={n}")
                 page.wait_for_timeout(800)
                 rows = _rows(page)
             except Exception as e:  # noqa: BLE001
@@ -80,7 +95,7 @@ def fetch(days: int = 2, max_pages: int = 40) -> list[Job]:
         for sid, c in cands.items():
             url = f"{BASE}/archive/recruitInfoView.do?dataId={sid}"
             try:
-                page.goto(url, wait_until="networkidle", timeout=60000)
+                _goto(page, url)
                 page.wait_for_timeout(800)
                 body = " ".join(page.inner_text("body").split())
             except Exception as e:  # noqa: BLE001
