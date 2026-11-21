@@ -1,0 +1,42 @@
+name: 인스타 토큰 확인
+
+# IG_ACCESS_TOKEN 이 작동하는지, 인스타 계정 ID(IG_USER_ID)가 무엇인지 로그에 출력 (토큰 값은 출력하지 않음)
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 확인
+        env:
+          TOK: ${{ secrets.IG_ACCESS_TOKEN }}
+          UID_SET: ${{ secrets.IG_USER_ID != '' }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, urllib.request, urllib.parse
+          tok = os.environ["TOK"]
+          print("IG_ACCESS_TOKEN 길이:", len(tok), "/ 앞 4글자:", tok[:4])
+          print("IG_USER_ID 등록됨:", os.environ["UID_SET"])
+          def get(host, path, fields):
+              url = f"https://{host}/v23.0/{path}?" + urllib.parse.urlencode({"fields": fields, "access_token": tok})
+              try:
+                  with urllib.request.urlopen(url, timeout=30) as r:
+                      return json.load(r)
+              except urllib.error.HTTPError as e:
+                  return {"error": json.load(e).get("error", {}).get("message")}
+          def clean(o):  # 응답 속 토큰 제거
+              if isinstance(o, dict):
+                  return {k: clean(v) for k, v in o.items() if "token" not in k}
+              if isinstance(o, list):
+                  return [clean(v) for v in o]
+              return o
+          for host, path, fields in [
+              ("graph.facebook.com", "me", "id,name"),
+              ("graph.facebook.com", "me/accounts", "name,instagram_business_account{id,username}"),
+              ("graph.facebook.com", "me", "instagram_business_account{id,username}"),
+              ("graph.instagram.com", "me", "user_id,username"),
+          ]:
+              print(f"\n▶ {host}/{path}")
+              print(json.dumps(clean(get(host, path, fields)), ensure_ascii=False, indent=1))
+          EOF
