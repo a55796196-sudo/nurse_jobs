@@ -675,7 +675,7 @@ def _dedupe(jobs: list[Job]) -> list[Job]:
 
 
 # ---------- 인스타 피드: 진행 중 공고 총정리 카드 (1080x1350, 표지 + 목록 장) ----------
-def roundup_cards(jobs: list[Job], today: date, per_page: int = 8, max_pages: int = 5) -> list[Image.Image]:
+def roundup_cards(jobs: list[Job], today: date, per_page: int = 8, max_pages: int = 9) -> list[Image.Image]:
     bg, mark, pt = SUMMARY_PAL
     open_jobs = _dedupe(sorted([j for j in jobs if not j.deadline or j.deadline >= today.isoformat()], key=lambda j: j.deadline or "9999"))
     soon = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
@@ -683,30 +683,66 @@ def roundup_cards(jobs: list[Job], today: date, per_page: int = 8, max_pages: in
     cover_img = Image.new("RGB", (W, H), bg)
     cover_img.paste(summary_thumb(today, len(open_jobs), counts, soon), (0, 135))
     out = [cover_img]
-    pages = [open_jobs[i:i + per_page] for i in range(0, len(open_jobs), per_page)][:max_pages]
-    for pno, chunk in enumerate(pages, start=1):
+    # 분야별로 묶고 각 분야 안에서 D-day 순 → 장마다 (분야 제목 + 줄) 배치
+    names = {"기업": "기업 · 보건관리자", "공공": "공공기관 · 보건소", "연구": "임상연구 · CRC", "학교": "학교 보건실", "기타": "기타"}
+    items: list[tuple] = []
+    for c in CATEGORIES:
+        group = [j for j in open_jobs if j.category == c]
+        if group:
+            items.append(("h", c, len(group)))
+            items += [("r", j) for j in group]
+    ROW, HEAD = 108, 96
+    x0, y0, x1, y1 = 60, 70, W - 60, H - 110
+    top, bottom = y0 + 150, y1 - 40
+    pages_items: list[list[tuple]] = [[]]
+    y = top
+    cur_cat = None
+    for it in items:
+        need = HEAD if it[0] == "h" else ROW
+        if it[0] == "h":
+            cur_cat = it
+            if y + HEAD + ROW > bottom:          # 제목만 덩그러니 남지 않게
+                pages_items.append([]); y = top
+        elif y + ROW > bottom:
+            pages_items.append([("h", cur_cat[1], cur_cat[2], True)]); y = top + HEAD
+        pages_items[-1].append(it); y += need
+    pages_items = [p for p in pages_items if p][:max_pages]
+    for pno, chunk in enumerate(pages_items, start=1):
         img = Image.new("RGB", (W, H), bg)
         d = ImageDraw.Draw(img)
-        x0, y0, x1, y1 = 60, 70, W - 60, H - 110
         d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
         d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
-        d.text((x0 + 60, y0 + 60), "진행 중 공고", font=font(56, "Title"), fill="#1E1E1E")
-        d.text((x1 - 60, y0 + 70), f"{pno}/{len(pages)}", font=font(34, "Bold"), fill="#B0B0B0", anchor="ra")
-        y = y0 + 170
-        rowh = (y1 - 60 - y) // per_page
-        for j in chunk:
+        d.text((x0 + 60, y0 + 55), "진행 중 공고", font=font(58, "Title"), fill="#1E1E1E")
+        d.text((x1 - 60, y0 + 70), f"{pno}/{len(pages_items)}", font=font(34, "Bold"), fill="#B0B0B0", anchor="ra")
+        y = top
+        for it in chunk:
+            if it[0] == "h":
+                c = IG_PAL.get(it[1], IG_PAL["기타"])
+                label = names.get(it[1], it[1]) + (" (이어서)" if len(it) > 3 else f"  {it[2]}건")
+                fl = font(40, "ExtraBold")
+                tw = d.textlength(label, font=fl)
+                d.rounded_rectangle((x0 + 50, y + 14, x0 + 50 + tw + 56, y + 78), 32, fill=c[0])
+                d.text((x0 + 78, y + 46), label, font=fl, fill=c[2], anchor="lm")
+                y += HEAD
+                continue
+            j = it[1]
             c = IG_PAL.get(j.category or "기타", IG_PAL["기타"])
             left = (date.fromisoformat(j.deadline) - today).days if j.deadline else None
             dd = ("D-DAY" if left == 0 else f"D-{left}") if left is not None else "상시"
-            d.rounded_rectangle((x0 + 50, y + 8, x0 + 210, y + 68), 30, fill="#E5383B" if left is not None and left <= 3 else c[2])
-            d.text((x0 + 130, y + 38), dd, font=font(34, "ExtraBold"), fill="white", anchor="mm")
-            name = " ".join(x for x in (re.sub(r"^\((재|사|주)\)|\(주\)|㈜", "", j.org).strip(), j.job_role or "") if x)
-            fr = font(40, "Bold")
-            while d.textlength(name, font=fr) > x1 - x0 - 300 and len(name) > 4:
-                name = name[:-2]
-            d.text((x0 + 240, y + 4), name, font=fr, fill="#1E1E1E")
-            d.text((x0 + 240, y + 54), (j.location or "").split(",")[0], font=font(30, "Medium"), fill="#8C8C8C")
-            y += rowh
+            urgent = left is not None and left <= 3
+            d.rounded_rectangle((x0 + 50, y + 14, x0 + 212, y + 78), 32, fill="#E5383B" if urgent else c[2])
+            d.text((x0 + 131, y + 46), dd, font=font(36, "ExtraBold"), fill="white", anchor="mm")
+            org = re.sub(r"^\((재|사|주)\)|\(주\)|㈜", "", j.org).strip()
+            fr = font(42, "Bold")
+            maxw = x1 - x0 - 330
+            while d.textlength(org, font=fr) > maxw and len(org) > 4:
+                org = org[:-2]
+            d.text((x0 + 240, y + 8), org, font=fr, fill="#1E1E1E")
+            sub = " · ".join(x for x in (j.job_role or "", (j.location or "").split(",")[0]) if x)
+            d.text((x0 + 240, y + 60), sub, font=font(32, "Medium"), fill="#7A7A7A")
+            if it is not chunk[-1]:
+                d.line((x0 + 50, y + ROW - 6, x1 - 50, y + ROW - 6), fill="#F0EEF8", width=2)
+            y += ROW
         d.text((W / 2, H - 55), BRAND + "  ·  전체 목록·링크는 프로필 링크(블로그)", font=font(30, "SemiBold"), fill=pt, anchor="mm")
         out.append(img)
     return out
