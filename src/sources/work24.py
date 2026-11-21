@@ -29,7 +29,8 @@ NOT_CLINICAL_HINT = re.compile(r"병동|외래|수술실|응급실|중환자|요
 
 
 def _clean(s: str) -> str:
-    return " ".join(H.unescape(re.sub(r"<[^>]+>", " ", s)).split())
+    s = re.sub(r"<script.*?</script>", " ", s, flags=re.S)
+    return " ".join(H.unescape(re.sub(r"<[^>]+>", " ", s)).split()).lstrip("> ").strip()
 
 
 def _rows(html: str) -> list[dict]:
@@ -49,7 +50,7 @@ def _rows(html: str) -> list[dict]:
     return out
 
 
-def fetch(days: int = 3, per_kw: int = 50, max_detail: int = 40) -> list[Job]:
+def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -61,27 +62,35 @@ def fetch(days: int = 3, per_kw: int = 50, max_detail: int = 40) -> list[Job]:
         b = p.chromium.launch()
         page = b.new_context(user_agent=UA, locale="ko-KR").new_page()
         for kw, need in KEYWORDS.items():
-            url = f"{LIST}?srcKeyword={quote(kw)}&listCount={per_kw}&pageIndex=1&sortField=DATE&sortOrderBy=DESC"
-            try:
-                page.goto(url, wait_until="networkidle", timeout=90000)
-                page.wait_for_timeout(1500)
-                rows = _rows(page.content())
-            except Exception as e:  # noqa: BLE001
-                print(f"[work24] 검색 실패 {kw}: {e}")
-                continue
-            hit = 0
-            for r in rows:
-                if r["posted"] and r["posted"] < since:
-                    continue
-                if not re.search(need, r["title"], re.I) or r["auth"] in found:
-                    continue
-                if kw == "간호사 사무" and NOT_CLINICAL_HINT.search(r["title"]):
-                    continue
-                r["kw"] = kw
-                found[r["auth"]] = r
-                hit += 1
-            print(f"[work24] {kw}: 목록 {len(rows)}건 중 {hit}건")
-            time.sleep(2)
+            hit, total = 0, 0
+            for pg_no in range(1, pages + 1):
+                # keywordWantedTitle=Y: 제목에서만 검색 (안 먹히면 전체 검색 결과를 제목으로 거름)
+                url = (f"{LIST}?srcKeyword={quote(kw)}&keywordWantedTitle=Y&keywordFlag=&pageIndex={pg_no}"
+                       f"&sortField=DATE&sortOrderBy=DESC")
+                try:
+                    page.goto(url, wait_until="networkidle", timeout=90000)
+                    page.wait_for_timeout(1500)
+                    rows = _rows(page.content())
+                except Exception as e:  # noqa: BLE001
+                    print(f"[work24] 검색 실패 {kw} p{pg_no}: {e}")
+                    break
+                total += len(rows)
+                old_seen = False
+                for r in rows:
+                    if r["posted"] and r["posted"] < since:
+                        old_seen = True
+                        continue
+                    if not re.search(need, r["title"], re.I) or r["auth"] in found:
+                        continue
+                    if kw == "간호사 사무" and NOT_CLINICAL_HINT.search(r["title"]):
+                        continue
+                    r["kw"] = kw
+                    found[r["auth"]] = r
+                    hit += 1
+                time.sleep(2)
+                if len(rows) < 10 or old_seen:
+                    break
+            print(f"[work24] {kw}: 목록 {total}건 중 {hit}건")
         jobs: list[Job] = []
         for n, (auth, r) in enumerate(found.items()):
             url = f"{BASE}/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo={auth}&infoTypeCd=VALIDATION&infoTypeGroup=tb_workinfoworknet"
@@ -92,14 +101,15 @@ def fetch(days: int = 3, per_kw: int = 50, max_detail: int = 40) -> list[Job]:
                     page.wait_for_timeout(1200)
                     body = " ".join(page.inner_text("body").split())
                     i = body.find(r["title"][:15])
-                    body = body[i:] if i > 0 else body
+                    body = body[i:] if i > 0 else ""   # 외부 제공 공고는 본문이 없음
                     time.sleep(1.5)
                 except Exception as e:  # noqa: BLE001
                     print(f"[work24] 상세 실패 {auth}: {e}")
             text = r["text"]
             company = text.split(r["title"][:10])[0].strip() if r["title"] else ""
             company = re.sub(r"\s+\S*\(주\)\S*$|\s+$", "", company)[:40] or "기업"
-            loc = re.search(r"(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|충청|전북|전남|전라|경북|경남|경상|제주)\S*\s+(\S+[시군구])", text)
+            after = text.split(r["title"][:15], 1)[-1]
+            loc = re.search(r"(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|충청|전북|전남|전라|경북|경남|경상|제주)\S*\s+(\S+[시군구])", after)
             jobs.append(Job(
                 source="work24", source_id=auth, title=r["title"][:150], url=url,
                 org=company, deadline=r["deadline"], start_date=r["posted"],
