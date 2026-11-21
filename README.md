@@ -28,7 +28,7 @@ GitHub 저장소 → **Settings → Secrets and variables → Actions → New re
 | `BRAND_NAME` | 탈임상 채용노트 |
 | `IG_HANDLE` | 인스타 아이디 (@ 빼고) |
 | `PAGES_BASE_URL` | https://내아이디.github.io/nurse_jobs |
-| `IG_AUTO_POST` | `true`면 매일 자동 업로드 (처음엔 비워두는 걸 추천) |
+| `IG_AUTO_POST` | `false`면 자동 업로드 끔 (비워두면 켜짐) |
 
 ### 2) 작업실 페이지 켜기 (GitHub Pages)
 Settings → **Pages** → Source: *Deploy from a branch* → Branch: `main`, 폴더: `/docs` → Save
@@ -63,7 +63,7 @@ Settings → **Pages** → Source: *Deploy from a branch* → Branch: `main`, �
 ## 매일 할 일 (2분)
 1. 작업실 페이지에서 오늘 날짜 클릭
 2. **제목 복사 → 본문 복사** → 네이버 블로그에 붙여넣기 → 발행
-3. 인스타는 자동 업로드 (IG_AUTO_POST=true일 때) — 아니면 Actions에서 Run workflow
+3. 인스타는 자동 업로드 (기본 켜짐) — 아니면 Actions에서 Run workflow
 
 ## 로컬에서 테스트
 ```bash
