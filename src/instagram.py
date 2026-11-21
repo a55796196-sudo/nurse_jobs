@@ -9,7 +9,8 @@
 이미지는 공개 URL이어야 하므로 GitHub Pages에 올라간 이미지를 사용합니다.
 
 올릴 게시물:
-  - 매일 공고: docs/YYYY-MM-DD/ig-NN-K.jpg  (공고 1개 = 게시물 1개, 캡션은 jobs.json으로 만듦)
+  - 매일 피드: docs/YYYY-MM-DD/roundup-*.jpg (진행 중 공고 총정리) + roundup_caption.txt
+  - 매일 스토리: docs/YYYY-MM-DD/story-NN.jpg (공고별, 캡션 없음)
   - 주간 가이드: docs/guides/YYYY-MM-DD/card-*.jpg + caption.txt
 올린 기록: data/ig_posted.json  (같은 게시물을 두 번 올리지 않음)
 
@@ -48,28 +49,16 @@ def _graph() -> str:
 
 # ---------- 게시물 목록 ----------
 def _day_posts(day: str) -> list[dict]:
-    """매일 공고 게시물: [{id, images, caption}]"""
+    """매일: 피드 = 진행 중 공고 총정리 카드(roundup-*.jpg) 1개, 스토리 = 공고별 story-NN.jpg."""
     d = DOCS / day
-    groups: dict[int, list[Path]] = {}
-    for p in d.glob("ig-*-*.jpg"):
-        m = re.fullmatch(r"ig-(\d+)-(\d+)\.jpg", p.name)
-        if m:
-            groups.setdefault(int(m[1]), []).append(p)
-    if not groups:
-        return []
-    from .blog import picks
-    from .models import Job
-    from .site import ig_caption
-    jobs = [Job.from_dict(x) for x in json.loads((d / "jobs.json").read_text(encoding="utf-8"))]
-    chosen = picks(jobs)
-    post_day = max(date.fromisoformat(day), today_kst())
     out = []
-    for n in sorted(groups):
-        imgs = sorted(groups[n], key=lambda p: int(p.stem.rsplit("-", 1)[1]))
-        job = chosen[n - 1] if n <= len(chosen) else None
-        expired = bool(job and job.deadline and job.deadline < today_kst().isoformat())
-        cap = ig_caption(job, post_day) if job else ""
-        out.append({"id": f"{day}/ig-{n:02d}", "images": imgs, "caption": cap, "expired": expired})
+    for p in sorted(d.glob("story-*.jpg")):
+        out.append({"id": f"{day}/{p.stem}", "images": [p], "caption": "", "story": True})
+    rc = sorted(d.glob("roundup-*.jpg"), key=lambda p: int(p.stem.split("-")[1]))
+    # 피드 도배 방지: 총정리는 월·목만 (가이드는 수·토) → 피드 주 4개
+    if rc and date.fromisoformat(day).weekday() in (0, 3):
+        cap = (d / "roundup_caption.txt").read_text(encoding="utf-8") if (d / "roundup_caption.txt").exists() else ""
+        out.append({"id": f"{day}/roundup", "images": rc, "caption": cap})
     return out
 
 
@@ -151,7 +140,7 @@ def _wait_container(cid: str) -> None:
 def publish_one(post: dict, dry: bool = False) -> None:
     base = os.environ.get("PAGES_BASE_URL", "https://example.github.io/nurse_jobs").rstrip("/")
     urls = [f"{base}/{p.relative_to(DOCS).as_posix()}" for p in post["images"]][:10]
-    if not post["caption"]:
+    if not post["caption"] and not post.get("story"):
         raise RuntimeError(f"{post['id']} 캡션이 비어 있습니다")
     print(f"▶ {post['id']} ({len(urls)}장)")
     if dry:
@@ -160,7 +149,9 @@ def publish_one(post: dict, dry: bool = False) -> None:
         return
     ig = os.environ["IG_USER_ID"]
     _wait_public(urls[-1])
-    if len(urls) == 1:
+    if post.get("story"):
+        c = _post(f"{ig}/media", image_url=urls[0], media_type="STORIES")
+    elif len(urls) == 1:
         c = _post(f"{ig}/media", image_url=urls[0], caption=post["caption"])
     else:
         children = [_post(f"{ig}/media", image_url=u, is_carousel_item="true")["id"] for u in urls]
@@ -193,8 +184,15 @@ def main(argv: list[str]) -> None:
         if not todo:
             print("올릴 게시물이 없습니다.")
             return
-        publish_one(todo[0], dry)
-        print(f"남은 게시물 {len(todo) - 1}개")
+        stories = [p for p in todo if p.get("story") and p["id"].startswith(today_kst().isoformat())]
+        feeds = [p for p in todo if not p.get("story")]
+        for p in stories:          # 오늘 공고 스토리는 한 번에
+            publish_one(p, dry)
+            if not dry:
+                time.sleep(20)
+        if feeds:                   # 피드는 한 번에 1개 (총정리·가이드)
+            publish_one(feeds[0], dry)
+        print(f"남은 피드 {max(0, len(feeds) - 1)}개")
         return
 
     posts = posts_for(target)

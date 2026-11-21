@@ -131,6 +131,21 @@ def _job_rows(jobs: list[Job], show_role: bool = True) -> str:
             + "".join(rows) + "</table>")
 
 
+def roundup_caption(jobs: list[Job], today: date) -> str:
+    """피드용 총정리 캡션."""
+    from .render import _dedupe
+    open_jobs = _dedupe(sorted([j for j in jobs if not j.deadline or j.deadline >= today.isoformat()], key=lambda j: j.deadline or "9999"))
+    lines = [f"📋 {today.month}/{today.day} 기준 탈임상 간호사 채용공고 {len(open_jobs)}건", ""]
+    for j in open_jobs[:12]:
+        dl = d_day(j.deadline, today).split(" ·")[0] if j.deadline else "상시"
+        lines.append(f"· {_org(j)} {j.job_role or ''} ({dl})")
+    if len(open_jobs) > 12:
+        lines.append(f"…외 {len(open_jobs) - 12}건")
+    lines += ["", "🔗 전체 목록·원문 링크는 프로필 링크(블로그)에서", "💾 저장해두고 마감 체크", "",
+              "#탈임상 #탈임상간호사 #간호사채용 #간호사이직 #간호사취업 #보건관리자 #보험심사간호사 #보건소간호사 #CRC #간호사채용공고"]
+    return "\n".join(lines)
+
+
 def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None, post_day: date | None = None,
               excluded: list[Job] | None = None) -> Path:
     day_dir = docs / today.isoformat()
@@ -143,7 +158,8 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
 <div><b>인스타 {n}. {_e(j.org)}</b> <span class="muted">({len(ps)}장 · 순서대로 올리세요)</span>
 <pre id="ic{n}" style="margin:8px 0">{_e(ig_caption(j, post_day or today))}</pre>
 <button onclick="copyText('ic{n}',this)">캡션 복사</button></div></div>""")
-    ig_html = ("<h2>📷 인스타 게시물 (공고 1개 = 1장)</h2>\n" + "".join(ig)) if ig else ""
+    ig_html = ""   # 인스타 영역은 아래(총정리 카드 생성 뒤)에서 만듦
+    ig_job_html = ("<details><summary class='muted' style='cursor:pointer'>공고별 카드뉴스(예전 형식, 필요할 때만)</summary>" + "".join(ig) + "</details>") if ig else ""
     posts = []
     for n, j in enumerate(picks(jobs), start=1):
         role = " ".join(x for x in (j.department, j.job_role) if x)
@@ -167,6 +183,25 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
     cats = [(c, c) for c in CATEGORIES]
     soon_n = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
     summary_thumb(today, len(open_jobs), [(n, sum(1 for j in open_jobs if j.category == c)) for c, n in cats], soon_n).save(day_dir / "thumb-summary.png")
+    # 인스타: 피드용 총정리 카드 + 스토리용 공고 이미지
+    from .render import ig_story, roundup_cards
+    for old_f in list(day_dir.glob("roundup-*.jpg")) + list(day_dir.glob("story-*.jpg")):
+        old_f.unlink()
+    rcards = roundup_cards(open_jobs, post_day or today)
+    for k, im in enumerate(rcards, start=1):
+        im.save(day_dir / f"roundup-{k}.jpg", quality=92)
+    for n, j in enumerate(picks(jobs), start=1):
+        ig_story(j, post_day or today).save(day_dir / f"story-{n:02d}.jpg", quality=92)
+    (day_dir / "roundup_caption.txt").write_text(roundup_caption(open_jobs, post_day or today), encoding="utf-8")
+    rc_imgs = "".join(f'<a href="roundup-{k}.jpg" download><img src="roundup-{k}.jpg" style="width:150px;border-radius:8px;border:1px solid var(--line);margin:0 6px 6px 0"></a>' for k in range(1, len(rcards) + 1))
+    st_imgs = "".join(f'<a href="story-{n:02d}.jpg" download><img src="story-{n:02d}.jpg" style="width:110px;border-radius:8px;border:1px solid var(--line);margin:0 6px 6px 0"></a>' for n in range(1, len(picks(jobs)) + 1))
+    ig_html = f"""<h2>📷 인스타</h2>
+<div class="box"><b>피드: 진행 중 공고 총정리</b> <span class="muted">({len(rcards)}장 · 순서대로)</span>
+<div style="display:flex;flex-wrap:wrap;margin-top:8px">{rc_imgs}</div>
+<pre id="rcap" style="margin:8px 0">{_e(roundup_caption(open_jobs, post_day or today))}</pre><button onclick="copyText('rcap',this)">캡션 복사</button></div>
+<div class="box"><b>스토리: 오늘 공고</b> <span class="muted">(링크 스티커로 블로그 글 연결)</span>
+<div style="display:flex;flex-wrap:wrap;margin-top:8px">{st_imgs}</div></div>
+{ig_job_html}"""
     not_picked = [j for j in jobs if j.is_target and not j.blog_pick]
     others_html = ""
     if not_picked or excluded:

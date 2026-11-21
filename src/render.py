@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import os
+import re
 from datetime import date
 from pathlib import Path
 
@@ -641,3 +642,71 @@ def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: 
     if soon:
         d.text((X, y1 - 120), f"3일 안에 마감 {soon}건", font=font(52, "ExtraBold"), fill="#E5383B", anchor="lm")
     return img
+
+
+# ---------- 인스타 스토리 (공고 1개 = 스토리 1장, 1080x1920) ----------
+def ig_story(job: Job, today: date) -> Image.Image:
+    bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
+    img = Image.new("RGB", (W, 1920), bg)
+    d = ImageDraw.Draw(img)
+    for i in range(0, W + 80, 120):
+        for j in range(0, 1920 + 80, 120):
+            if (i // 120 + j // 120) % 2 == 0:
+                d.ellipse((i - 7, j - 7, i + 7, j + 7), fill=mark)
+    d.text((W / 2, 170), "오늘의 탈임상 공고", font=font(56, "Title"), fill=pt, anchor="mm")
+    card = ig_post(job, today)                      # 1080x1350 표지를 가운데에
+    img.paste(card.resize((972, 1215)), (54, 260))
+    by = 1560
+    d.rounded_rectangle((120, by, W - 120, by + 170), 85, fill="white")
+    d.text((W / 2, by + 58), "자세한 조건 · 지원 링크는", font=font(40, "SemiBold"), fill="#666", anchor="mm")
+    d.text((W / 2, by + 118), "프로필 링크(블로그)에서 확인", font=font(52, "ExtraBold"), fill=pt, anchor="mm")
+    d.text((W / 2, 1830), BRAND, font=font(34, "SemiBold"), fill=pt, anchor="mm")
+    return img
+
+
+def _dedupe(jobs: list[Job]) -> list[Job]:
+    """같은 기관·직무·근무지·마감일이 여러 날 수집된 경우 하나만."""
+    seen, out = set(), []
+    for j in jobs:
+        k = (j.org, j.job_role, (j.location or "").split(",")[0], j.deadline)
+        if k not in seen:
+            seen.add(k); out.append(j)
+    return out
+
+
+# ---------- 인스타 피드: 진행 중 공고 총정리 카드 (1080x1350, 표지 + 목록 장) ----------
+def roundup_cards(jobs: list[Job], today: date, per_page: int = 8, max_pages: int = 5) -> list[Image.Image]:
+    bg, mark, pt = SUMMARY_PAL
+    open_jobs = _dedupe(sorted([j for j in jobs if not j.deadline or j.deadline >= today.isoformat()], key=lambda j: j.deadline or "9999"))
+    soon = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
+    counts = [(c, sum(1 for j in open_jobs if j.category == c)) for c in CATEGORIES]
+    cover_img = Image.new("RGB", (W, H), bg)
+    cover_img.paste(summary_thumb(today, len(open_jobs), counts, soon), (0, 135))
+    out = [cover_img]
+    pages = [open_jobs[i:i + per_page] for i in range(0, len(open_jobs), per_page)][:max_pages]
+    for pno, chunk in enumerate(pages, start=1):
+        img = Image.new("RGB", (W, H), bg)
+        d = ImageDraw.Draw(img)
+        x0, y0, x1, y1 = 60, 70, W - 60, H - 110
+        d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
+        d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
+        d.text((x0 + 60, y0 + 60), "진행 중 공고", font=font(56, "Title"), fill="#1E1E1E")
+        d.text((x1 - 60, y0 + 70), f"{pno}/{len(pages)}", font=font(34, "Bold"), fill="#B0B0B0", anchor="ra")
+        y = y0 + 170
+        rowh = (y1 - 60 - y) // per_page
+        for j in chunk:
+            c = IG_PAL.get(j.category or "기타", IG_PAL["기타"])
+            left = (date.fromisoformat(j.deadline) - today).days if j.deadline else None
+            dd = ("D-DAY" if left == 0 else f"D-{left}") if left is not None else "상시"
+            d.rounded_rectangle((x0 + 50, y + 8, x0 + 210, y + 68), 30, fill="#E5383B" if left is not None and left <= 3 else c[2])
+            d.text((x0 + 130, y + 38), dd, font=font(34, "ExtraBold"), fill="white", anchor="mm")
+            name = " ".join(x for x in (re.sub(r"^\((재|사|주)\)|\(주\)|㈜", "", j.org).strip(), j.job_role or "") if x)
+            fr = font(40, "Bold")
+            while d.textlength(name, font=fr) > x1 - x0 - 300 and len(name) > 4:
+                name = name[:-2]
+            d.text((x0 + 240, y + 4), name, font=fr, fill="#1E1E1E")
+            d.text((x0 + 240, y + 54), (j.location or "").split(",")[0], font=font(30, "Medium"), fill="#8C8C8C")
+            y += rowh
+        d.text((W / 2, H - 55), BRAND + "  ·  전체 목록·링크는 프로필 링크(블로그)", font=font(30, "SemiBold"), fill=pt, anchor="mm")
+        out.append(img)
+    return out
