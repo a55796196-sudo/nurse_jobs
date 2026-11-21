@@ -16,11 +16,11 @@ import zlib
 from pathlib import Path
 
 MAX_FILES = 3
-MAX_TEXT = 8000
+MAX_TEXT = 12000
 MAX_BYTES = 15 * 1024 * 1024
 EXT = re.compile(r"\.(hwpx?|pdf|docx|zip|jpe?g|png)\b", re.I)
 # 지원서·서식류는 건너뜀 (공고문·직무기술서만)
-SKIP = re.compile(r"지원서|입사지원|서식|양식|동의서|자기소개|이의신청|반환청구|확인서|서약서|신청서|위임장|증명서|체크리스트")
+SKIP = re.compile(r"지원서|입사지원|응시자\s*제출서류|서식|양식|동의서|자기소개|이의신청|반환청구|확인서|서약서|신청서|위임장|증명서|체크리스트")
 PRIORITY = (re.compile(r"공고"), re.compile(r"직무기술|직무설명"), re.compile(r"채용|모집|안내"))
 KEYWORDS = re.compile(r"보수|급여|임금|연봉|월급|기본급|수당|근무\s*(시간|형태|일|조건|장소|지)|자격|요건|우대|가산|전형|절차|"
                       r"접수|모집\s*(인원|분야)|채용\s*인원|계약\s*기간|직무|업무|담당|복리|후생|제출\s*서류")
@@ -169,22 +169,46 @@ def tidy(text: str) -> str:
     return "\n".join(out)
 
 
-def excerpt(text: str, limit: int = MAX_TEXT) -> str:
-    """길면 급여·근무·자격·우대·전형 등 핵심 줄(+뒤 4줄)만 남김."""
+def excerpt(text: str, limit: int = MAX_TEXT, focus: str = "") -> str:
+    """길면 ① 이 공고 직무(간호 등) 주변 넓게 → ② 급여·근무·자격 등 핵심 줄 순으로 남김.
+    여러 분야를 한 공고문에 모은 지자체 공고는 표가 한 칸씩 줄로 쪼개져서, 직무 행 주변을 넓게 잡아야 급여·자격이 남는다."""
     if len(text) <= limit:
         return text
     lines = text.splitlines()
-    keep: set[int] = set()
+    first: set[int] = set()
+    fpat = re.compile(focus) if focus else None
+    if fpat:
+        for i, ln in enumerate(lines):
+            if fpat.search(ln):
+                first.update(range(max(0, i - 3), min(i + 25, len(lines))))
+    second: set[int] = set()
     for i, ln in enumerate(lines):
         if KEYWORDS.search(ln):
-            keep.update(range(i, min(i + 5, len(lines))))
-    picked = "\n".join(lines[i] for i in sorted(keep)) or text
-    return picked[:limit]
+            second.update(range(i, min(i + 8, len(lines))))
+    keep: set[int] = set(range(min(15, len(lines))))   # 머리말(공고명·기관)
+    size = sum(len(lines[i]) + 1 for i in keep)
+    for group in (sorted(first), sorted(second - first)):
+        for i in group:
+            if i in keep:
+                continue
+            if size + len(lines[i]) + 1 > limit:
+                break
+            keep.add(i); size += len(lines[i]) + 1
+    return "\n".join(lines[i] for i in sorted(keep)) or text[:limit]
 
 
 def choose(names: list[str]) -> list[str]:
     """공고문 → 직무기술서 → 기타 순으로 최대 MAX_FILES 개 (서식·지원서 제외)."""
     cand = [n for n in names if not SKIP.search(n)]
+    # 같은 공고문을 hwp(x)와 pdf로 둘 다 올린 경우 하나만 (내용 중복으로 글자 한도만 차지함)
+    stem = lambda n: re.sub(r"\.(hwpx?|pdf|docx)\b.*$", "", n, flags=re.I).strip()  # noqa: E731
+    seen_stems: set[str] = set()
+    uniq = []
+    for n in sorted(cand, key=lambda n: 0 if re.search(r"\.hwpx?\b", n, re.I) else 1):
+        if stem(n) in seen_stems:
+            continue
+        seen_stems.add(stem(n)); uniq.append(n)
+    cand = [n for n in cand if n in uniq]
     rank = lambda n: next((i for i, p in enumerate(PRIORITY) if p.search(n)), len(PRIORITY))  # noqa: E731
     return sorted(cand, key=rank)[:MAX_FILES]
 
@@ -290,6 +314,6 @@ def enrich(jobs: list) -> None:
             if not texts:
                 continue
             j.extra["attach_files"] = [n for n, _ in texts]
-            j.extra["attach_text"] = excerpt("\n\n".join(f"[{n}]\n{t}" for n, t in texts))
+            j.extra["attach_text"] = excerpt("\n\n".join(f"[{n}]\n{t}" for n, t in texts), focus=r"간\s*호|보건진료")
             print(f"[attach] OK {j.org} {j.title[:30]}: {len(j.extra['attach_text'])}자 ({', '.join(j.extra['attach_files'])})")
         b.close()
