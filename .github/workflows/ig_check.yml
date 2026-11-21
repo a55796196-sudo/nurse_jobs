@@ -31,12 +31,27 @@ jobs:
               if isinstance(o, list):
                   return [clean(v) for v in o]
               return o
-          for host, path, fields in [
-              ("graph.facebook.com", "me", "id,name"),
-              ("graph.facebook.com", "me/accounts", "name,instagram_business_account{id,username}"),
-              ("graph.facebook.com", "me", "instagram_business_account{id,username}"),
-              ("graph.instagram.com", "me", "user_id,username"),
-          ]:
-              print(f"\n▶ {host}/{path}")
-              print(json.dumps(clean(get(host, path, fields)), ensure_ascii=False, indent=1))
+          def show(host, path, fields=""):
+              r = get(host, path, fields)
+              print(f"\n▶ {host}/{path} ({fields})")
+              print(json.dumps(clean(r), ensure_ascii=False, indent=1)[:1500])
+              return r
+          F = "graph.facebook.com"
+          show(F, "me", "id,name")
+          show(F, "me/accounts", "name,instagram_business_account{id,username}")
+          show(F, "me/instagram_accounts", "id,username")
+          biz = show(F, "me/businesses", "id,name")
+          for b in (biz.get("data") or []) if isinstance(biz, dict) else []:
+              show(F, f"{b['id']}/owned_instagram_accounts", "id,username")
+              show(F, f"{b['id']}/instagram_business_accounts", "id,username")
+              show(F, f"{b['id']}/instagram_accounts", "id,username")
+              show(F, f"{b['id']}/owned_pages", "name,instagram_business_account{id,username}")
+          dbg = urllib.parse.urlencode({"input_token": tok, "access_token": tok})
+          try:
+              with urllib.request.urlopen(f"https://{F}/debug_token?{dbg}", timeout=30) as r:
+                  d = json.load(r).get("data", {})
+              print("\n▶ debug_token")
+              print(json.dumps({k: d.get(k) for k in ("type", "is_valid", "expires_at", "scopes", "granular_scopes")}, ensure_ascii=False, indent=1))
+          except urllib.error.HTTPError as e:
+              print("debug_token 실패:", json.load(e).get("error", {}).get("message"))
           EOF
