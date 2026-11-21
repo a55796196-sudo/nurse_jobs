@@ -12,6 +12,7 @@ jobs:
         env:
           TOK: ${{ secrets.IG_ACCESS_TOKEN }}
           UID_SET: ${{ secrets.IG_USER_ID != '' }}
+          IGUID: ${{ secrets.IG_USER_ID }}
         run: |
           python3 - <<'EOF'
           import json, os, urllib.request, urllib.parse
@@ -37,6 +38,11 @@ jobs:
               print(json.dumps(clean(r), ensure_ascii=False, indent=1)[:1500])
               return r
           F = "graph.facebook.com"
+          uid = os.environ.get("IGUID", "").strip()
+          if uid:
+              print("IG_USER_ID 길이:", len(uid), "/ 숫자만:", uid.isdigit())
+              show(F, uid, "id,username,name,media_count")
+              show(F, f"{uid}/content_publishing_limit", "quota_usage,config")
           show(F, "me", "id,name")
           show(F, "me/accounts", "name,instagram_business_account{id,username}")
           show(F, "me/instagram_accounts", "id,username")
