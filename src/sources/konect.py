@@ -31,6 +31,11 @@ def fetch(days: int = 45, pages: int = 2) -> list[Job]:
         page = b.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
                              locale="ko-KR").new_page()
         rows = []
+        try:   # 첫 화면(gate)을 먼저 거쳐야 게시판 본문이 뜨는 경우가 있음
+            page.goto("https://www.konect.or.kr/kr/gate.do", wait_until="networkidle", timeout=60000)
+            page.goto("https://www.konect.or.kr/kr/index.do", wait_until="networkidle", timeout=60000)
+        except Exception:  # noqa: BLE001
+            pass
         for n in range(1, pages + 1):
             try:
                 for k in range(3):   # 본문 표가 늦게 뜨거나 안 뜨는 경우가 있어 몇 번 다시 염
