@@ -9,7 +9,7 @@ with sync_playwright() as p:
             print("\nURL", url, "->", pg.url)
             links = pg.eval_on_selector_all("a", "els => els.map(e => [e.innerText.trim(), e.href])")
             for t, h in links:
-                if re.search(r"구인|구직|채용|인재|Job|career|recruit", t + h, re.I):
+                if re.search(r"구인|구직|채용|인재|Job|career|recruit|konect|cthub", t + h, re.I):
                     print("LINK", t[:50], "|", h)
             body = " ".join(pg.inner_text("body").split())
             print("BODY", body[:1500])
