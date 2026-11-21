@@ -22,7 +22,10 @@ KEYWORDS = {
     "연구간호사": r"연구\s*간호|CRC|임상연구|임상시험",
     "CRC": r"CRC|코디네이터|임상연구|연구\s*간호",
     "임상연구코디네이터": r"CRC|코디네이터|임상연구",
+    "임상시험 간호사": r"임상시험|임상연구|연구\s*간호|CRC",
+    "임상시험센터": r"임상시험|임상연구|연구\s*간호|CRC",
     "보험심사 간호사": r"보험\s*심사|심사\s*간호|청구",
+    "심사간호사": r"심사|청구|적정성",
     "간호사 사무": r"간호사",
 }
 NOT_CLINICAL_HINT = re.compile(r"병동|외래|수술실|응급실|중환자|요양병원|3교대|2교대|야간전담|간호조무")
@@ -109,6 +112,7 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
             company = text.split(r["title"][:10])[0].strip() if r["title"] else ""
             company = re.sub(r"\s+\S*\(주\)\S*$|\s+$", "", company)[:40] or "기업"
             after = text.split(r["title"][:15], 1)[-1]
+            after = re.sub(r"채용시까지|채용시", " ", after)
             loc = re.search(r"(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|충청|전북|전남|전라|경북|경남|경상|제주)\S*\s+(\S+[시군구])", after)
             jobs.append(Job(
                 source="work24", source_id=auth, title=r["title"][:150], url=url,
