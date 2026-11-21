@@ -32,8 +32,9 @@ def fetch(days: int = 45, pages: int = 2) -> list[Job]:
         rows = []
         for n in range(1, pages + 1):
             try:
-                page.goto(f"{LIST}?pageIndex={n}", wait_until="networkidle", timeout=60000)
-                page.wait_for_timeout(1000)
+                page.goto(f"{LIST}?pageIndex={n}", wait_until="domcontentloaded", timeout=60000)
+                page.wait_for_selector("table tbody tr a[href*='bbsIdx']", timeout=30000)
+                page.wait_for_timeout(500)
                 rows += page.eval_on_selector_all(
                     "table tbody tr",
                     "trs => trs.map(t => [t.innerText.replace(/\\s+/g,' ').trim(), (t.querySelector('a')||{}).href || ''])")
