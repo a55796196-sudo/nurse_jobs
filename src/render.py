@@ -322,7 +322,7 @@ IG_PAL = {
 }
 SUMMARY_PAL = ("#E6E3FA", "#CFC7FF", "#6C5CE0")  # 총정리 글 전용 보라
 IG_SOURCE = {"alio": "잡알리오", "sen": "서울시교육청 교육일자리포털", "goe": "경기도교육청 구인정보",
-             "gojobs": "나라일터", "konect": "KoNECT 구인게시판", "hongseong": "홍성군 고시공고", "site": "기관 채용 홈페이지", "saramin": "사람인"}
+             "gojobs": "나라일터", "konect": "KoNECT 구인게시판", "work24": "고용24", "hongseong": "홍성군 고시공고", "site": "기관 채용 홈페이지", "saramin": "사람인"}
 
 
 def _sparkle(d: ImageDraw.ImageDraw, x: float, y: float, r: float, col: str) -> None:
