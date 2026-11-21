@@ -28,15 +28,21 @@ def fetch(days: int = 45, pages: int = 2) -> list[Job]:
     jobs: list[Job] = []
     with sync_playwright() as p:
         b = p.chromium.launch()
-        page = b.new_page()
+        page = b.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+                             locale="ko-KR").new_page()
         rows = []
         for n in range(1, pages + 1):
             try:
-                page.goto(f"{LIST}?pageIndex={n}", wait_until="domcontentloaded", timeout=60000)
-                page.wait_for_selector("table tbody tr a[href*='bbsIdx']", timeout=30000)
+                for k in range(3):   # 본문 표가 늦게 뜨거나 안 뜨는 경우가 있어 몇 번 다시 염
+                    page.goto(f"{LIST}?pageIndex={n}", wait_until="networkidle", timeout=60000)
+                    try:
+                        page.wait_for_selector("a[href*='boardView.do?bbsIdx']", timeout=20000)
+                        break
+                    except Exception:  # noqa: BLE001
+                        page.wait_for_timeout(5000 * (k + 1))
                 page.wait_for_timeout(500)
                 rows += page.eval_on_selector_all(
-                    "table tbody tr",
+                    "tr:has(a[href*='boardView.do?bbsIdx'])",
                     "trs => trs.map(t => [t.innerText.replace(/\\s+/g,' ').trim(), (t.querySelector('a')||{}).href || ''])")
             except Exception as e:  # noqa: BLE001
                 print(f"[konect] 목록 실패 p{n}: {e}")
