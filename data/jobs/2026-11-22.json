@@ -166,36 +166,54 @@
   },
   "is_target": true,
   "category": "공공",
-  "job_role": "간호",
-  "summary": "고양시 지방임기제공무원 시간선택제 마급 간호 분야 1명. 최초 계약 1년 내외, 11월 30일~12월 2일 접수.",
+  "job_role": "간호사",
+  "summary": "고양시 일산서구보건소 치매안심센터 시간선택제임기제(마급) 간호사 1명. 주35시간, 기본연봉 약 2,871만원, 간호 실무경력 1년 이상 필요.",
   "requirements": [
    "간호사 면허",
-   "세부 자격 공고문 참고"
+   "간호 실무경력 1년 이상"
   ],
   "tags": [
-   "고양시",
+   "고양시채용",
+   "일산서구보건소",
+   "치매안심센터",
    "임기제공무원",
-   "시간선택제",
    "경기간호사"
   ],
   "blog_pick": true,
-  "qualifications": [],
+  "qualifications": [
+   "간호법 제4조에 의한 간호사 면허증 소지자",
+   "국가·지자체·공공기관·법인·기업체·의료기관 등에서 간호사(보건·의료) 실무경력 1년 이상",
+   "응시연령 18세 이상, 남자는 병역 필 또는 면제자",
+   "지방공무원법 제31조 결격사유 미해당자",
+   "관련 경력 퇴직 후 10년 이내 (시간선택제임기제 기준)"
+  ],
   "preferred": [],
-  "process": null,
-  "headcount": null,
+  "process": "서류전형(12.7 발표) → 인성검사(12.8) → 면접",
+  "headcount": "1명",
   "blog_comment": null,
-  "ig_tip": null,
-  "department": null,
-  "salary": null,
-  "work_hours": null,
+  "ig_tip": "교대 없는 공무원 경력을 원하는 임상 1년 차 이상에게 추천. 접수는 11.30~12.2 방문·등기만.",
+  "department": "일산서구보건소 건강증진과 (치매안심센터)",
+  "salary": "약 239만원 +수당",
+  "work_hours": "주35시간 (시간선택제)",
   "benefits": [],
   "faq": [],
-  "intro": null,
-  "salary_detail": [],
-  "duties": [],
-  "contract_period": null,
+  "intro": "임상 1년 경력으로 지자체 공무원 신분의 치매안심센터 간호사에 도전할 수 있습니다. 주35시간 근무에 근무실적에 따라 최대 5년까지 연장 가능합니다.",
+  "salary_detail": [
+   "기본연봉 28,706천원 (주35시간, 지방공무원 보수규정 연봉한계액 하한액)",
+   "정액급식비·직급보조비·가족수당 등 별도 지급",
+   "정기평가 등급에 따라 성과연봉 지급 예정"
+  ],
+  "duties": [
+   "치매 조기검진, 상담·등록·관리",
+   "맞춤형 사례관리, 치매치료관리비·조호물품 지원",
+   "치매환자 쉼터·가족지원, 실종예방사업",
+   "치매전문 프로그램·특화사업 기획·운영",
+   "유관기관 종사자 교육",
+   "치매가족돌봄 안심휴가지원 사업 운영"
+  ],
+  "contract_period": "최초 1년 내외 (총 5년 범위 내 연장 가능, 2027년 1월 임용 예정)",
   "address": null,
-  "deadline_time": null,
+  "deadline_time": "18:00",
   "education": null
  },
  {
@@ -369,30 +387,47 @@
    "경력 1년 이상"
   ],
   "tags": [
+   "제주드림타워채용",
    "보건관리자",
-   "제주드림타워",
-   "제주",
+   "산업간호사",
+   "제주간호사",
    "정규직"
   ],
   "blog_pick": true,
-  "qualifications": [],
+  "qualifications": [
+   "간호사 면허 (필수)",
+   "경력 1년 이상",
+   "학력무관"
+  ],
   "preferred": [],
-  "process": null,
-  "headcount": null,
+  "process": "서류 → 면접",
+  "headcount": "1명",
   "blog_comment": null,
-  "ig_tip": null,
+  "ig_tip": "제주 정착을 고려하는 임상 1년 차 이상에게 적합. 식사·기숙사 미제공.",
   "department": null,
-  "salary": null,
-  "work_hours": null,
-  "benefits": [],
+  "salary": "월 280만원 이상",
+  "work_hours": "주5일 09:00~18:00 (주 40시간)",
+  "benefits": [
+   "4대보험",
+   "퇴직연금"
+  ],
   "faq": [],
-  "intro": null,
-  "salary_detail": [],
-  "duties": [],
+  "intro": "제주에서 정규직 보건관리자로 산업간호 경력을 시작할 수 있는 자리입니다. 임상 1년 이상이면 지원 가능하고 월 280만원 이상이 제시됐습니다.",
+  "salary_detail": [
+   "월급 280만원 이상",
+   "퇴직연금",
+   "4대보험 가입",
+   "통근버스·기숙사·식사 미제공"
+  ],
+  "duties": [
+   "산업안전보건법 시행령에 따른 보건관리자 업무",
+   "직무 스트레스 및 뇌심혈관계질환 예방 관리",
+   "응급처치 및 의약품 관리"
+  ],
   "contract_period": null,
-  "address": null,
-  "deadline_time": null,
-  "education": null
+  "address": "제주특별자치도 제주시 노연로 12, 드림타워 (노형동)",
+  "deadline_time": "10:00",
+  "education": "학력무관"
  },
  {
   "source": "work24",
@@ -421,30 +456,34 @@
    "학력무관"
   ],
   "tags": [
+   "ktcs채용",
    "보건관리자",
-   "ktcs",
-   "서울",
-   "계약직"
+   "서울보건관리자",
+   "계약직",
+   "산업간호사"
   ],
   "blog_pick": true,
-  "qualifications": [],
+  "qualifications": [
+   "경력직 (세부 요건은 고용24 공고 확인)",
+   "학력무관"
+  ],
   "preferred": [],
   "process": null,
   "headcount": null,
   "blog_comment": null,
-  "ig_tip": null,
+  "ig_tip": "짧게 보건관리자 경력을 만들려는 경력직에게 적합. 6개월 계약직.",
   "department": "LG전자매니저운영센터",
   "salary": null,
-  "work_hours": null,
+  "work_hours": "주5일",
   "benefits": [],
   "faq": [],
-  "intro": null,
+  "intro": "대기업 계열사 소속으로 6개월간 보건관리자 경력을 쌓을 수 있는 자리입니다. 서울 강서구 LG전자매니저운영센터에서 근무합니다.",
   "salary_detail": [],
   "duties": [],
-  "contract_period": null,
+  "contract_period": "6개월 (계약직)",
   "address": null,
   "deadline_time": null,
-  "education": null
+  "education": "학력무관"
  },
  {
   "source": "work24",
@@ -517,30 +556,34 @@
    "학력무관"
   ],
   "tags": [
+   "제일비에스채용",
    "보건관리자",
-   "제일비에스",
-   "서울",
-   "본사"
+   "서울보건관리자",
+   "산업간호사",
+   "본사근무"
   ],
   "blog_pick": true,
-  "qualifications": [],
+  "qualifications": [
+   "경력 1년 이상 (세부 요건은 고용24 공고 확인)",
+   "학력무관"
+  ],
   "preferred": [],
   "process": null,
   "headcount": null,
   "blog_comment": null,
-  "ig_tip": null,
+  "ig_tip": "서울 도심 본사 근무를 원하는 경력 1년 이상에게 추천. 급여는 회사내규.",
   "department": "본사",
   "salary": null,
-  "work_hours": null,
+  "work_hours": "주5일",
   "benefits": [],
   "faq": [],
-  "intro": null,
+  "intro": "서울 서초구 본사에서 근무하는 보건관리자 공고입니다. 경력 1년 이상이면 학력 제한 없이 지원할 수 있습니다.",
   "salary_detail": [],
   "duties": [],
   "contract_period": null,
   "address": null,
   "deadline_time": null,
-  "education": null
+  "education": "학력무관"
  },
  {
   "source": "work24",
@@ -614,28 +657,32 @@
   ],
   "tags": [
    "대한산업보건협회",
-   "보건관리",
-   "광주",
-   "간호사"
+   "보건관리대행",
+   "광주간호사",
+   "산업간호사",
+   "보건관리자"
   ],
   "blog_pick": true,
-  "qualifications": [],
+  "qualifications": [
+   "간호사 (경력무관)",
+   "대졸(2~3년) 이상"
+  ],
   "preferred": [],
   "process": null,
   "headcount": null,
   "blog_comment": null,
-  "ig_tip": null,
+  "ig_tip": "신규도 지원 가능한 보건관리 입문 자리. 11월 25일 마감으로 일정이 촉박.",
   "department": "광주 보건관리국",
   "salary": null,
-  "work_hours": null,
+  "work_hours": "주5일",
   "benefits": [],
   "faq": [],
-  "intro": null,
+  "intro": "경력무관으로 지원할 수 있는 보건관리 대행기관 간호사 자리입니다. 대한산업보건협회 광주전남지역본부 보건관리국에서 근무합니다.",
   "salary_detail": [],
   "duties": [],
   "contract_period": null,
   "address": null,
   "deadline_time": null,
-  "education": null
+  "education": "대졸(2~3년) 이상"
  }
 ]
