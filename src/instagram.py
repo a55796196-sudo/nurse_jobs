@@ -50,6 +50,15 @@ def _graph() -> str:
 
 
 # ---------- 게시물 목록 ----------
+def _roundup_post(day: str) -> list[dict]:
+    d = DOCS / day
+    rc = sorted(d.glob("roundup-*.jpg"), key=lambda p: int(p.stem.split("-")[1]))
+    if not rc:
+        return []
+    cap = (d / "roundup_caption.txt").read_text(encoding="utf-8") if (d / "roundup_caption.txt").exists() else ""
+    return [{"id": f"{day}/roundup", "images": rc, "caption": cap}]
+
+
 def _day_posts(day: str) -> list[dict]:
     """매일: 피드 = 진행 중 공고 총정리 카드(roundup-*.jpg) 1개, 스토리 = 공고별 story-NN.jpg."""
     d = DOCS / day
@@ -76,6 +85,8 @@ def _guide_posts(day: str) -> list[dict]:
 def posts_for(target: str) -> list[dict]:
     if target.startswith("guides/"):
         return _guide_posts(target.split("/", 1)[1])
+    if target.endswith("/roundup"):   # 요일과 상관없이 그날 총정리만
+        return _roundup_post(target.split("/", 1)[0])
     return _day_posts(target)
 
 

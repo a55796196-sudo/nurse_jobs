@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "비우면 다음 1개 / YYYY-MM-DD / guides/YYYY-MM-DD"
+        description: "비우면 다음 1개 / YYYY-MM-DD / YYYY-MM-DD/roundup / guides/YYYY-MM-DD"
         required: false
       dry_run:
         description: "시험 실행 (실제로 올리지 않고 목록·캡션만 출력)"
