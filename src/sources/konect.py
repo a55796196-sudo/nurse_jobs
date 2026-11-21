@@ -47,6 +47,9 @@ def fetch(days: int = 45, pages: int = 2) -> list[Job]:
             except Exception as e:  # noqa: BLE001
                 print(f"[konect] 목록 실패 p{n}: {e}")
                 break
+            if not rows:
+                print("[konect] 목록이 비어 있음:", " ".join(page.inner_text("body").split())[:300])
+                break
         for text, href in rows:
             m = re.search(r"(\d\d)\.(\d\d)\.(\d\d)\s+\d+\s*$", text)   # 작성일 26.11.19 + 조회수
             posted = f"20{m.group(1)}-{m.group(2)}-{m.group(3)}" if m else None
