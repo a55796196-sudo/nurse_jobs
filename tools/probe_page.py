@@ -1,22 +1,18 @@
-"""(임시) 게시판 표의 글 목록·상세를 읽어 로그로 출력."""
+"""(임시) 게시판 표에서 지정 번호 글을 눌러 상세 본문 출력."""
 import re, sys
 from playwright.sync_api import sync_playwright
-URL = sys.argv[1]
+URL, WANT = sys.argv[1], sys.argv[2].split(",")
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_page()
-    pg.goto(URL, wait_until="networkidle", timeout=60000); pg.wait_for_timeout(2000)
-    rows = pg.eval_on_selector_all("table tbody tr", "trs => trs.map(t => [t.innerText.replace(/\\s+/g,' ').trim(), (t.querySelector('a')||{}).href || ''])")
-    print("NROWS", len(rows))
-    for t, h in rows:
-        print("ROW", t[:200], "|", h)
-    for t, h in rows:
-        m = re.search(r"(20\d\d-\d\d-\d\d)", t)
-        if not h or "채용" not in t or (m and m.group(1) < "2026-11-01"):
-            continue
+    for no in WANT:
         try:
-            pg.goto(h, wait_until="networkidle", timeout=60000); pg.wait_for_timeout(800)
+            pg.goto(URL, wait_until="networkidle", timeout=60000); pg.wait_for_timeout(1500)
+            row = pg.query_selector(f"table tbody tr:has(td:text-is('{no}'))")
+            row.query_selector("a").click()
+            pg.wait_for_load_state("networkidle"); pg.wait_for_timeout(1500)
             d = " ".join(pg.inner_text("body").split())
-            k = d.find("제목"); print("\n####", t[:150], "\nURL", h, "\n", d[k:k+2500] if k >= 0 else d[:2500])
+            k = d.find("공고번호"); print("\n####", no, pg.url, "\n", d[k:k+3500] if k >= 0 else d[:3500])
+            print("FILES", pg.eval_on_selector_all("a", "els => els.map(e => e.innerText.trim()).filter(t => /\\.(hwp|hwpx|pdf)/i.test(t))"))
         except Exception as e:
-            print("ERR", h, e)
+            print("ERR", no, e)
     b.close()

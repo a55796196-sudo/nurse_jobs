@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       url: {description: "URL", required: true}
+      want: {description: "rows", required: false, default: ""}
 jobs:
   probe:
     runs-on: ubuntu-latest
@@ -12,4 +13,4 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install -q playwright && python -m playwright install --with-deps chromium >/dev/null
-      - run: python tools/probe_page.py "${{ github.event.inputs.url }}"
+      - run: python tools/probe_page.py "${{ github.event.inputs.url }}" "${{ github.event.inputs.want }}"
