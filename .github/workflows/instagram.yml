@@ -1,6 +1,7 @@
 name: 인스타 업로드
 
-# 1) 예약 업로드: 저장소 변수 IG_AUTO_POST=true 이면 하루 4번(KST 08·12·18·21시 무렵) 아직 안 올린 게시물을 1개씩 올림
+# 1) 예약 업로드: 기본으로 켜짐 (끄려면 저장소 변수 IG_AUTO_POST=false). 실행마다 0~15분 무작위로 늦게 시작하고,
+#    피드 최대 1개 + 스토리 최대 2개를 1.5~3분 간격으로 올림. 하루 4번(KST 08·12·18·21시 무렵) 실행
 # 2) 수동 실행: Actions 탭 → Run workflow
 #      비우면 다음 게시물 1개 / YYYY-MM-DD 면 그날 전부 / guides/YYYY-MM-DD 면 가이드 카드뉴스
 # 올린 기록은 data/ig_posted.json 에 저장되어 같은 게시물을 두 번 올리지 않음
@@ -29,7 +30,7 @@ concurrency:
 
 jobs:
   post:
-    if: github.event_name == 'workflow_dispatch' || vars.IG_AUTO_POST == 'true'
+    if: github.event_name == 'workflow_dispatch' || vars.IG_AUTO_POST != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -38,6 +39,9 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -q -r requirements.txt
+      - name: 무작위 대기 (예약 실행만)
+        if: github.event_name == 'schedule'
+        run: sleep $((RANDOM % 900))
       - name: 업로드
         env:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}

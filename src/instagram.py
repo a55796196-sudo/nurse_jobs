@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
 import sys
 import time
@@ -34,6 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 POSTED = ROOT / "data" / "ig_posted.json"
 KST = timezone(timedelta(hours=9))
+STORY_PER_RUN = 2  # 한 번 실행에 올릴 스토리 수 (하루 4번 실행 → 최대 8개)
 MAX_AGE_DAYS = 2   # 이보다 오래된 날짜의 게시물은 예약 업로드에서 건너뜀 (D-day가 안 맞음)
 
 
@@ -180,19 +182,19 @@ def main(argv: list[str]) -> None:
             return
 
     if target == "next":
+        # 계정 보호: 한 번 실행에 피드 최대 1개 + 스토리 최대 STORY_PER_RUN개, 사이사이 무작위 간격
         todo = pending()
         if not todo:
             print("올릴 게시물이 없습니다.")
             return
         stories = [p for p in todo if p.get("story") and p["id"].startswith(today_kst().isoformat())]
         feeds = [p for p in todo if not p.get("story")]
-        for p in stories:          # 오늘 공고 스토리는 한 번에
+        batch = feeds[:1] + stories[:STORY_PER_RUN]
+        for i, p in enumerate(batch):
+            if i and not dry:
+                time.sleep(random.randint(90, 180))
             publish_one(p, dry)
-            if not dry:
-                time.sleep(20)
-        if feeds:                   # 피드는 한 번에 1개 (총정리·가이드)
-            publish_one(feeds[0], dry)
-        print(f"남은 피드 {max(0, len(feeds) - 1)}개")
+        print(f"남은 피드 {max(0, len(feeds) - 1)}개 / 남은 스토리 {max(0, len(stories) - STORY_PER_RUN)}개")
         return
 
     posts = posts_for(target)
@@ -205,7 +207,7 @@ def main(argv: list[str]) -> None:
             continue
         publish_one(p, dry)
         if not dry and i < len(posts) - 1:
-            time.sleep(60)   # 연속 업로드 간격
+            time.sleep(random.randint(90, 180))   # 연속 업로드 간격
 
 
 if __name__ == "__main__":
