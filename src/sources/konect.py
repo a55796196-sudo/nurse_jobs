@@ -46,9 +46,13 @@ def fetch(days: int = 45, pages: int = 2) -> list[Job]:
                     except Exception:  # noqa: BLE001
                         page.wait_for_timeout(5000 * (k + 1))
                 page.wait_for_timeout(500)
-                rows += page.eval_on_selector_all(
-                    "tr:has(a[href*='boardView.do?bbsIdx'])",
-                    "trs => trs.map(t => [t.innerText.replace(/\\s+/g,' ').trim(), (t.querySelector('a')||{}).href || ''])")
+                for fr in page.frames:   # 본문이 iframe 안에 있을 수도 있음
+                    try:
+                        rows += fr.eval_on_selector_all(
+                            "tr:has(a[href*='boardView.do?bbsIdx'])",
+                            "trs => trs.map(t => [t.innerText.replace(/\\s+/g,' ').trim(), (t.querySelector('a')||{}).href || ''])")
+                    except Exception:  # noqa: BLE001
+                        pass
             except Exception as e:  # noqa: BLE001
                 print(f"[konect] 목록 실패 p{n}: {e}")
                 break
