@@ -66,8 +66,8 @@ def _day_posts(day: str) -> list[dict]:
     for p in sorted(d.glob("story-*.jpg")):
         out.append({"id": f"{day}/{p.stem}", "images": [p], "caption": "", "story": True})
     rc = sorted(d.glob("roundup-*.jpg"), key=lambda p: int(p.stem.split("-")[1]))
-    # 피드 도배 방지: 총정리는 월·목만 (가이드는 수·토) → 피드 주 4개
-    if rc and date.fromisoformat(day).weekday() in (0, 3):
+    # 총정리는 매일 피드에 올림 (한 번 실행에 피드는 1개씩이라 가이드 날도 따로 올라감)
+    if rc:
         cap = (d / "roundup_caption.txt").read_text(encoding="utf-8") if (d / "roundup_caption.txt").exists() else ""
         out.append({"id": f"{day}/roundup", "images": rc, "caption": cap})
     return out
