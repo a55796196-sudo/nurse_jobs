@@ -114,7 +114,9 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
                     print(f"[work24] 상세 실패 {auth}: {e}")
             text = r["text"]
             company = text.split(r["title"][:10])[0].strip() if r["title"] else ""
-            company = re.sub(r"\s+\S*\(주\)\S*$|\s+$", "", company)[:40] or "기업"
+            company = re.sub(r"\s+\S*\(주\)\S*$|\s+$", "", company)
+            # 목록에 붙는 기업 구분 표시(대기업·코스피·가족 등) 제거
+            company = re.sub(r"(\s+(대기업|중견|중소|강소|코스피|코스닥|코넥스|가족|외국계|공기업|공공기관|벤처|스타트업|일반기업|청년친화|인증기업))+\s*$", "", company).strip()[:40] or "기업"
             after = text.split(r["title"][:15], 1)[-1]
             after = re.sub(r"채용시까지|채용시", " ", after)
             loc = re.search(r"(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|충청|전북|전남|전라|경북|경남|경상|제주)\S*\s+(\S+[시군구])", after)
