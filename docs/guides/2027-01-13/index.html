@@ -1,0 +1,105 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>2027-01-13 탈임상 가이드</title>
+<style>
+:root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#2563eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card:#111a2e;--ink:#e2e8f0;--muted:#94a3b8;--line:#1e293b;--accent:#60a5fa}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;line-height:1.6}
+main{max-width:860px;margin:0 auto;padding:24px 16px 80px}h1{font-size:1.6rem;margin:.2em 0}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:18px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+button{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-size:1rem;font-weight:600;cursor:pointer}
+button.done{background:#16a34a}.muted{color:var(--muted);font-size:.9rem}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.cards img{width:100%;border-radius:8px;border:1px solid var(--line)}
+pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:8px;font-family:inherit;margin:8px 0 0}
+#post,.post{background:#fff;color:#111;padding:16px;border-radius:8px;}
+h2{font-size:1.2rem;margin:28px 0 4px}
+a{color:var(--accent)}ul.days{padding-left:1.2em}
+</style></head><body><main>
+<p class="muted"><a href="../../">← 작업실 첫 화면</a></p>
+<h1>💡 2027-01-13 탈임상 가이드</h1>
+
+<div class="box"><div class="row"><b>블로그 글</b><span class="muted">카테고리: 탈임상 가이드 &gt; 병원 밖 업무 스킬</span></div>
+<div class="row" style="margin-top:8px"><pre id="pt" style="flex:1;margin:0">엑셀 피벗테이블로 월별 통계 내기: 보고서용 집계 따라 하기 (보건사업·검진 실적)</pre>
+<button onclick="copyText('pt',this)">제목 복사</button></div>
+<details open><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기 (접기)</summary>
+<div id="pb" class="post"><p style="text-align:center"><img src="https://a55796196-sudo.github.io/nurse_jobs/guides/2027-01-13/card-00.jpg" width="540" alt="카드 0"></p>
+<p style="text-align:center">&nbsp;</p>
+<p style="text-align:center">피벗테이블은 많은 행의 데이터를 월별·항목별로<br>클릭 몇 번 만에 집계해 주는 엑셀 기능입니다.<br>보건사업 실적, 상담 건수, 검진 사후관리 현황처럼<br>매달 보고서에 들어가는 숫자를 만들 때 특히 유용합니다.<br><br>예시 데이터로 월별 통계를 내 보겠습니다.</p>
+<p style="text-align:center">&nbsp;</p>
+<hr>
+<blockquote style="text-align:center"><p style="text-align:center"><b>피벗테이블, 한눈에 보기</b></p></blockquote>
+<p style="text-align:center"><img src="https://a55796196-sudo.github.io/nurse_jobs/guides/2027-01-13/card-01.jpg" width="540" alt="카드 1"></p>
+<p style="text-align:center">순서만 정리하면 이렇습니다.</p>
+<p style="text-align:center">&nbsp;</p>
+<p style="text-align:center">✔️ 원본 정리 : 한 건을 한 행으로, 맨 위에 머리글<br>✔️ 만들기 : [삽입] → [피벗 테이블]<br>✔️ 배치 : 행·열·값 영역에 필드를 끌어다 놓기<br>✔️ 갱신 : 원본이 바뀌면 [새로 고침]</p>
+<p style="text-align:center">&nbsp;</p>
+<hr>
+<blockquote style="text-align:center"><p style="text-align:center"><b>피벗테이블을 쓰려면 원본을 어떻게 정리할까?</b></p></blockquote>
+<p style="text-align:center"><img src="https://a55796196-sudo.github.io/nurse_jobs/guides/2027-01-13/card-02.jpg" width="540" alt="카드 2"></p>
+<p style="text-align:center">피벗테이블은 원본이 깔끔해야 제대로 동작합니다.<br>한 건(상담 1건, 방문 1건)을 한 행으로 두고,<br>맨 위에 머리글(날짜, 사업명, 구분 등)을 둡니다.<br><br>중간의 빈 행과 병합된 셀은 없애고<br>날짜는 날짜 형식으로 입력해야 월별로 묶을 수 있습니다.</p>
+<p style="text-align:center">&nbsp;</p>
+<hr>
+<blockquote style="text-align:center"><p style="text-align:center"><b>월별 통계는 어떻게 낼까?</b></p></blockquote>
+<p style="text-align:center"><img src="https://a55796196-sudo.github.io/nurse_jobs/guides/2027-01-13/card-03.jpg" width="540" alt="카드 3"></p>
+<p style="text-align:center">날짜 필드를 행 영역에 놓고<br>날짜를 월 단위로 그룹화합니다.<br>(버전에 따라 자동으로 월·분기로 묶이기도 합니다.)<br><br>사업명이나 구분을 열 영역에 두고,<br>건수를 셀 필드를 값 영역에 놓은 뒤 &#x27;개수&#x27;로 바꾸면<br>월별·사업별 실적표가 완성됩니다.</p>
+<p style="text-align:center">&nbsp;</p>
+<p style="text-align:center">(💡 값이 &#x27;합계&#x27;로 나오면 값 필드 설정에서 &#x27;개수&#x27;로 바꿔야 건수가 나옵니다)</p>
+<p style="text-align:center">&nbsp;</p>
+<hr>
+<blockquote style="text-align:center"><p style="text-align:center"><b>보고서에 넣을 때는 어떻게 할까?</b></p></blockquote>
+<p style="text-align:center"><img src="https://a55796196-sudo.github.io/nurse_jobs/guides/2027-01-13/card-04.jpg" width="540" alt="카드 4"></p>
+<p style="text-align:center">보고서 필터 영역에 부서나 사업을 넣으면<br>원하는 범위만 골라 볼 수 있습니다.<br><br>보고서 양식에 옮길 때는 피벗 결과를 복사해<br>값만 붙여넣기 하면 서식이 깨지지 않습니다.<br>원본이 바뀌었다면 [새로 고침]을 꼭 누르세요.</p>
+<p style="text-align:center">&nbsp;</p>
+<hr>
+<blockquote style="text-align:center"><p style="text-align:center"><b>피벗테이블 쓸 때 주의할 점은?</b></p></blockquote>
+<p style="text-align:center"><img src="https://a55796196-sudo.github.io/nurse_jobs/guides/2027-01-13/card-05.jpg" width="540" alt="카드 5"></p>
+<p style="text-align:center">✔️ 범위 : 원본에 행을 추가했는데 범위에 안 들어가는 실수가 잦음<br>✔️ 표 기능 : 원본을 표(Ctrl+T)로 만들어 두면 범위가 자동으로 늘어남<br>✔️ 공유 : 피벗 결과에 개인 식별 정보가 보이지 않는지 확인 후 공유</p>
+<p style="text-align:center">&nbsp;</p>
+<hr>
+<p style="text-align:center">피벗테이블은 한 번 익히면<br>매달 반복되는 집계 업무를 몇 분으로 줄여 줍니다.<br><br>다음 실무 스킬에서는<br>공문·보고서의 기본 형식을 다룹니다.</p>
+<p style="text-align:center">&nbsp;</p>
+<hr>
+<p style="text-align:center">이 밖에 더 궁금한 점이나<br>다뤄줬으면 하는 주제가 있다면<br>댓글로 남겨주세요.<br>다음 글에서 다뤄보겠습니다.</p>
+<p style="text-align:center">&nbsp;</p>
+<p style="text-align:center">읽어주셔서 감사합니다.</p>
+<p style="text-align:center">&nbsp;</p>
+<p style="text-align:center">#피벗테이블 #엑셀통계 #엑셀보고서 #보건사업실적 #탈임상스킬 #탈임상 #탈임상간호사 #간호사이직 #간호사취업</p></div></details>
+<div class="row"><span class="muted">제목 → 본문 순서로 붙여넣기. 카드 이미지가 같이 안 붙으면 아래 카드뉴스를 저장해 그 자리에 넣고, 글꼴은 나눔마루부리로 바꾸세요</span>
+<button onclick="copyHtml('pb',this)">본문 복사</button></div>
+<div class="row" style="margin-top:10px"><pre id="tg" style="flex:1;margin:0">#피벗테이블 #엑셀통계 #엑셀보고서 #보건사업실적 #탈임상스킬 #탈임상 #탈임상간호사 #간호사이직 #간호사취업</pre>
+<button onclick="copyText('tg',this)">태그 복사</button></div>
+<div class="row" style="margin-top:10px;align-items:flex-start"><a href="thumb.png" download><img src="thumb.png" alt="썸네일" style="width:160px;border-radius:8px;border:1px solid var(--line)"></a>
+<span class="muted">썸네일: 이미지를 눌러 저장 후 글 맨 위에 넣으세요</span></div></div>
+
+<div class="box"><div class="row"><b>📷 인스타 카드뉴스</b><span class="muted">이미지를 눌러 저장</span></div>
+<div class="cards"><a href="card-00.jpg" download><img src="card-00.jpg" alt="카드 0"></a><a href="card-01.jpg" download><img src="card-01.jpg" alt="카드 1"></a><a href="card-02.jpg" download><img src="card-02.jpg" alt="카드 2"></a><a href="card-03.jpg" download><img src="card-03.jpg" alt="카드 3"></a><a href="card-04.jpg" download><img src="card-04.jpg" alt="카드 4"></a><a href="card-05.jpg" download><img src="card-05.jpg" alt="카드 5"></a><a href="card-06.jpg" download><img src="card-06.jpg" alt="카드 6"></a></div></div>
+
+<div class="box"><div class="row"><b>📷 인스타 캡션</b><button onclick="copyText('cap',this)">캡션 복사</button></div>
+<pre id="cap">💡 매달 보고서 집계, 피벗테이블이면 몇 분이면 끝납니다
+
+1. 한눈에 보기
+2. 원본 정리
+3. 월별 통계
+4. 보고서에 넣기
+5. 주의할 점
+
+💬 더 궁금한 점이나 다뤄줬으면 하는 주제가 있다면 댓글로 알려주세요
+
+📌 자세한 내용은 프로필 링크(블로그)에서 확인하세요!
+💾 저장해두고 필요할 때 꺼내보세요
+
+#피벗테이블 #엑셀통계 #엑셀보고서 #보건사업실적 #탈임상스킬 #탈임상 #탈임상간호사 #간호사이직 #간호사취업 #간호사 #간호사채용</pre></div>
+</main><script>
+async function copyHtml(id, btn){
+  const el=document.getElementById(id);
+  try{await navigator.clipboard.write([new ClipboardItem({
+    'text/html':new Blob([el.innerHTML],{type:'text/html'}),
+    'text/plain':new Blob([el.innerText],{type:'text/plain'})})]);}
+  catch(e){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();}
+  done(btn);}
+async function copyText(id, btn){
+  const t=document.getElementById(id).innerText;
+  try{await navigator.clipboard.writeText(t);}catch(e){}
+  done(btn);}
+function done(btn){const o=btn.textContent;btn.textContent='복사됨 ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent=o;btn.classList.remove('done')},1500);}
+</script></body></html>
