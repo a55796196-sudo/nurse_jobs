@@ -126,9 +126,19 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
                             try:
                                 page.goto(H.unescape(m_o.group(1)), wait_until="domcontentloaded", timeout=45000)
                                 page.wait_for_timeout(2500)
-                                txt = " ".join(page.inner_text("body").split())
+                                page.wait_for_timeout(2500)
+                                parts = []
+                                for fr in page.frames:   # 잡코리아 등은 상세요강이 iframe(GI_Read_Comt_Ifrm) 안에 있음
+                                    try:
+                                        parts.append(" ".join(fr.inner_text("body").split()))
+                                    except Exception:  # noqa: BLE001
+                                        pass
+                                body_o = max(parts[1:], key=len) if len(parts) > 1 and max(map(len, parts[1:])) > 300 else ""
+                                txt = parts[0] if parts else ""
                                 k = txt.find(r["title"][:12])
-                                r["origin_text"] = (txt[k:] if k > 0 else txt)[:8000]
+                                main_o = (txt[k:] if k > 0 else txt)
+                                cut = main_o.find("로그인하고 비슷한 조건")
+                                r["origin_text"] = ((body_o + " || " if body_o else "") + main_o[:cut if cut > 0 else 4000])[:9000]
                                 n_origin += 1
                             except Exception as e:  # noqa: BLE001
                                 print(f"[work24] 원문 실패 {auth}: {e}")
