@@ -13,6 +13,7 @@
     python tools/naver_draft.py 2026-11-20        특정 날짜
     python tools/naver_draft.py --only 1          글 1번만 (시험용)
     python tools/naver_draft.py --summary         전체 정리 글도 함께
+    python tools/naver_draft.py 2026-11-22 --redo 이미 임시저장한 날짜를 다시 저장 (글이 수정됐을 때)
 
 설정 (환경변수 또는 아래 기본값):
     NAVER_BLOG_ID   네이버 블로그 아이디 (blog.naver.com/아이디)
@@ -192,11 +193,11 @@ def draft_one(ctx, work, day: str, key: str, title_btn: str, body_btn: str, thum
         page.close()
 
 
-def run(day: str, only: int | None, with_summary: bool) -> None:
+def run(day: str, only: int | None, with_summary: bool, redo: bool = False) -> None:
     from playwright.sync_api import sync_playwright
     if not BLOG_ID:
         sys.exit("NAVER_BLOG_ID 환경변수에 블로그 아이디를 넣어주세요.")
-    done = _done()
+    done = {} if redo else _done()   # --redo: 이미 임시저장한 글도 다시 저장
     with sync_playwright() as p:
         ctx = launch(p)
         ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=PAGES.split("/nurse_jobs")[0])
@@ -284,7 +285,7 @@ def _main() -> None:
             t = datetime.now(KST).date()
             days = [(t - timedelta(days=1)).isoformat(), t.isoformat()]
         for day in days:
-            run(day, only, "--summary" in args)
+            run(day, only, "--summary" in args, "--redo" in args)
 
 
 if __name__ == "__main__":
