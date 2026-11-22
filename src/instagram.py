@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 POSTED = ROOT / "data" / "ig_posted.json"
 KST = timezone(timedelta(hours=9))
-STORY_PER_RUN = 1  # 한 번 실행에 올릴 스토리 수 (새 계정 보호용으로 1개씩, 하루 4번 실행 → 최대 4개)
+STORY_PER_RUN = 10  # 한 번 실행에 그날 스토리를 전부 올림 (사이사이 1.5~3분 간격)
 MAX_AGE_DAYS = 2   # 이보다 오래된 날짜의 게시물은 예약 업로드에서 건너뜀 (D-day가 안 맞음)
 
 
