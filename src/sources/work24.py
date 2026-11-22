@@ -37,6 +37,14 @@ def _clean(s: str) -> str:
     return " ".join(H.unescape(re.sub(r"<[^>]+>", " ", s)).split()).lstrip("> ").strip()
 
 
+def _clean_url(u: str) -> str:
+    """원문 주소에서 추적용 파라미터(utm_*, Oem_Code) 제거."""
+    from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+    sp = urlsplit(u)
+    q = [(k, v) for k, v in parse_qsl(sp.query) if not k.startswith("utm_") and k != "Oem_Code"]
+    return urlunsplit((sp.scheme, sp.netloc, sp.path, urlencode(q), ""))
+
+
 def _rows(html: str) -> list[dict]:
     out = []
     for chunk in re.split(r'<tr id="list\d+"', html)[1:]:
@@ -113,10 +121,10 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
                     # 사람인·잡코리아 등에서 온 공고는 '채용사이트 바로가기'에 원문 주소가 있음 → 원문 링크·본문도 확보
                     m_o = re.search(r"f_goMove\('([^']+)'\)", page.content())
                     if m_o:
-                        r["origin"] = re.sub(r"[?&](utm_[^=&]+|Oem_Code)=[^&]*", "", m_o.group(1)).rstrip("?&")
+                        r["origin"] = _clean_url(H.unescape(m_o.group(1)))
                         if n_origin < max_origin:
                             try:
-                                page.goto(m_o.group(1), wait_until="domcontentloaded", timeout=60000)
+                                page.goto(H.unescape(m_o.group(1)), wait_until="domcontentloaded", timeout=45000)
                                 page.wait_for_timeout(2500)
                                 txt = " ".join(page.inner_text("body").split())
                                 k = txt.find(r["title"][:12])
