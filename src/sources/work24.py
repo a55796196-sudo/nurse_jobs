@@ -44,12 +44,15 @@ def _rows(html: str) -> list[dict]:
         auth = re.search(r"wantedAuthNo=([A-Za-z0-9]+)", chunk)
         if not auth:
             continue
+        # 공고마다 정보제공처 코드가 다름 (고용24 자체 VALIDATION, 잡코리아 CJK, 사람인 CSI 등) → 목록의 링크를 그대로 씀
+        href = re.search(r'href="(/wk/a/b/1500/empDetailAuthView\.do\?[^"]*wantedAuthNo=' + auth.group(1) + r'[^"]*)"', chunk)
         links = re.findall(r"<a[^>]*wantedAuthNo=[^>]*>(.*?)</a>", chunk, re.S)
         title = _clean(links[0]) if links else ""
         text = _clean(chunk)
         dl = re.search(r"마감일\s*:\s*(20\d\d-\d\d-\d\d)", text)
         reg = re.search(r"등록일\s*:\s*(20\d\d-\d\d-\d\d)", text)
         out.append({"auth": auth.group(1), "title": title, "text": text,
+                    "href": BASE + H.unescape(href.group(1)) if href else None,
                     "deadline": dl.group(1) if dl else None, "posted": reg.group(1) if reg else None})
     return out
 
@@ -97,7 +100,7 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
             print(f"[work24] {kw}: 목록 {total}건 중 {hit}건")
         jobs: list[Job] = []
         for n, (auth, r) in enumerate(found.items()):
-            url = f"{BASE}/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo={auth}&infoTypeCd=VALIDATION&infoTypeGroup=tb_workinfoworknet"
+            url = r.get("href") or f"{BASE}/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo={auth}&infoTypeCd=VALIDATION&infoTypeGroup=tb_workinfoworknet"
             body = ""
             if n < max_detail:
                 try:

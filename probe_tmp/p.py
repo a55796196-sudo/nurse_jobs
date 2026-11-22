@@ -1,17 +1,15 @@
-import re, html as H
-from urllib.parse import quote
 from playwright.sync_api import sync_playwright
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+urls = {
+ "55608183": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=55608183&infoTypeCd=CSI&infoTypeGroup=tb_workinfogubun",
+ "51969656": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=51969656&infoTypeCd=CJK&infoTypeGroup=tb_workinfogubun",
+ "51974659": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=51974659&infoTypeCd=CJK&infoTypeGroup=tb_workinfogubun",
+}
 with sync_playwright() as p:
     b = p.chromium.launch(); pg = b.new_context(user_agent=UA, locale="ko-KR").new_page()
-    for kw in ("보건관리자", "대한산업보건협회 간호사"):
-        pg.goto(f"https://www.work24.go.kr/wk/a/b/1200/retriveDtlEmpSrchList.do?srcKeyword={quote(kw)}&keywordWantedTitle=Y&pageIndex=1&sortField=DATE&sortOrderBy=DESC", wait_until="networkidle", timeout=90000)
-        pg.wait_for_timeout(1500)
-        h = pg.content()
-        for m in re.finditer(r'<a[^>]*(?:href|onclick)="([^"]*wantedAuthNo=([A-Za-z0-9]+)[^"]*)"', h):
-            print("HREF", m.group(2), H.unescape(m.group(1))[:250])
-        for m in re.finditer(r'onclick="([^"]*(?:55608183|51969656|51974659)[^"]*)"', h):
-            print("ONCLICK", H.unescape(m.group(1))[:250])
-    for u in ("https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=51969656&infoTypeCd=VALIDATION&infoTypeGroup=tb_workinfoworknet",):
-        pg.goto(u, wait_until="networkidle", timeout=90000); print("DETAILURL", pg.url, " ".join(pg.inner_text("body").split())[:300])
+    for k, u in urls.items():
+        pg.goto(u, wait_until="networkidle", timeout=90000); pg.wait_for_timeout(1500)
+        t = " ".join(pg.inner_text("body").split())
+        i = max(t.find("보건"), 0)
+        print("CHK", k, pg.url[-60:], "|", t[i:i+400])
     b.close()
