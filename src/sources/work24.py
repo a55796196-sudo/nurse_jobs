@@ -99,6 +99,7 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
                     break
             print(f"[work24] {kw}: 목록 {total}건 중 {hit}건")
         jobs: list[Job] = []
+        n_origin, max_origin = 0, 15
         for n, (auth, r) in enumerate(found.items()):
             url = r.get("href") or f"{BASE}/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo={auth}&infoTypeCd=VALIDATION&infoTypeGroup=tb_workinfoworknet"
             body = ""
@@ -108,7 +109,21 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
                     page.wait_for_timeout(1200)
                     body = " ".join(page.inner_text("body").split())
                     i = body.find(r["title"][:15])
-                    body = body[i:] if i > 0 else ""   # 외부 제공 공고는 본문이 없음
+                    body = body[i:] if i > 0 else ""
+                    # 사람인·잡코리아 등에서 온 공고는 '채용사이트 바로가기'에 원문 주소가 있음 → 원문 링크·본문도 확보
+                    m_o = re.search(r"f_goMove\('([^']+)'\)", page.content())
+                    if m_o:
+                        r["origin"] = re.sub(r"[?&](utm_[^=&]+|Oem_Code)=[^&]*", "", m_o.group(1)).rstrip("?&")
+                        if n_origin < max_origin:
+                            try:
+                                page.goto(m_o.group(1), wait_until="domcontentloaded", timeout=60000)
+                                page.wait_for_timeout(2500)
+                                txt = " ".join(page.inner_text("body").split())
+                                k = txt.find(r["title"][:12])
+                                r["origin_text"] = (txt[k:] if k > 0 else txt)[:8000]
+                                n_origin += 1
+                            except Exception as e:  # noqa: BLE001
+                                print(f"[work24] 원문 실패 {auth}: {e}")
                     time.sleep(1.5)
                 except Exception as e:  # noqa: BLE001
                     print(f"[work24] 상세 실패 {auth}: {e}")
@@ -123,11 +138,12 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
             emp = re.search(r"고용\s*형태\s+(정규직|계약직|기간의 정함이 없는 근로계약|기간의 정함이 있는 근로계약|파견근로|시간\(선택\)제|인턴)", body)
             emp_t = {"기간의 정함이 없는 근로계약": "정규직", "기간의 정함이 있는 근로계약": "계약직"}.get(emp.group(1), emp.group(1)) if emp else None
             jobs.append(Job(
-                source="work24", source_id=auth, title=r["title"][:150], url=url,
+                source="work24", source_id=auth, title=r["title"][:150], url=r.get("origin") or url,
                 org=company, deadline=r["deadline"], start_date=r["posted"],
                 location=" ".join(loc.groups()) if loc else None, employment_type=emp_t,
                 raw_text=(r["title"] + " " + text + " " + body)[:3000],
                 extra={"list_text": text[:1500], "site_text": body[:8000], "detail_url": url,
+                       "origin_url": r.get("origin"), "origin_text": r.get("origin_text", ""),
                        "search_kw": r["kw"], "source_name": "고용24"},
             ))
         b.close()
