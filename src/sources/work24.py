@@ -120,10 +120,12 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
             after = text.split(r["title"][:15], 1)[-1]
             after = re.sub(r"채용시까지|채용시", " ", after)
             loc = re.search(r"(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|충청|전북|전남|전라|경북|경남|경상|제주)\S*\s+(\S+[시군구])", after)
+            emp = re.search(r"고용\s*형태\s+(정규직|계약직|기간의 정함이 없는 근로계약|기간의 정함이 있는 근로계약|파견근로|시간\(선택\)제|인턴)", body)
+            emp_t = {"기간의 정함이 없는 근로계약": "정규직", "기간의 정함이 있는 근로계약": "계약직"}.get(emp.group(1), emp.group(1)) if emp else None
             jobs.append(Job(
                 source="work24", source_id=auth, title=r["title"][:150], url=url,
                 org=company, deadline=r["deadline"], start_date=r["posted"],
-                location=" ".join(loc.groups()) if loc else None, employment_type=None,
+                location=" ".join(loc.groups()) if loc else None, employment_type=emp_t,
                 raw_text=(r["title"] + " " + text + " " + body)[:3000],
                 extra={"list_text": text[:1500], "site_text": body[:8000], "detail_url": url,
                        "search_kw": r["kw"], "source_name": "고용24"},

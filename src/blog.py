@@ -35,7 +35,7 @@ def _md(d: date) -> str:
 
 
 def _org(job: Job) -> str:
-    return re.sub(r"^\((재|사|주)\)|\(주\)|㈜", "", job.org).strip()
+    return re.sub(r"\s+", " ", re.sub(r"^\((재|사|주)\)|\(주\)|㈜|주식회사", "", job.org)).strip()
 
 
 def _emp(job: Job) -> str:

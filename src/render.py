@@ -349,7 +349,8 @@ def _title_block(d: ImageDraw.ImageDraw, job: Job, X: int, y: int, maxw: int, bi
         lines: list[str] = []
         for sg in segs:
             lines += wrap(d, sg, ft, maxw, 3)
-        if len(lines) <= 4:
+        words_fit = all(d.textlength(w, font=ft) <= maxw for sg in segs for w in sg.split())   # 단어 중간에서 줄이 끊기지 않게
+        if len(lines) <= 4 and words_fit:
             break
     lines = lines[:4]
     for i, ln in enumerate(lines):
