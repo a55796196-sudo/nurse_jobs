@@ -601,13 +601,15 @@ def blog_thumb(job: Job, today: date) -> Image.Image:
     return img
 
 
-def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: int) -> Image.Image:
-    """'진행 중 공고 전체 정리' 글 썸네일: 보라색(총정리 전용) + 분야별 색 칩."""
+def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: int, height: int = 1080) -> Image.Image:
+    """'진행 중 공고 전체 정리' 글 썸네일(1080x1080) / 인스타 총정리 표지(height=1350): 보라색 + 분야별 색 칩."""
     S = 1080
     bg, mark, pt = SUMMARY_PAL
-    img = Image.new("RGB", (S, S), bg)
+    img = Image.new("RGB", (S, height), bg)
     d = ImageDraw.Draw(img)
-    x0, y0, x1, y1 = 50, 50, S - 50, S - 50
+    tall = height > S
+    # 4:5 표지는 뒤쪽 목록 장과 같은 카드 크기
+    x0, y0, x1, y1 = (60, 70, S - 60, height - 110) if tall else (50, 50, S - 50, S - 50)
     d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
     d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
     X = x0 + 70
@@ -625,6 +627,10 @@ def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: 
             d.rounded_rectangle((X - 8, y + 112 * 0.55, X + tw + 8, y + 112 * 1.05), 12, fill=mark)
         d.text((X, y), ln, font=t, fill="#1E1E1E"); y += 140
     d.text((X, y + 10), f"진행 중 {total}건", font=font(70, "ExtraBold"), fill=pt)
+    if tall:   # 늘어난 공간: 안내 한 줄 + 아래 출처 줄 (목록 장과 같은 위치)
+        d.text((X, y + 140), "마감 임박 순 · 분야별로 정리했습니다", font=font(40, "SemiBold"), fill=MUTED)
+        d.text((X, y + 200), "옆으로 넘겨서 전체 목록 보기  →", font=font(40, "SemiBold"), fill=MUTED)
+        d.text((S / 2, height - 55), "탈임상 채용노트  ·  전체 목록·링크는 프로필 링크(블로그)", font=font(30, "SemiBold"), fill=pt, anchor="mm")
     # 분야별 칩 (카테고리 색)
     names = {"기업": "기업", "공공": "공공", "연구": "연구", "학교": "학교", "기타": "기타"}
     cx, cy = X, y1 - 250
@@ -681,9 +687,7 @@ def roundup_cards(jobs: list[Job], today: date, per_page: int = 8, max_pages: in
     open_jobs = _dedupe(sorted([j for j in jobs if not j.deadline or j.deadline >= today.isoformat()], key=lambda j: j.deadline or "9999"))
     soon = sum(1 for j in open_jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3)
     counts = [(c, sum(1 for j in open_jobs if j.category == c)) for c in CATEGORIES]
-    cover_img = Image.new("RGB", (W, H), bg)
-    cover_img.paste(summary_thumb(today, len(open_jobs), counts, soon), (0, 135))
-    out = [cover_img]
+    out = [summary_thumb(today, len(open_jobs), counts, soon, height=H)]
     # 분야별로 묶고 각 분야 안에서 D-day 순 → 장마다 (분야 제목 + 줄) 배치
     names = {"기업": "기업 · 보건관리자", "공공": "공공기관 · 보건소", "연구": "임상연구 · CRC", "학교": "학교 보건실", "기타": "기타"}
     items: list[tuple] = []
