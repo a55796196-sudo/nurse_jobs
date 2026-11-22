@@ -151,9 +151,35 @@ def collect() -> Path | None:
     return path
 
 
-def check(path: Path) -> list[str]:
+def _missing(j: Job) -> list[str]:
+    """블로그 글로 고른 공고에서, 원문에는 있는데 비워둔 칸을 찾음 (빼먹기 방지)."""
+    import re as _re
+    e = j.extra or {}
+    src = " ".join(str(x or "") for x in (j.raw_text, e.get("site_text"), e.get("origin_text"), e.get("attach_text"),
+                                          e.get("list_text"), e.get("site_ocr")))
+    rules = [
+        ("employment_type", None, "고용형태"),
+        ("work_hours", r"근무\s*시간|\d{1,2}:\d{2}\s*~|주\s*\d\s*일|주\s*\d{2}\s*시간|상근", "근무시간"),
+        ("duties", r"직무\s*내용|담당\s*업무|주요\s*업무|업무\s*내용|직무수행|직무\s*정의", "직무내용"),
+        ("contract_period", r"계약\s*기간|근로계약기간|채용\s*기간|근무\s*기간|임용\s*기간", "계약기간"),
+        ("salary_detail", r"급여|임금|보수|연봉|월급|기본급|시급|일급", "급여"),
+    ]
+    out = []
+    for field, pat, name in rules:
+        if getattr(j, field):
+            continue
+        if pat is None or _re.search(pat, src):
+            out.append(name)
+    return out
+
+
+def check(path: Path, strict: bool = True) -> list[str]:
     errors = []
     for i, j in enumerate(read_jobs(path)):
+        if strict and j.blog_pick and j.is_target:
+            miss = _missing(j)
+            if miss:
+                errors.append(f"#{i} 원문에 있는데 비어 있음({', '.join(miss)}): {j.title} — 원문 확인 후 채우고, 정말 없으면 해당 칸에 '공고문 확인 필요' 등 사실대로 적기")
         if j.is_target is None:
             errors.append(f"#{i} 미분류: {j.title}")
         elif j.is_target and j.category not in CATEGORIES:
@@ -166,7 +192,7 @@ def check(path: Path) -> list[str]:
 
 
 def build(path: Path, day: str, archive: bool = True) -> None:
-    errors = check(path)
+    errors = check(path, strict=archive)   # 다시 만들 때(archive=False)는 빈칸 검사 생략
     if errors:
         sys.exit("분류가 덜 끝났습니다:\n" + "\n".join(errors[:20]))
     jobs = read_jobs(path)
