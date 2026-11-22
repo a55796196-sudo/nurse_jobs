@@ -12,7 +12,7 @@
     python tools/naver_draft.py                   어제·오늘 글(+그날 주말 가이드) 중 아직 안 한 것 전부 임시저장
     python tools/naver_draft.py 2026-11-20        특정 날짜
     python tools/naver_draft.py --only 1          글 1번만 (시험용)
-    python tools/naver_draft.py --summary         전체 정리 글도 함께
+    python tools/naver_draft.py --no-summary      전체 정리 글은 빼고 (기본: 함께 저장)
     python tools/naver_draft.py 2026-11-22 --redo 이미 임시저장한 날짜를 다시 저장 (글이 수정됐을 때)
 
 설정 (환경변수 또는 아래 기본값):
@@ -223,7 +223,7 @@ def run(day: str, only: int | None, with_summary: bool, redo: bool = False) -> N
                 for n in range(1, n_posts + 1):
                     if only is None or only == n:
                         jobs.append((f"{day}/{n}", f"copyText('pt{n}',this)", f"copyHtml('pb{n}',this)", f"thumb-{n:02d}.png"))
-                if with_summary:
+                if with_summary and only is None:
                     jobs.append((f"{day}/summary", "copyText('st',this)", "copyHtml('sb',this)", "thumb-summary.png"))
             todo = [x for x in jobs if x[0] not in done]
             for x in jobs:
@@ -285,7 +285,7 @@ def _main() -> None:
             t = datetime.now(KST).date()
             days = [(t - timedelta(days=1)).isoformat(), t.isoformat()]
         for day in days:
-            run(day, only, "--summary" in args, "--redo" in args)
+            run(day, only, "--no-summary" not in args, "--redo" in args)
 
 
 if __name__ == "__main__":
