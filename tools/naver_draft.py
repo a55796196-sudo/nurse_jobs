@@ -206,6 +206,9 @@ def run(day: str, only: int | None, with_summary: bool, redo: bool = False) -> N
                     break
         except Exception:  # noqa: BLE001
             pass
+        if day < datetime.now(KST).date().isoformat():
+            log(f"{day} 검토 완료 표시가 없어 건너뜁니다 (지난 날짜)")
+            return
         if k == 0:
             log(f"{day} 아직 검토 전이라 기다립니다 (검토가 끝나면 자동으로 시작)")
         if k == 18:
