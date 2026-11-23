@@ -127,7 +127,7 @@ def fetch() -> list[Job]:
                 source="incruit", source_id=no, title=r["title"][:150], url=url,
                 org=r["org"] or "인크루트 게시 기관", deadline=_deadline(head),
                 start_date=(dt.date.today() - dt.timedelta(days=r["ago"] or 0)).isoformat(),
-                location=meta[0] if meta else None,
+                location=next((m for m in meta if re.match(r"(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주|전국|해외)", m)), None),
                 employment_type=(m_emp.group(1) if m_emp else emp),
                 raw_text=(r["title"] + " " + cont + " " + head)[:3000],
                 extra={"site_text": head[:4000], "origin_text": cont[:8000], "list_text": " / ".join(meta + [r["last"]]),
