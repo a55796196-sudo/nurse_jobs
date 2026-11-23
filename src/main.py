@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -108,8 +109,8 @@ def collect() -> Path | None:
     today = today_kst()
     seen = load_seen()
     jobs: list[Job] = []
-    from .sources import edu, gojobs, work24
-    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch), ("edu", edu.fetch), ("gojobs", gojobs.fetch), ("work24", work24.fetch)):
+    from .sources import edu, gojobs, incruit, work24
+    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch), ("edu", edu.fetch), ("gojobs", gojobs.fetch), ("work24", work24.fetch), ("incruit", incruit.fetch)):
         try:
             jobs += fn()
         except Exception as e:  # 한 출처가 실패해도 나머지는 계속
@@ -118,7 +119,7 @@ def collect() -> Path | None:
     uniq: dict[str, Job] = {}
     titles = set()
     for j in jobs:
-        sig = (j.org.strip(), j.title.strip())
+        sig = (re.sub(r"\(주\)|㈜|주식회사|\(학\)|\(의\)|[\W_]", "", j.org), re.sub(r"[\W_]", "", j.title))
         if j.key in seen or j.key in uniq or sig in titles:
             continue
         if j.deadline and j.deadline < today:

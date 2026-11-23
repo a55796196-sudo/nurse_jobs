@@ -93,7 +93,8 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
         seen = set()
     with sync_playwright() as p:
         b = p.chromium.launch()
-        page = b.new_context(user_agent=UA, locale="ko-KR").new_page()
+        ctx = b.new_context(user_agent=UA, locale="ko-KR")
+        page = ctx.new_page()
         for kw, need in KEYWORDS.items():
             hit, total = 0, 0
             for pg_no in range(1, pages + 1):
@@ -162,9 +163,13 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
                                 n_origin += 1
                             except Exception as e:  # noqa: BLE001
                                 print(f"[work24] 원문 실패 {auth}: {e}")
+                                page.close()   # 멈춘 탭을 계속 쓰면 다음 공고까지 줄줄이 실패함
+                                page = ctx.new_page()
                     time.sleep(1.5)
                 except Exception as e:  # noqa: BLE001
                     print(f"[work24] 상세 실패 {auth}: {e}")
+                    page.close()
+                    page = ctx.new_page()
             text = r["text"]
             company = text.split(r["title"][:10])[0].strip() if r["title"] else ""
             company = re.sub(r"\s+\S*\(주\)\S*$|\s+$", "", company)
