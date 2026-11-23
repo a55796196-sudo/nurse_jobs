@@ -6,15 +6,19 @@
   "hit": "3/7",
   "why": ""
  },
- "글2 순천향대학교서울병원": {
-  "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55619733",
-  "ok": false,
-  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?"
+ "글2 순천향대학교 서울병원": {
+  "url": "https://jobapplication.schmc.ac.kr/recruit/biz/job/recruiteList",
+  "ok": true,
+  "status": 200,
+  "hit": "5/7",
+  "why": ""
  },
  "글3 에스지씨이앤씨": {
   "url": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=186138&infoTypeCd=OEW&infoTypeGroup=tb_workinfoopen",
-  "ok": false,
-  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView"
+  "ok": true,
+  "status": 200,
+  "hit": "6/6",
+  "why": ""
  },
  "글4 라온건설(주)": {
   "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55649076",
@@ -23,17 +27,21 @@
  },
  "글5 환영철강공업(주)": {
   "url": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=K172112611230068&infoTypeCd=VALIDATION&infoTypeGroup=tb_workinfoworknet",
-  "ok": false,
-  "why": "열기 실패: Page.goto: net::ERR_CONNECTION_TIMED_OUT at https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=K1721"
+  "ok": true,
+  "status": 200,
+  "hit": "5/5",
+  "why": ""
  },
  "글6 주식회사 노바씨알": {
   "url": "https://job.incruit.com/jobdb_info/jobpost.asp?job=2611180001031",
-  "ok": false,
-  "why": "열기 실패: Page.goto: Navigation to \"https://job.incruit.com/jobdb_info/jobpost.asp?job=2611180001031\" is interrupted by another na"
+  "ok": true,
+  "status": 200,
+  "hit": "9/9",
+  "why": ""
  },
  "글7 (주)디알리서치": {
   "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55639350",
   "ok": false,
-  "why": "열기 실패: Page.goto: Navigation to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55639350\" is interrupted by another "
+  "why": "열기 실패: Page.goto: net::ERR_CONNECTION_RESET at http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55639350\nCall log:\n  -"
  }
 }
