@@ -112,6 +112,11 @@ def fetch(days: int = 2, max_pages: int = 40) -> list[Job]:
             last = orgs.split()[-1] if orgs else "지자체"
             if last == "보건소" and city:
                 last = city + "보건소"
+            # '남구'처럼 구 이름만 있으면 어느 도시인지 붙임 (부산 남구, 대구 중구 …)
+            if re.fullmatch(r"\S{1,3}구", last):
+                big = next((SHORT.get(a, a) for a in sorted(AREAS, key=len, reverse=True) if a in orgs), None)
+                if big:
+                    last = f"{big[:2]} {last}"
             jobs.append(Job(
                 source="gojobs", source_id=sid, title=c["title"], url=url,
                 org=last, deadline=c["deadline"], start_date=c["posted"],

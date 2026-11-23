@@ -343,7 +343,8 @@ def _title_block(d: ImageDraw.ImageDraw, job: Job, X: int, y: int, maxw: int, bi
     emp = "" if "강사" in role else _emp(job)
     if emp and emp in role:
         emp = ""
-    segs = [x for x in (_org(job), job.department or "", role) if x]
+    # 제목체(Black Han Sans)에 가운뎃점(·)이 없어 빈칸처럼 보임 → '/'로 표시
+    segs = [x.replace("·", "/ ").replace("ㆍ", "/ ") for x in (_org(job), job.department or "", role) if x]
     for size in (big, int(big * 0.9), int(big * 0.8), int(big * 0.72), int(big * 0.65)):
         ft = font(size, "Title")
         lines: list[str] = []
@@ -358,8 +359,15 @@ def _title_block(d: ImageDraw.ImageDraw, job: Job, X: int, y: int, maxw: int, bi
             tw = d.textlength(ln, font=ft)
             d.rounded_rectangle((X - 8, y + size * 0.55, X + tw + 8, y + size * 1.05), 12, fill=mark)
         d.text((X, y), ln, font=ft, fill="#1E1E1E"); y += int(size * 1.25)
-    fe = font(int(size * 0.62), "ExtraBold")
-    d.text((X, y + 6), " ".join(f"{emp} 채용".split()), font=fe, fill=pt)
+    # 고용형태 줄: 괄호 설명은 빼고 짧게, 그래도 길면 글씨를 줄여 한 줄에 맞춤
+    short = re.sub(r"\s*\([^)]*\)?", "", emp or "").strip()
+    if "임기제" in short:
+        short = "임기제공무원"
+    line = " ".join(f"{short} 채용".split())
+    esz = int(size * 0.62)
+    while esz > 26 and d.textlength(line, font=font(esz, "ExtraBold")) > maxw:
+        esz -= 2
+    d.text((X, y + 6), line, font=font(esz, "ExtraBold"), fill=pt)
     return y + int(size * 0.9)
 
 
