@@ -125,8 +125,8 @@ def _post(path: str, **params) -> dict:
     r = requests.post(f"{_graph()}/{path}", data=params, timeout=60)
     if r.status_code >= 400:
         if "request limit" in r.text or '"error_subcode":2207051' in r.text or '"code":4,' in r.text:
-            # 인스타 '행동 차단'(자동 게시 과다 의심) → 48시간 쉬었다가 다시 시도
-            until = (datetime.now(KST) + timedelta(hours=48)).isoformat(timespec="minutes")
+            # 앱 호출 한도 초과/행동 차단 → 6시간 쉬었다가 다시 시도 (한도는 보통 1시간 단위로 풀림)
+            until = (datetime.now(KST) + timedelta(hours=6)).isoformat(timespec="minutes")
             COOLDOWN.write_text(json.dumps({"until": until, "why": r.text[:300]}, ensure_ascii=False), encoding="utf-8")
             print(f"인스타가 활동을 제한해 {until}까지 업로드를 쉽니다.")
             raise SystemExit(0)
@@ -150,14 +150,15 @@ def _wait_public(url: str, minutes: int = 15) -> None:
 
 def _wait_container(cid: str) -> None:
     import requests
-    for _ in range(60):
+    time.sleep(10)
+    for _ in range(30):   # 상태 확인도 API 호출 한도에 들어가므로 15초 간격으로
         r = requests.get(f"{_graph()}/{cid}", params={"fields": "status_code", "access_token": os.environ["IG_ACCESS_TOKEN"]}, timeout=30)
         status = r.json().get("status_code")
         if status == "FINISHED":
             return
         if status == "ERROR":
             raise RuntimeError(f"미디어 처리 실패: {r.text[:300]}")
-        time.sleep(5)
+        time.sleep(15)
     raise RuntimeError(f"미디어 처리 시간 초과: {cid}")
 
 
