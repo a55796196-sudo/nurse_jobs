@@ -1,0 +1,23 @@
+{
+ "글1 ㈜크루솔루션스": {
+  "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50410286",
+  "ok": true,
+  "status": 200,
+  "hit": "9/9",
+  "why": ""
+ },
+ "글2 함양군": {
+  "url": "https://www.korea.kr/archive/recruitInfoView.do?dataId=400207",
+  "ok": true,
+  "status": 200,
+  "hit": "11/11",
+  "why": ""
+ },
+ "글3 부산 남구": {
+  "url": "https://www.korea.kr/archive/recruitInfoView.do?dataId=400264",
+  "ok": true,
+  "status": 200,
+  "hit": "8/8",
+  "why": ""
+ }
+}
