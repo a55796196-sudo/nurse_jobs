@@ -1,0 +1,39 @@
+{
+ "글1 연성초등학교": {
+  "url": "https://www.goe.go.kr/recruit/ad/func/pb/hnfpPbancList.do?mi=10502",
+  "ok": true,
+  "status": 200,
+  "hit": "3/7",
+  "why": ""
+ },
+ "글2 순천향대학교서울병원": {
+  "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55619733",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?"
+ },
+ "글3 에스지씨이앤씨": {
+  "url": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=186138&infoTypeCd=OEW&infoTypeGroup=tb_workinfoopen",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView"
+ },
+ "글4 라온건설(주)": {
+  "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55649076",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?"
+ },
+ "글5 환영철강공업(주)": {
+  "url": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=K172112611230068&infoTypeCd=VALIDATION&infoTypeGroup=tb_workinfoworknet",
+  "ok": false,
+  "why": "열기 실패: Page.goto: net::ERR_CONNECTION_TIMED_OUT at https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=K1721"
+ },
+ "글6 주식회사 노바씨알": {
+  "url": "https://job.incruit.com/jobdb_info/jobpost.asp?job=2611180001031",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Navigation to \"https://job.incruit.com/jobdb_info/jobpost.asp?job=2611180001031\" is interrupted by another na"
+ },
+ "글7 (주)디알리서치": {
+  "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55639350",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Navigation to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55639350\" is interrupted by another "
+ }
+}
