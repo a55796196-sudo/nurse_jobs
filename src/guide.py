@@ -112,7 +112,9 @@ def post_html(g: dict, day: str = "") -> str:
             f'<a href="{_e(l["url"])}">{_e(l["name"])}</a>' + (f" · {_e(l['desc'])}" if l.get("desc") else "") for l in g["links"]) + "</p>")
         out.append(f"<p {C}>※ 시험 일정·응시 자격·비용은 바뀔 수 있으니 준비 전 공식 사이트에서 확인하시기 바랍니다.</p>")
     out.append("<hr>")
-    out += [_br(ASK), _gap(), _br("읽어주셔서 감사합니다."), _gap()]
+    out += [_br(ASK), _gap()]
+    from .blog import ig_cta_html
+    out += [ig_cta_html(center=True), _br("읽어주셔서 감사합니다."), _gap()]
     out.append(f"<p {C}>" + " ".join(f"#{_e(t)}" for t in tags(g)) + "</p>")
     return "\n".join(x for x in out if x)
 

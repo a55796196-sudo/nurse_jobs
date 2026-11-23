@@ -36,6 +36,11 @@ DOCS = ROOT / "docs"
 POSTED = ROOT / "data" / "ig_posted.json"
 COOLDOWN = ROOT / "data" / "ig_cooldown.json"   # 인스타 행동 차단 시 쉬는 기간
 KST = timezone(timedelta(hours=9))
+# 계정 보호: 하루 상한 (넘으면 다음 날로)
+FEED_PER_DAY = 2
+STORY_PER_DAY = 12
+# 이 말이 응답에 있으면 '행동 차단'으로 보고 완전히 멈춤 (호출 한도 초과 code 4 는 6시간 쉬기)
+BLOCK_SIGNS = ('"error_subcode":2207051', '"code":368', "temporarily blocked", "Action Blocked", "spam")
 STORY_PER_RUN = 10  # 한 번 실행에 그날 스토리를 전부 올림 (사이사이 1.5~3분 간격)
 MAX_AGE_DAYS = 2   # 이보다 오래된 날짜의 게시물은 예약 업로드에서 건너뜀 (D-day가 안 맞음)
 
@@ -61,10 +66,10 @@ def _roundup_post(day: str) -> list[dict]:
 
 
 def _day_posts(day: str) -> list[dict]:
-    """매일: 피드 = 진행 중 공고 총정리 카드(roundup-*.jpg) 1개, 스토리 = 공고별 story-NN.jpg."""
+    """매일: 피드 = 진행 중 공고 총정리 카드(roundup-*.jpg) 1개, 스토리 = 공고별 story-NN.jpg + 내일 마감 알림 remind-NN.jpg."""
     d = DOCS / day
     out = []
-    for p in sorted(d.glob("story-*.jpg")):
+    for p in sorted(d.glob("story-*.jpg")) + sorted(d.glob("remind-*.jpg")):   # 새 공고 → 내일 마감 알림
         out.append({"id": f"{day}/{p.stem}", "images": [p], "caption": "", "story": True})
     rc = sorted(d.glob("roundup-*.jpg"), key=lambda p: int(p.stem.split("-")[1]))
     # 총정리는 매일 피드에 올림 (한 번 실행에 피드는 1개씩이라 가이드 날도 따로 올라감)
@@ -124,7 +129,14 @@ def _post(path: str, **params) -> dict:
     params["access_token"] = os.environ["IG_ACCESS_TOKEN"]
     r = requests.post(f"{_graph()}/{path}", data=params, timeout=60)
     if r.status_code >= 400:
-        if "request limit" in r.text or '"error_subcode":2207051' in r.text or '"code":4,' in r.text:
+        if any(s in r.text for s in BLOCK_SIGNS):
+            # 계정 행동 차단·스팸 의심 → 자동으로 다시 시도하지 않고 멈춘 뒤 사람을 부른다
+            COOLDOWN.write_text(json.dumps({"until": "9999-12-31", "blocked": True, "at": datetime.now(KST).isoformat(timespec="minutes"),
+                                            "why": r.text[:300]}, ensure_ascii=False, indent=1), encoding="utf-8")
+            print("⚠️ 인스타가 계정 활동을 제한했습니다. 자동 업로드를 멈춥니다. "
+                  "인스타 앱에서 경고를 확인한 뒤 data/ig_cooldown.json 을 지우면 다시 시작합니다.")
+            raise SystemExit(1)   # 실패로 끝내 GitHub 알림 메일이 가게 함
+        if "request limit" in r.text or '"code":4,' in r.text:
             # 앱 호출 한도 초과/행동 차단 → 6시간 쉬었다가 다시 시도 (한도는 보통 1시간 단위로 풀림)
             until = (datetime.now(KST) + timedelta(hours=6)).isoformat(timespec="minutes")
             COOLDOWN.write_text(json.dumps({"until": until, "why": r.text[:300]}, ensure_ascii=False), encoding="utf-8")
@@ -186,6 +198,13 @@ def publish_one(post: dict, dry: bool = False) -> None:
     _wait_container(c["id"])
     try:
         res = _post(f"{ig}/media_publish", creation_id=c["id"])
+    except SystemExit:
+        # 차단 응답이어도 실제로 올라간 경우가 있어, 기록을 남긴 뒤 멈춘다 (다시 시작할 때 중복 게시 방지)
+        import requests
+        st = requests.get(f"{_graph()}/{c['id']}", params={"fields": "status_code", "access_token": os.environ["IG_ACCESS_TOKEN"]}, timeout=30).json().get("status_code")
+        if st == "PUBLISHED":
+            _mark(post["id"], f"container:{c['id']}")
+        raise
     except RuntimeError:
         # 인스타가 '행동이 차단되었습니다' 오류를 주면서도 실제로는 게시하는 경우가 있음 → 컨테이너 상태로 확인
         import requests
@@ -217,6 +236,10 @@ def main(argv: list[str]) -> None:
     if target == "next":
         try:
             cd = json.loads(COOLDOWN.read_text(encoding="utf-8"))
+            if cd.get("blocked"):
+                print(f"⚠️ {cd.get('at')} 인스타 활동 제한으로 자동 업로드를 멈춘 상태입니다. "
+                      "확인 후 data/ig_cooldown.json 을 지우면 다시 시작합니다.")
+                return
             if cd.get("until", "") > datetime.now(KST).isoformat():
                 print(f"인스타 제한으로 {cd['until']}까지 쉬는 중")
                 return
@@ -229,7 +252,14 @@ def main(argv: list[str]) -> None:
             return
         stories = [p for p in todo if p.get("story") and p["id"].startswith(today_kst().isoformat())]
         feeds = [p for p in todo if not p.get("story")]
-        batch = feeds[:1] + stories[:STORY_PER_RUN]
+        today_s = today_kst().isoformat()
+        done_today = [k for k, v in _posted().items() if str(v.get("at", "")).startswith(today_s)]
+        feed_left = FEED_PER_DAY - sum(1 for k in done_today if "story-" not in k and "remind-" not in k)
+        story_left = STORY_PER_DAY - sum(1 for k in done_today if "story-" in k or "remind-" in k)
+        batch = feeds[:min(1, max(0, feed_left))] + stories[:max(0, min(STORY_PER_RUN, story_left))]
+        if not batch:
+            print(f"오늘 상한 도달 (피드 {FEED_PER_DAY}개·스토리 {STORY_PER_DAY}개) — 나머지는 다음 실행으로")
+            return
         for i, p in enumerate(batch):
             if i and not dry:
                 time.sleep(random.randint(90, 180))

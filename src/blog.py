@@ -14,6 +14,18 @@ from pathlib import Path
 from .models import Job
 from .render import d_label
 
+BLOG_ID = "live_in_fact"
+IG_ID = "live_in_fact"
+IG_URL = f"https://www.instagram.com/{IG_ID}/"
+
+
+def ig_cta_html(center: bool = False) -> str:
+    """블로그 글 끝 인스타 안내: 인스타에만 있는 것(아침에 먼저·마감 알림)을 알려 팔로우할 이유를 준다."""
+    st = ' style="text-align:center"' if center else ""
+    return (f"<p{st}>📢 <b>새 공고는 매일 아침 인스타그램 스토리에 먼저 올라옵니다.</b><br>"
+            f"마감 하루 전 알림도 스토리로 보내드립니다.<br>"
+            f'👉 인스타그램 <a href="{IG_URL}">@{IG_ID}</a> 팔로우하고 놓치지 마세요</p><p>&nbsp;</p>')
+
 AUTHOR = "리브"
 
 # 블로그 카테고리 (네이버 블로그에 만든 이름과 같아야 함)
@@ -279,6 +291,7 @@ def post_html(job: Job, today: date) -> str:
     if job.extra.get("apply"):
         out.append(f'<li>접수 방법: {_e(job.extra["apply"])}</li>')
     out.append("</ul><p>※ 공고 내용을 요약한 글입니다. 지원 전 원문 공고문을 꼭 확인하세요.</p><p>&nbsp;</p>")
+    out.append(ig_cta_html())
 
     out.append("<p>" + " ".join(f"#{_e(t)}" for t in blog_tags(job)) + "</p>")
     return "\n".join(out)
@@ -302,7 +315,6 @@ def _link(job: Job) -> str:
     return job.extra.get("alio_url") or job.url or ""
 
 
-BLOG_ID = "live_in_fact"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
@@ -363,5 +375,6 @@ def summary_html(jobs: list[Job], today: date) -> str:
         out.append("</table><p>&nbsp;</p>")
     out.append("<p>📝 정리글에는 급여·자격요건·전형 절차·근무시간을 공고별로 자세히 정리해 두었습니다.</p>")
     out.append("<p>※ 마감일은 공고 기준이며, 조기 마감될 수 있으니 원문을 꼭 확인하세요.</p><p>&nbsp;</p>")
+    out.append(ig_cta_html())
     out.append("<p>#탈임상 #탈임상간호사 #간호사채용 #간호사이직 #간호사채용공고 #공공기관채용 #보건교사채용 #채용공고총정리</p>")
     return "\n".join(out)

@@ -660,7 +660,7 @@ def summary_thumb(today: date, total: int, counts: list[tuple[str, int]], soon: 
 
 
 # ---------- 인스타 스토리 (공고 1개 = 스토리 1장, 1080x1920) ----------
-def ig_story(job: Job, today: date) -> Image.Image:
+def ig_story(job: Job, today: date, header: str = "오늘의 탈임상 공고") -> Image.Image:
     bg, mark, pt, lab = IG_PAL.get(job.category or "기타", IG_PAL["기타"])
     img = Image.new("RGB", (W, 1920), bg)
     d = ImageDraw.Draw(img)
@@ -668,7 +668,7 @@ def ig_story(job: Job, today: date) -> Image.Image:
         for j in range(0, 1920 + 80, 120):
             if (i // 120 + j // 120) % 2 == 0:
                 d.ellipse((i - 7, j - 7, i + 7, j + 7), fill=mark)
-    d.text((W / 2, 170), "오늘의 탈임상 공고", font=font(56, "Title"), fill=pt, anchor="mm")
+    d.text((W / 2, 170), header, font=font(56, "Title"), fill=pt, anchor="mm")
     card = ig_post(job, today)                      # 1080x1350 표지를 가운데에
     img.paste(card.resize((972, 1215)), (54, 260))
     by = 1560

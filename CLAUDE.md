@@ -87,7 +87,8 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 8. 커밋 & 푸시:
    `git add -A data docs && git commit -m "분류·콘텐츠 생성·검토 YYYY-MM-DD" && git push origin main`
    (push가 네트워크 오류로 실패하면 2·4·8·16초 간격으로 재시도)
-9. 결과를 한 줄로 보고: 전체 N건 중 탈임상 M건 (카테고리별 개수), 작업실 페이지 주소
+9. **인스타 상태 확인**: `data/ig_cooldown.json`에 `"blocked": true`가 있으면 보고 **첫 줄**에 "⚠️ 인스타 활동 제한으로 자동 업로드 멈춤 (날짜·사유)"를 쓰고, 사용자가 인스타 앱에서 경고를 확인한 뒤 그 파일을 지워야 다시 시작된다고 알린다. 직접 지우거나 재시도하지 않는다.
+10. 결과를 한 줄로 보고: 전체 N건 중 탈임상 M건 (카테고리별 개수), 작업실 페이지 주소
    https://a55796196-sudo.github.io/nurse_jobs/YYYY-MM-DD/
 
 ## 사용자가 공고 캡처를 보냈을 때 (직접 올리고 싶은 공고)
@@ -152,6 +153,11 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 5. 커밋에 `data/guides` 포함: `git add -A data docs && git commit -m "탈임상 가이드 YYYY-MM-DD" && git push origin main`
 6. 보고에 한 줄 추가: 가이드 주제 + https://a55796196-sudo.github.io/nurse_jobs/guides/YYYY-MM-DD/
 - 인스타 업로드: 예약 업로드(IG_AUTO_POST=true)면 글 날짜가 되면 자동으로 올라감. 수동이면 Actions → "인스타 업로드" → target 칸에 `guides/YYYY-MM-DD` 입력
+
+## 인스타 (자동 업로드, `src/instagram.py`)
+- 피드: 매일 총정리 + 가이드 카드뉴스. 스토리: 그날 고른 공고(`story-NN`) + **마감 하루 전 알림**(`remind-NN`, 블로그에 쓴 공고 중 내일 마감, 최대 3장).
+- 계정 보호: 하루 피드 2개·스토리 12개 상한, 한 번 실행에 피드 1개. 호출 한도 초과(code 4)는 6시간 쉬고, **행동 차단·스팸 의심 응답이면 완전히 멈추고 실패 알림**(위 9번).
+- 블로그 글·총정리·가이드 끝에는 인스타(@live_in_fact) 안내가 자동으로 붙는다.
 
 ## 주의
 - **사용량 절약**: 탈임상이 아닌 공고는 is_target만 판단하고 나머지 필드는 비워둔다. 7번 검토는 생략하지 않는다(시트는 한 장만 연다). 보고는 2~3줄.

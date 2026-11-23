@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import html
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from .models import CATEGORIES, Job
@@ -185,13 +185,21 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
     summary_thumb(today, len(open_jobs), [(n, sum(1 for j in open_jobs if j.category == c)) for c, n in cats], soon_n).save(day_dir / "thumb-summary.png")
     # 인스타: 피드용 총정리 카드 + 스토리용 공고 이미지
     from .render import ig_story, roundup_cards
-    for old_f in list(day_dir.glob("roundup-*.jpg")) + list(day_dir.glob("story-*.jpg")):
+    for old_f in list(day_dir.glob("roundup-*.jpg")) + list(day_dir.glob("story-*.jpg")) + list(day_dir.glob("remind-*.jpg")):
         old_f.unlink()
     rcards = roundup_cards(open_jobs, post_day or today)
     for k, im in enumerate(rcards, start=1):
         im.save(day_dir / f"roundup-{k}.jpg", quality=92)
     for n, j in enumerate(picks(jobs), start=1):
         ig_story(j, post_day or today).save(day_dir / f"story-{n:02d}.jpg", quality=92)
+    # 마감 하루 전 알림 스토리: 블로그에 글을 쓴 공고 중 내일 마감인 것 (최대 3장, 인스타에만 있는 알림)
+    from .main import load_posted
+    posted = load_posted()
+    tomorrow = ((post_day or today) + timedelta(days=1)).isoformat()
+    today_keys = {j.key for j in picks(jobs)}
+    remind = [j for j in open_jobs if j.deadline == tomorrow and (j.key in posted or j.blog_pick) and j.key not in today_keys][:3]
+    for n, j in enumerate(remind, start=1):
+        ig_story(j, post_day or today, header="내일 마감! 놓치지 마세요").save(day_dir / f"remind-{n:02d}.jpg", quality=92)
     (day_dir / "roundup_caption.txt").write_text(roundup_caption(open_jobs, post_day or today), encoding="utf-8")
     rc_imgs = "".join(f'<a href="roundup-{k}.jpg" download><img src="roundup-{k}.jpg" style="width:150px;border-radius:8px;border:1px solid var(--line);margin:0 6px 6px 0"></a>' for k in range(1, len(rcards) + 1))
     st_imgs = "".join(f'<a href="story-{n:02d}.jpg" download><img src="story-{n:02d}.jpg" style="width:110px;border-radius:8px;border:1px solid var(--line);margin:0 6px 6px 0"></a>' for n in range(1, len(picks(jobs)) + 1))
