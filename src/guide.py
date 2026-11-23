@@ -326,14 +326,29 @@ def build(path: Path, docs: Path) -> Path:
 
 
 def index_items(docs: Path) -> list[str]:
+    """작업실 첫 화면 목록: 올릴 예정인 글(오늘 이후)은 날짜 순으로 전부, 지난 글은 최근 20개."""
     gdir = docs / "guides"
     if not gdir.exists():
         return []
-    items = []
-    for d in sorted((p for p in gdir.iterdir() if p.is_dir()), reverse=True)[:30]:
+    from datetime import datetime, timedelta, timezone
+    today = datetime.now(timezone(timedelta(hours=9))).date().isoformat()
+    dirs = sorted(p for p in gdir.iterdir() if p.is_dir())
+    upcoming = [d for d in dirs if d.name >= today]
+    past = [d for d in dirs if d.name < today][::-1][:20]
+
+    def li(d):
         try:
             meta = json.loads((d / "guide.json").read_text(encoding="utf-8"))
         except (OSError, ValueError):
             meta = {"title": "", "category": ""}
-        items.append(f'<li><a href="guides/{d.name}/">{d.name}</a> <span class="muted">· {_e(meta["category"])}</span><br>{_e(meta["title"])}</li>')
+        wd = "월화수목금토일"[date.fromisoformat(d.name).weekday()]
+        return f'<li><a href="guides/{d.name}/">{d.name} ({wd})</a> <span class="muted">· {_e(meta["category"])}</span><br>{_e(meta["title"])}</li>'
+
+    items = []
+    if upcoming:
+        items.append(f'<li class="muted" style="list-style:none;margin-left:-1.2em"><b>올릴 예정 ({len(upcoming)}편, 날짜 순)</b></li>')
+        items += [li(d) for d in upcoming]
+    if past:
+        items.append('<li class="muted" style="list-style:none;margin:12px 0 0 -1.2em"><b>지난 글</b></li>')
+        items += [li(d) for d in past]
     return items
