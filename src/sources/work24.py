@@ -25,10 +25,21 @@ KEYWORDS = {
     "임상연구코디네이터": r"CRC|코디네이터|임상연구",
     "임상시험 간호사": r"임상시험|임상연구|연구\s*간호|CRC",
     "임상시험센터": r"임상시험|임상연구|연구\s*간호|CRC",
+    # 제약·CRO·의료기기 회사 연구직 (CRA·임상운영). 간호사 지원 가능 여부는 분류 때 본문으로 판단
+    "CRA": r"CRA|모니터링|Clinical\s*Research|임상\s*운영",
+    "CRO": r"CRA|CRC|임상\s*운영|모니터링|연구\s*간호",
+    "임상연구": r"CRA|CRC|연구\s*간호|임상\s*연구\s*(원|팀|간호|코디|관리)|임상\s*시험\s*(지원|센터|간호|코디)",
+    "임상시험": r"CRA|CRC|연구\s*간호|임상\s*시험\s*(지원|센터|간호|코디|담당|운영)|임상\s*운영|Clinical\s*Operation",
+    "의료기기 임상": r"의료기기\s*임상\s*(연구|시험)|임상\s*시험\s*운영|CRA",
     "보험심사 간호사": r"보험\s*심사|심사\s*간호|청구",
     "심사간호사": r"심사|청구|적정성",
     "간호사 사무": r"간호사",
 }
+# 연구직 검색어는 공고가 적어 더 오래 거슬러 봄(이미 본 공고는 seen.json 으로 걸러짐)
+RESEARCH_KW = {"연구간호사", "CRC", "임상연구코디네이터", "임상시험 간호사", "임상시험센터", "CRA", "CRO", "임상연구", "임상시험", "의료기기 임상"}
+RESEARCH_DAYS = 10
+# 간호사와 무관한 연구·임상 직무 (병리사·방사선사·심리사·화장품·통계·영업 등)
+RESEARCH_EXCLUDE = re.compile(r"병리|방사선|심리|화장품|피부\s*임상|통계|Writer|BD|영업|Data|데이터|동물|실험\s*보조|약물전달|생산|Biostat|과학자|전략", re.I)
 NOT_CLINICAL_HINT = re.compile(r"병동|외래|수술실|응급실|중환자|요양병원|3교대|2교대|야간전담|간호조무")
 
 
@@ -72,7 +83,14 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
         print("[work24] playwright 없음 → 건너뜀")
         return []
     since = (dt.date.today() - dt.timedelta(days=days)).isoformat()
+    since_r = (dt.date.today() - dt.timedelta(days=max(days, RESEARCH_DAYS))).isoformat()
     found: dict[str, dict] = {}
+    try:   # 이미 본 공고는 상세를 다시 열지 않음 (연구직은 10일치를 거슬러 보므로)
+        import json
+        from pathlib import Path
+        seen = {k.split(":", 1)[1] for k in json.loads(Path("data/seen.json").read_text(encoding="utf-8")) if k.startswith("work24:")}
+    except Exception:  # noqa: BLE001
+        seen = set()
     with sync_playwright() as p:
         b = p.chromium.launch()
         page = b.new_context(user_agent=UA, locale="ko-KR").new_page()
@@ -92,10 +110,12 @@ def fetch(days: int = 3, pages: int = 3, max_detail: int = 40) -> list[Job]:
                 total += len(rows)
                 old_seen = False
                 for r in rows:
-                    if r["posted"] and r["posted"] < since:
+                    if r["posted"] and r["posted"] < (since_r if kw in RESEARCH_KW else since):
                         old_seen = True
                         continue
-                    if not re.search(need, r["title"], re.I) or r["auth"] in found:
+                    if not re.search(need, r["title"], re.I) or r["auth"] in found or r["auth"] in seen:
+                        continue
+                    if kw in RESEARCH_KW and RESEARCH_EXCLUDE.search(r["title"]):
                         continue
                     if kw == "간호사 사무" and NOT_CLINICAL_HINT.search(r["title"]):
                         continue
