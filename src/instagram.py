@@ -34,6 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
 POSTED = ROOT / "data" / "ig_posted.json"
+COOLDOWN = ROOT / "data" / "ig_cooldown.json"   # 인스타 행동 차단 시 쉬는 기간
 KST = timezone(timedelta(hours=9))
 STORY_PER_RUN = 10  # 한 번 실행에 그날 스토리를 전부 올림 (사이사이 1.5~3분 간격)
 MAX_AGE_DAYS = 2   # 이보다 오래된 날짜의 게시물은 예약 업로드에서 건너뜀 (D-day가 안 맞음)
@@ -123,6 +124,12 @@ def _post(path: str, **params) -> dict:
     params["access_token"] = os.environ["IG_ACCESS_TOKEN"]
     r = requests.post(f"{_graph()}/{path}", data=params, timeout=60)
     if r.status_code >= 400:
+        if "request limit" in r.text or '"error_subcode":2207051' in r.text or '"code":4,' in r.text:
+            # 인스타 '행동 차단'(자동 게시 과다 의심) → 48시간 쉬었다가 다시 시도
+            until = (datetime.now(KST) + timedelta(hours=48)).isoformat(timespec="minutes")
+            COOLDOWN.write_text(json.dumps({"until": until, "why": r.text[:300]}, ensure_ascii=False), encoding="utf-8")
+            print(f"인스타가 활동을 제한해 {until}까지 업로드를 쉽니다.")
+            raise SystemExit(0)
         if "API access blocked" in r.text or '"code":190' in r.text:
             # 메타 계정·앱이 아직 막혀 있거나 토큰 만료 → 실패로 끝내지 않고 건너뜀 (매일 실패 알림 방지)
             print(f"인스타 API가 아직 막혀 있어 업로드를 건너뜁니다: {r.text[:200]}")
@@ -207,6 +214,13 @@ def main(argv: list[str]) -> None:
             return
 
     if target == "next":
+        try:
+            cd = json.loads(COOLDOWN.read_text(encoding="utf-8"))
+            if cd.get("until", "") > datetime.now(KST).isoformat():
+                print(f"인스타 제한으로 {cd['until']}까지 쉬는 중")
+                return
+        except (OSError, ValueError):
+            pass
         # 계정 보호: 한 번 실행에 피드 최대 1개 + 스토리 최대 STORY_PER_RUN개, 사이사이 무작위 간격
         todo = pending()
         if not todo:
