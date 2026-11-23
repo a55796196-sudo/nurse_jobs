@@ -123,6 +123,10 @@ def _post(path: str, **params) -> dict:
     params["access_token"] = os.environ["IG_ACCESS_TOKEN"]
     r = requests.post(f"{_graph()}/{path}", data=params, timeout=60)
     if r.status_code >= 400:
+        if "API access blocked" in r.text or '"code":190' in r.text:
+            # 메타 계정·앱이 아직 막혀 있거나 토큰 만료 → 실패로 끝내지 않고 건너뜀 (매일 실패 알림 방지)
+            print(f"인스타 API가 아직 막혀 있어 업로드를 건너뜁니다: {r.text[:200]}")
+            raise SystemExit(0)
         raise RuntimeError(f"Instagram API 오류 {r.status_code}: {r.text[:500]}")
     return r.json()
 
