@@ -70,9 +70,14 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
    **보고 전 자가 점검**: 고른 공고마다 원문(첨부·원문 본문·상세)을 처음부터 끝까지 한 번 더 훑어 고용형태(예: 1년 계약직·주 5일)·근무시간·직무내용·지원자격 전체·우대·전형·복리후생·접수 방법이 다 들어갔는지 대조한다.
 5. `pip install -q -r requirements.txt` (폰트는 저장소 fonts/ 에 포함되어 있음)
 6. `python -m src.main build YYYY-MM-DD` (inbox 파일은 `data/jobs/`로 자동 이동)
-7. 인스타 이미지 1장을 열어 글자 넘침이 없는지 눈으로 확인 (`docs/YYYY-MM-DD/ig-01-1.jpg`)
+7. **임시저장 전 검토** (노트북 임시저장 프로그램은 7-5의 검토 완료 표시가 있어야 시작한다):
+   1. 6번까지 한 결과를 커밋·push 한 뒤 GitHub MCP `actions_run_trigger`로 `review.yml` 실행 (inputs `{"day": "YYYY-MM-DD"}`), 끝나면 `git pull` (링크 확인 결과 `data/linkcheck/YYYY-MM-DD.json`).
+   2. `python -m src.main review YYYY-MM-DD` → 자동 점검 문제(빈칸·링크·기관명·마감·중복 등)를 모두 고친다.
+   3. `docs/YYYY-MM-DD/review-sheet.jpg`(썸네일+인스타 표지 한 장)를 Read로 열어 글자 잘림·이상한 줄바꿈·빈칸·잘못된 고용형태/지역이 없는지 본다.
+   4. 고른 공고마다 원문과 글을 한 번 더 대조한다 (4번의 자가 점검). 고친 게 있으면 `build`를 다시 실행(이미 data/jobs로 옮겨졌으면 archive=False로).
+   5. 다 끝나면 `python -m src.main ready YYYY-MM-DD` (검토 완료 표시) → 8번 커밋에 포함.
 8. 커밋 & 푸시:
-   `git add -A data docs && git commit -m "분류·콘텐츠 생성 YYYY-MM-DD" && git push origin main`
+   `git add -A data docs && git commit -m "분류·콘텐츠 생성·검토 YYYY-MM-DD" && git push origin main`
    (push가 네트워크 오류로 실패하면 2·4·8·16초 간격으로 재시도)
 9. 결과를 한 줄로 보고: 전체 N건 중 탈임상 M건 (카테고리별 개수), 작업실 페이지 주소
    https://a55796196-sudo.github.io/nurse_jobs/YYYY-MM-DD/
@@ -133,7 +138,7 @@ GitHub Actions가 매일 05:17(KST, 종종 늦어짐)에 공고를 수집해 `da
 - 인스타 업로드: 예약 업로드(IG_AUTO_POST=true)면 글 날짜가 되면 자동으로 올라감. 수동이면 Actions → "인스타 업로드" → target 칸에 `guides/YYYY-MM-DD` 입력
 
 ## 주의
-- **사용량 절약**: 탈임상이 아닌 공고는 is_target만 판단하고 나머지 필드는 비워둔다. 7번(카드 눈으로 확인)은 생략한다. 보고는 2~3줄.
+- **사용량 절약**: 탈임상이 아닌 공고는 is_target만 판단하고 나머지 필드는 비워둔다. 7번 검토는 생략하지 않는다(시트는 한 장만 연다). 보고는 2~3줄.
 - 이 환경에서는 국내 채용 사이트에 직접 접속이 안 된다. 수집은 GitHub Actions 담당이므로 직접 수집하려 하지 말 것.
 - `data/seen.json`, `src/` 코드는 사용자가 요청하지 않는 한 수정하지 않는다.
 - `tools/naver_draft.py`·`tools/naver_draft.bat`은 사용자 노트북의 블로그 임시저장 프로그램이다. 임시 파일을 정리할 때 지우지 말 것 (임시 스크립트는 `tools/`가 아닌 곳에 둔다).

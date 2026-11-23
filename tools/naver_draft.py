@@ -198,6 +198,20 @@ def run(day: str, only: int | None, with_summary: bool, redo: bool = False) -> N
     if not BLOG_ID:
         sys.exit("NAVER_BLOG_ID 환경변수에 블로그 아이디를 넣어주세요.")
     done = {} if redo else _done()   # --redo: 이미 임시저장한 글도 다시 저장
+    # 서버 쪽 검토(ready.json)가 끝난 날만 저장. 아직이면 10분마다 확인하며 최대 3시간 기다림
+    for k in range(19):
+        try:
+            with urllib.request.urlopen(f"{PAGES}/{day}/ready.json?t={int(time.time())}", timeout=20) as r:
+                if r.status == 200:
+                    break
+        except Exception:  # noqa: BLE001
+            pass
+        if k == 0:
+            log(f"{day} 아직 검토 전이라 기다립니다 (검토가 끝나면 자동으로 시작)")
+        if k == 18:
+            log(f"{day} 3시간 기다려도 검토가 끝나지 않아 건너뜁니다")
+            return
+        time.sleep(600)
     with sync_playwright() as p:
         ctx = launch(p)
         ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=PAGES.split("/nurse_jobs")[0])

@@ -276,6 +276,16 @@ def main() -> None:
         have = {j.key for j in cur}
         write_jobs(inbox_file, cur + [j for j in add if j.key not in have])
         print(f"{len(add)}건 추가 → {inbox_file} (blog_pick=true, intro·급여 등 블로그 필드를 채울 것)")
+    elif cmd in ("review", "linkcheck", "ready"):   # 블로그 임시저장 전 검토
+        from . import review
+        if cmd == "linkcheck":
+            review.linkcheck(day)
+        elif cmd == "ready":
+            review.ready(day)
+        else:
+            left = review.issues(day)
+            print("\n".join(left) if left else "자동 점검 OK")
+            print(f"눈으로 볼 시트: {review.sheet(day)}")
     elif cmd == "manual":  # 사용자가 보낸 캡처 공고 추가: python -m src.main manual 날짜 공고.json
         import hashlib
         items = json.loads(Path(sys.argv[3]).read_text(encoding="utf-8"))
