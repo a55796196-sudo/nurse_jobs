@@ -52,17 +52,40 @@ def _emp(job: Job) -> str:
     return {"비정규직": "계약직"}.get(t, t)
 
 
+METRO = ("서울", "인천", "부산", "대구", "대전", "광주", "울산", "세종", "제주")
+
+
+def region(job: Job) -> str:
+    """제목용 지역: 서울·광역시는 시도명, 도는 시·군 이름 (예: 경기 평택시 → 평택, 서울 강서구 → 서울)."""
+    loc = (job.location or "").split(",")[0].strip()
+    parts = loc.split()
+    if not parts:
+        return ""
+    if parts[0] in METRO or len(parts) == 1:
+        return parts[0]
+    city = parts[1]
+    if city.endswith("구"):          # 도 + 구 (잘못 들어온 값 등)는 도 이름으로
+        return parts[0]
+    if city[-1] in "시군" and len(city) > 2:
+        city = city[:-1]
+    return city
+
+
 def post_title(job: Job) -> str:
-    """예: (~12/1) 국민건강보험공단 일산병원 간호행정부 간호사 기간제 채용"""
-    dl = f"(~{int(job.deadline[5:7])}/{int(job.deadline[8:10])}) " if job.deadline else "(상시) "
-    role = job.job_role or ""
+    """예: [고양] 국민건강보험공단 일산병원 간호행정부 간호사 기간제 채용 (~12/1)
+    검색어가 '지역 + 직무 + 간호사 채용' 형태라 지역을 앞에, 마감일을 뒤에 둔다."""
+    dl = f"(~{int(job.deadline[5:7])}/{int(job.deadline[8:10])})" if job.deadline else "(상시)"
+    role = (job.job_role or "").strip()
     if job.department and job.department not in role:
         role = f"{job.department} {role}"
     emp = "" if "강사" in role else _emp(job)
     if emp and emp in role:
         emp = ""
-    tail = "" if ("간호" in role or "보건" in role) else " (간호사 지원 가능)"
-    return " ".join(f"{dl}{_org(job)} {role.strip()} {emp} 채용".split()) + tail
+    if "간호" not in role and "교사" not in role:
+        role += "(간호사)" if "보건" in role else "(간호사 지원 가능)"
+    reg = region(job)
+    head = f"[{reg}] " if reg else ""
+    return " ".join(f"{head}{_org(job)} {role} {emp} 채용 {dl}".split())
 
 
 def _x(job: Job, key: str) -> str:

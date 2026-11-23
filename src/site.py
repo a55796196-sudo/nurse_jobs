@@ -99,7 +99,7 @@ def ig_caption(job: Job, today: date) -> str:
     when = f"{int(job.deadline[5:7])}/{int(job.deadline[8:10])}" + (f" {job.deadline_time}" if job.deadline_time else "") if job.deadline else "상시"
     role = " ".join(x for x in (job.department, job.job_role) if x)
     import re
-    lines = [f"📌 {re.sub(r'^\(.*?\)\s*', '', post_title(job))}", ""]
+    lines = [f"📌 {re.sub(r'\s*\((~[\d/]+|상시)\)$', '', post_title(job))}", ""]
     lines.append(f"📍 근무지: {job.location or '공고 확인'}")
     lines.append(f"⏰ 마감: {when}까지 ({dl})")
     if job.salary:
