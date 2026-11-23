@@ -38,6 +38,32 @@ def _org(job: Job) -> str:
     return re.sub(r"\s+", " ", re.sub(r"^\((재|사|주)\)|\(주\)|㈜|주식회사", "", job.org)).strip()
 
 
+EMP_WORDS = (  # (찾는 말, 제목에 쓸 말) — 제목에는 고용형태 한 단어만
+    ("무기계약", "무기계약직"), ("임기제", "임기제"), ("비정규직", "계약직"), ("정규직", "정규직"),
+    ("기간제", "기간제"), ("계약직", "계약직"), ("대체인력", "대체인력"), ("인턴", "인턴"),
+)
+
+
+def _title_emp(job: Job) -> str:
+    """제목용 고용형태 한 단어. 공고 제목 → 고용형태 칸 순서로, 가장 먼저 나온 표현을 쓴다
+    (예: '정규직(수습 3개월) 또는 계약직(1년)' → 정규직, '지방시간선택제임기제 마급' → 임기제)."""
+    for text in (job.title, job.employment_type or ""):
+        hits = []
+        for key, word in EMP_WORDS:
+            i = text.find(key)
+            if i < 0:
+                continue
+            if key == "정규직" and text[max(0, i - 1):i] == "비":   # '비정규직' 안의 '정규직'
+                rest = text.replace("비정규직", "")
+                i = rest.find("정규직")
+                if i < 0:
+                    continue
+            hits.append((i, word))
+        if hits:
+            return min(hits)[1]
+    return ""
+
+
 def _emp(job: Job) -> str:
     """제목용 고용형태: 공고 제목에 쓰인 표현을 우선 (예: 대체인력 계약직)."""
     title = job.title.replace("비정규직", " ")  # '비정규직' 안의 '정규직'을 정규직으로 읽지 않게
@@ -78,7 +104,7 @@ def post_title(job: Job) -> str:
     role = (job.job_role or "").strip()
     if job.department and job.department not in role:
         role = f"{job.department} {role}"
-    emp = "" if "강사" in role else _emp(job)
+    emp = "" if "강사" in role else _title_emp(job)
     if emp and emp in role:
         emp = ""
     if "간호" not in role and "교사" not in role:
