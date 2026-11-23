@@ -302,11 +302,38 @@ def _link(job: Job) -> str:
     return job.extra.get("alio_url") or job.url or ""
 
 
+BLOG_ID = "live_in_fact"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
+
+def _read_json(name: str) -> dict:
+    try:
+        return json.loads((DATA_DIR / name).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _blog_search(word: str) -> str:
+    from urllib.parse import quote
+    return f"https://blog.naver.com/PostSearchList.naver?blogId={BLOG_ID}&orderType=sim&searchText={quote(word)}"
+
+
 def summary_html(jobs: list[Job], today: date) -> str:
     jobs = sorted(jobs, key=lambda j: j.deadline or "9999")
+    seen, posted = _read_json("seen.json"), _read_json("posted.json")
     soon = [j for j in jobs if j.deadline and (date.fromisoformat(j.deadline) - today).days <= 3]
+
+    def is_new(j: Job) -> bool:
+        try:
+            return (today - date.fromisoformat(seen.get(j.key, ""))).days <= 2
+        except ValueError:
+            return False
+
+    n_new = sum(1 for j in jobs if is_new(j))
     out = [f"<p>{today.month}월 {today.day}일 기준, 지금 지원할 수 있는 <b>탈임상 간호사 채용공고 {len(jobs)}건</b>을 한 번에 정리했습니다."
-           + (f" 이 중 <b>{len(soon)}건은 3일 안에 마감</b>되니 먼저 확인하세요." if soon else "") + "</p><p>&nbsp;</p>"]
+           + (f" 새로 올라온 공고는 <b>{n_new}건</b>," if n_new else "")
+           + (f" <b>3일 안에 마감</b>되는 공고는 <b>{len(soon)}건</b>입니다." if soon else "") + "</p>",
+           "<p>🆕 새로 올라온 공고 · 📝 블로그에 자세한 정리글이 있는 공고 · 기관명을 누르면 공고 원문</p><p>&nbsp;</p>"]
     for cat, name in CAT_ORDER:
         group = [j for j in jobs if j.category == cat]
         if not group:
@@ -321,13 +348,20 @@ def summary_html(jobs: list[Job], today: date) -> str:
         for (_, role, _, _), same in merged.items():
             j = same[0]
             label, dl = d_label(j.deadline, today)
-            when = f"{dl.month}/{dl.day} ({label})" if dl else "상시"
+            when = f"{dl.month}/{dl.day}" if dl else "상시"
+            urgent = dl is not None and (dl - today).days <= 3
+            dcell = f"{_e(when)}<br>" + (f'<b><span style="color:#e03131">{_e(label)}</span></b>' if urgent else _e(label)) if dl else "상시"
             if len(same) > 1:
                 role += f" ({len(same)}건)"
-            out.append(f'<tr><td>{_e(when)}</td><td><a href="{_e(_link(j))}">{_e(_org(j))}</a><br>{_e(role)}</td>'
+            emp = _title_emp(j)
+            line2 = _e(role) + (f" · <b>{_e(emp)}</b>" if emp else "")
+            new = "🆕 " if any(is_new(x) for x in same) else ""
+            note = (f'<br>📝 <a href="{_e(_blog_search(_org(j)))}">정리글 보기</a>'
+                    if any(x.key in posted for x in same) else "")
+            out.append(f'<tr><td>{dcell}</td><td>{new}<a href="{_e(_link(j))}">{_e(_org(j))}</a><br>{line2}{note}</td>'
                        f'<td>{_e((j.location or "-").replace(",", " · "))}</td></tr>')
         out.append("</table><p>&nbsp;</p>")
-    out.append("<p>기관명을 누르면 공고 원문으로 이동합니다. 공고별 자세한 정리(급여·자격·전형)는 <b>탈임상 채용공고</b> 카테고리에 있습니다.</p>")
+    out.append("<p>📝 정리글에는 급여·자격요건·전형 절차·근무시간을 공고별로 자세히 정리해 두었습니다.</p>")
     out.append("<p>※ 마감일은 공고 기준이며, 조기 마감될 수 있으니 원문을 꼭 확인하세요.</p><p>&nbsp;</p>")
     out.append("<p>#탈임상 #탈임상간호사 #간호사채용 #간호사이직 #간호사채용공고 #공공기관채용 #보건교사채용 #채용공고총정리</p>")
     return "\n".join(out)
