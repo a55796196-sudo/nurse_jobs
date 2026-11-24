@@ -58,6 +58,18 @@ def issues(day: str) -> list[str]:
             out.append(f"{tag}: 지원자격이 {len(j.qualifications or [])}개뿐 — 원문 전체 확인")
         if j.deadline_time and j.deadline_time not in " ".join(str(v) for v in (j.raw_text, *(j.extra or {}).values())):
             out.append(f"{tag}: 마감 시각 {j.deadline_time}이 원문에서 안 보임 — 확인")
+        ex = j.extra or {}
+        # 원문 본문을 못 읽은 채 쓴 글 (상세 수집 실패·사람인 차단) → 직무·우대·복리후생이 빠짐
+        if j.source in ("work24", "incruit") and not (ex.get("site_text") or ex.get("origin_text") or ex.get("attach_text")):
+            out.append(f"{tag}: 원문 상세를 못 읽음 (site_text·origin_text 없음) — 다시 수집하거나 사용자에게 캡처 요청")
+        if "saramin.co.kr" in (j.url or "") and not ex.get("origin_text") and not ex.get("attach_text"):
+            out.append(f"{tag}: 사람인 원문 미수집 — 직무내용·우대·자격 상세가 빠졌을 가능성 큼 (사용자에게 캡처 요청)")
+        if ex.get("ai_article"):
+            out.append(f"{tag}: 인크루트 AI 요약 기사 기반 — 원문 대조 필요")
+        blob = json.dumps({k: getattr(j, k, None) for k in ("intro", "summary", "ig_tip", "salary", "salary_detail", "work_hours",
+                                                           "qualifications", "preferred", "duties", "benefits", "process")}, ensure_ascii=False)
+        if re.search(r"확인\s*필요|공고문\s*확인|원문\s*확인|미기재", blob):
+            out.append(f"{tag}: '확인 필요' 같은 임시 문구가 글에 남아 있음")
         key = (j.org, j.job_role)
         if key in seen:
             out.append(f"{tag}: 같은 기관·직무 글이 두 개")
