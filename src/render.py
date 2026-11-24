@@ -683,7 +683,8 @@ def _dedupe(jobs: list[Job]) -> list[Job]:
     """같은 기관·직무·근무지·마감일이 여러 날 수집된 경우 하나만."""
     seen, out = set(), []
     for j in jobs:
-        k = (j.org, j.job_role, (j.location or "").split(",")[0], j.deadline)
+        # 제목까지 봄: 같은 공고가 여러 날 수집된 것만 합치고, 같은 기관의 다른 공고(대전/세종, 다른 공장 등)는 둘 다 남김
+        k = (j.org, j.job_role, (j.location or "").split(",")[0], j.deadline, re.sub(r"[\W_]", "", j.title or ""))
         if k not in seen:
             seen.add(k); out.append(j)
     return out
