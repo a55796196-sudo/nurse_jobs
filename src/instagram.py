@@ -38,10 +38,10 @@ COOLDOWN = ROOT / "data" / "ig_cooldown.json"   # 인스타 행동 차단 시 �
 KST = timezone(timedelta(hours=9))
 # 계정 보호: 하루 상한 (넘으면 다음 날로)
 FEED_PER_DAY = 2
-STORY_PER_DAY = 12
+STORY_PER_DAY = 8
 # 이 말이 응답에 있으면 '행동 차단'으로 보고 완전히 멈춤 (호출 한도 초과 code 4 는 6시간 쉬기)
 BLOCK_SIGNS = ('"error_subcode":2207051', '"code":368', "temporarily blocked", "Action Blocked", "spam")
-STORY_PER_RUN = 10  # 한 번 실행에 그날 스토리를 전부 올림 (사이사이 1.5~3분 간격)
+STORY_PER_RUN = 3   # 한 번 실행에 스토리 3장까지 (하루 4번 실행에 나눠 올림 — 새 계정 보호)
 MAX_AGE_DAYS = 2   # 이보다 오래된 날짜의 게시물은 예약 업로드에서 건너뜀 (D-day가 안 맞음)
 
 
@@ -118,8 +118,8 @@ def pending() -> list[dict]:
     out = []
     for d in range(0, MAX_AGE_DAYS + 1):
         day = (today - timedelta(days=d)).isoformat()
+        out += _day_posts(day) if (DOCS / day).is_dir() else []          # 그날 총정리가 먼저
         out += _guide_posts(day) if (DOCS / "guides" / day).is_dir() else []
-        out += _day_posts(day) if (DOCS / day).is_dir() else []
     return [p for p in out if p["id"] not in done and not p.get("expired")]
 
 
