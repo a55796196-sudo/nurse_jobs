@@ -330,6 +330,16 @@ def _blog_search(word: str) -> str:
     return f"https://blog.naver.com/PostSearchList.naver?blogId={BLOG_ID}&orderType=sim&searchText={quote(word)}"
 
 
+def _emp_kind(j: Job) -> str:
+    """총정리 표의 고용 칸: 정규(정규직·무기계약직) / 비정규(계약·기간제·임기제·대체·인턴·시간강사 등) / 모름이면 빈칸."""
+    t = " ".join(x for x in (j.employment_type, j.title) if x)
+    non = bool(re.search(r"비정규|계약직|기간제|임기제|대체|인턴|시간강사|위촉|파견|단시간|촉탁|한시", t.replace("무기계약", "")))
+    reg = bool(re.search(r"(?<!비)정규|무기계약|기간의 정함이 없는", t))
+    if reg and non and re.search(r"정규직.{0,15}(또는|/|,).{0,6}계약", t):
+        return "정규/계약"          # '정규직 또는 계약직' 처럼 둘 다 뽑는 공고
+    return "비정규" if non else "정규" if reg else ""
+
+
 def summary_html(jobs: list[Job], today: date) -> str:
     jobs = sorted(jobs, key=lambda j: j.deadline or "9999")
     seen, posted = _read_json("seen.json"), _read_json("posted.json")
@@ -345,14 +355,15 @@ def summary_html(jobs: list[Job], today: date) -> str:
     out = [f"<p>{today.month}월 {today.day}일 기준, 지금 지원할 수 있는 <b>탈임상 간호사 채용공고 {len(jobs)}건</b>을 한 번에 정리했습니다."
            + (f" 새로 올라온 공고는 <b>{n_new}건</b>," if n_new else "")
            + (f" <b>3일 안에 마감</b>되는 공고는 <b>{len(soon)}건</b>입니다." if soon else "") + "</p>",
-           "<p>🆕 새로 올라온 공고 · 📝 블로그에 자세한 정리글이 있는 공고 · 기관명을 누르면 공고 원문</p><p>&nbsp;</p>"]
+           "<p>🆕 새로 올라온 공고 · 고용: 정규(정규직·무기계약직) / 비정규(계약·기간제 등) · 📝 블로그 정리글 · 기관명을 누르면 공고 원문</p><p>&nbsp;</p>"]
     for cat, name in CAT_ORDER:
         group = [j for j in jobs if j.category == cat]
         if not group:
             continue
         out.append(f"<h2>{name} ({len(group)}건)</h2>")
         out.append('<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">')
-        out.append('<tr style="background:#f5f5f5"><td><b>마감</b></td><td><b>기관 · 직무</b></td><td><b>근무지</b></td></tr>')
+        out.append('<tr style="background:#f5f5f5"><td><b>마감</b></td><td><b>기관 · 직무</b></td><td><b>근무지</b></td>'
+                   '<td style="white-space:nowrap"><b>고용</b></td><td style="white-space:nowrap"><b>정리글</b></td></tr>')
         merged: dict[tuple, list[Job]] = {}
         for j in group:  # 같은 기관·직무·지역·마감은 한 줄로
             role = " ".join(x for x in (j.department, j.job_role) if x) or j.title
@@ -366,12 +377,17 @@ def summary_html(jobs: list[Job], today: date) -> str:
             if len(same) > 1:
                 role += f" ({len(same)}건)"
             emp = _title_emp(j)
-            line2 = _e(role) + (f" · <b>{_e(emp)}</b>" if emp else "")
+            line2 = _e(role) + (f" · {_e(emp)}" if emp else "")
             new = "🆕 " if any(is_new(x) for x in same) else ""
-            note = (f'<br>📝 <a href="{_e(_blog_search(_org(j)))}">정리글 보기</a>'
-                    if any(x.key in posted for x in same) else "")
-            out.append(f'<tr><td>{dcell}</td><td>{new}<a href="{_e(_link(j))}">{_e(_org(j))}</a><br>{line2}{note}</td>'
-                       f'<td>{_e((j.location or "-").replace(",", " · "))}</td></tr>')
+            kind = _emp_kind(j)
+            kcell = (f'<b><span style="color:#1971c2">{kind}</span></b>' if kind.startswith("정규")
+                     else f'<span style="color:#868e96">{kind}</span>' if kind else "-")
+            has_post = any(x.key in posted or x.blog_pick for x in same)
+            ncell = f'<a href="{_e(_blog_search(_org(j)))}">📝 보기</a>' if has_post else "-"
+            out.append(f'<tr><td>{dcell}</td><td>{new}<a href="{_e(_link(j))}">{_e(_org(j))}</a><br>{line2}</td>'
+                       f'<td>{_e((j.location or "-").replace(",", " · "))}</td>'
+                       f'<td style="white-space:nowrap;text-align:center">{kcell}</td>'
+                       f'<td style="white-space:nowrap;text-align:center">{ncell}</td></tr>')
         out.append("</table><p>&nbsp;</p>")
     out.append("<p>📝 정리글에는 급여·자격요건·전형 절차·근무시간을 공고별로 자세히 정리해 두었습니다.</p>")
     out.append("<p>※ 마감일은 공고 기준이며, 조기 마감될 수 있으니 원문을 꼭 확인하세요.</p><p>&nbsp;</p>")
