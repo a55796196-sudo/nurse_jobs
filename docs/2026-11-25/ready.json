@@ -1,0 +1,8 @@
+{
+ "reviewed_at": "2026-11-25T07:49+09:00",
+ "remaining_issues": [
+  "링크 확인 실패 글5 삼호개발(주): 열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?",
+  "링크 확인 실패 글6 에이치에스화성(주): 열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?",
+  "링크 확인 실패 글7 루가의료재단 나은병원: 열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?"
+ ]
+}
