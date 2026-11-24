@@ -1273,12 +1273,20 @@
    "search_kw": "임상연구",
    "source_name": "고용24"
   },
-  "is_target": false,
-  "category": null,
-  "job_role": null,
-  "summary": null,
-  "requirements": [],
-  "tags": [],
+  "is_target": true,
+  "category": "연구",
+  "job_role": "임상연구원",
+  "summary": "의료 AI 기업 빔웍스 임상연구팀 임상연구원 채용. 대구, 경력무관·고졸 이상. 12월 20일 마감, 상세는 원문 확인.",
+  "requirements": [
+   "경력무관",
+   "고졸 이상"
+  ],
+  "tags": [
+   "빔웍스채용",
+   "임상연구원",
+   "연구직",
+   "대구채용"
+  ],
   "blog_pick": false,
   "qualifications": [],
   "preferred": [],
@@ -1319,12 +1327,20 @@
    "search_kw": "임상연구",
    "source_name": "고용24"
   },
-  "is_target": false,
-  "category": null,
-  "job_role": null,
-  "summary": null,
-  "requirements": [],
-  "tags": [],
+  "is_target": true,
+  "category": "연구",
+  "job_role": "임상연구관리 사무원",
+  "summary": "강남세브란스병원 임상연구관리실 사무원(계약직). 서울 강남구 주 5일, 전공·경력 무관 전문대졸 이상. 12월 17일 마감.",
+  "requirements": [
+   "전문대졸 이상",
+   "경력 무관"
+  ],
+  "tags": [
+   "강남세브란스채용",
+   "임상연구관리실",
+   "연구직",
+   "병원사무원"
+  ],
   "blog_pick": false,
   "qualifications": [],
   "preferred": [],
@@ -1365,12 +1381,20 @@
    "search_kw": "임상연구",
    "source_name": "고용24"
   },
-  "is_target": false,
-  "category": null,
-  "job_role": null,
-  "summary": null,
-  "requirements": [],
-  "tags": [],
+  "is_target": true,
+  "category": "연구",
+  "job_role": "의료기기 임상연구",
+  "summary": "메디코아 의료기기 임상연구팀 신입·경력 채용. 경기 하남시, 전문대졸 이상. 2027년 1월 12일 마감, 상세는 원문 확인.",
+  "requirements": [
+   "신입·경력 3년",
+   "전문대졸 이상"
+  ],
+  "tags": [
+   "메디코아채용",
+   "의료기기임상",
+   "연구직",
+   "하남채용"
+  ],
   "blog_pick": false,
   "qualifications": [],
   "preferred": [],
@@ -2217,12 +2241,21 @@
    "source_name": "인크루트",
    "ai_article": false
   },
-  "is_target": false,
-  "category": null,
-  "job_role": null,
-  "summary": null,
-  "requirements": [],
-  "tags": [],
+  "is_target": true,
+  "category": "기업",
+  "job_role": "보험심사",
+  "summary": "청주삼성병원 심사과 심사·청구 정규직. 주 5일 08:30~17:30, 연봉 3,000만원 이상, 경력 1년 이상. 의/약학계열·보건행정 자격증 우대.",
+  "requirements": [
+   "경력 1년 이상",
+   "학력무관",
+   "의/약학계열 우대"
+  ],
+  "tags": [
+   "청주삼성병원",
+   "보험심사",
+   "심사간호사",
+   "청주채용"
+  ],
   "blog_pick": false,
   "qualifications": [],
   "preferred": [],
