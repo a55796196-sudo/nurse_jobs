@@ -1,0 +1,45 @@
+{
+ "글1 세정초등학교": {
+  "url": "https://www.goe.go.kr/recruit/ad/func/pb/hnfpPbancList.do?mi=10502",
+  "ok": true,
+  "status": 200,
+  "hit": "3/7",
+  "why": ""
+ },
+ "글2 의료법인 우리의료재단": {
+  "url": "https://job.incruit.com/jobdb_info/jobpost.asp?job=2611240001984&pco=583",
+  "ok": true,
+  "status": 200,
+  "hit": "8/8",
+  "why": ""
+ },
+ "글3 IPARK현대산업개발": {
+  "url": "https://job.incruit.com/jobdb_info/jobpost.asp?job=2611230000589",
+  "ok": true,
+  "status": 200,
+  "hit": "5/5",
+  "why": ""
+ },
+ "글4 (주)엠바이오": {
+  "url": "https://www.work24.go.kr/wk/a/b/1500/empDetailAuthView.do?wantedAuthNo=55610935&infoTypeCd=CSI&infoTypeGroup=tb_workinfogubun",
+  "ok": true,
+  "status": 200,
+  "hit": "6/6",
+  "why": ""
+ },
+ "글5 삼호개발(주)": {
+  "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55654148",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?"
+ },
+ "글6 에이치에스화성(주)": {
+  "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55654347",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?"
+ },
+ "글7 루가의료재단 나은병원": {
+  "url": "http://www.saramin.co.kr/zf_user/recruit/recruit-view?idx=55654781",
+  "ok": false,
+  "why": "열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"http://www.saramin.co.kr/zf_user/recruit/recruit-view?"
+ }
+}
