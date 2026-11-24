@@ -47,7 +47,7 @@ def _md(d: date) -> str:
 
 
 def _org(job: Job) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"^\((재|사|주)\)|\(주\)|㈜|주식회사", "", job.org)).strip()
+    return re.sub(r"\s+", " ", re.sub(r"^\((재|사|주|의|학)\)|\(주\)|㈜|주식회사", "", job.org)).strip()
 
 
 EMP_WORDS = (  # (찾는 말, 제목에 쓸 말) — 제목에는 고용형태 한 단어만
@@ -355,39 +355,39 @@ def summary_html(jobs: list[Job], today: date) -> str:
     out = [f"<p>{today.month}월 {today.day}일 기준, 지금 지원할 수 있는 <b>탈임상 간호사 채용공고 {len(jobs)}건</b>을 한 번에 정리했습니다."
            + (f" 새로 올라온 공고는 <b>{n_new}건</b>," if n_new else "")
            + (f" <b>3일 안에 마감</b>되는 공고는 <b>{len(soon)}건</b>입니다." if soon else "") + "</p>",
-           "<p>🆕 새로 올라온 공고 · 고용: 정규(정규직·무기계약직) / 비정규(계약·기간제 등) · 📝 블로그 정리글 · 기관명을 누르면 공고 원문</p><p>&nbsp;</p>"]
+           "<p>🆕 새로 올라온 공고 · 고용: 정규(정규직·무기계약직) / 비정규(계약·기간제 등)<br>📝 누르면 블로그 정리글 · 기관명을 누르면 공고 원문</p><p>&nbsp;</p>"]
     for cat, name in CAT_ORDER:
         group = [j for j in jobs if j.category == cat]
         if not group:
             continue
         out.append(f"<h2>{name} ({len(group)}건)</h2>")
-        out.append('<table border="1" cellpadding="8" style="border-collapse:collapse;width:100%">')
-        out.append('<tr style="background:#f5f5f5"><td><b>마감</b></td><td><b>기관 · 직무</b></td><td><b>근무지</b></td>'
-                   '<td style="white-space:nowrap"><b>고용</b></td><td style="white-space:nowrap"><b>정리글</b></td></tr>')
+        # 칸 너비: 기관·직무를 넓게, 마감·고용·정리글은 좁게 (합 100%)
+        W = {"마감": 11, "기관": 26, "직무": 28, "근무지": 17, "고용": 10, "글": 8}
+        th = lambda k, label: f'<td width="{W[k]}%" style="width:{W[k]}%;text-align:center;white-space:nowrap"><b>{label}</b></td>'
+        out.append('<table border="1" cellpadding="6" style="border-collapse:collapse;width:100%;table-layout:fixed">')
+        out.append('<tr style="background:#f5f5f5">' + th("마감", "마감") + th("기관", "기관") + th("직무", "직무")
+                   + th("근무지", "근무지") + th("고용", "고용") + th("글", "글") + "</tr>")
         merged: dict[tuple, list[Job]] = {}
         for j in group:  # 같은 기관·직무·지역·마감은 한 줄로
             role = " ".join(x for x in (j.department, j.job_role) if x) or j.title
             merged.setdefault((_org(j), role, j.location, j.deadline), []).append(j)
+        mid = 'style="text-align:center;white-space:nowrap"'
         for (_, role, _, _), same in merged.items():
             j = same[0]
             label, dl = d_label(j.deadline, today)
-            when = f"{dl.month}/{dl.day}" if dl else "상시"
             urgent = dl is not None and (dl - today).days <= 3
-            dcell = f"{_e(when)}<br>" + (f'<b><span style="color:#e03131">{_e(label)}</span></b>' if urgent else _e(label)) if dl else "상시"
+            dcell = (f"{dl.month}/{dl.day}<br>" + (f'<b><span style="color:#e03131">{_e(label)}</span></b>' if urgent else _e(label))) if dl else "상시"
             if len(same) > 1:
                 role += f" ({len(same)}건)"
-            emp = _title_emp(j)
-            line2 = _e(role) + (f" · {_e(emp)}" if emp else "")
             new = "🆕 " if any(is_new(x) for x in same) else ""
             kind = _emp_kind(j)
-            kcell = (f'<b><span style="color:#1971c2">{kind}</span></b>' if kind.startswith("정규")
+            kcell = (f'<b><span style="color:#1971c2">{kind.replace("/", "/<br>")}</span></b>' if kind.startswith("정규")
                      else f'<span style="color:#868e96">{kind}</span>' if kind else "-")
             has_post = any(x.key in posted or x.blog_pick for x in same)
-            ncell = f'<a href="{_e(_blog_search(_org(j)))}">📝 보기</a>' if has_post else "-"
-            out.append(f'<tr><td>{dcell}</td><td>{new}<a href="{_e(_link(j))}">{_e(_org(j))}</a><br>{line2}</td>'
-                       f'<td>{_e((j.location or "-").replace(",", " · "))}</td>'
-                       f'<td style="white-space:nowrap;text-align:center">{kcell}</td>'
-                       f'<td style="white-space:nowrap;text-align:center">{ncell}</td></tr>')
+            ncell = f'<a href="{_e(_blog_search(_org(j)))}">📝</a>' if has_post else "-"
+            loc = (j.location or "-").replace(",", " · ")
+            out.append(f'<tr><td {mid}>{dcell}</td><td>{new}<a href="{_e(_link(j))}">{_e(_org(j))}</a></td>'
+                       f'<td>{_e(role)}</td><td>{_e(loc)}</td><td {mid}>{kcell}</td><td {mid}>{ncell}</td></tr>')
         out.append("</table><p>&nbsp;</p>")
     out.append("<p>📝 정리글에는 급여·자격요건·전형 절차·근무시간을 공고별로 자세히 정리해 두었습니다.</p>")
     out.append("<p>※ 마감일은 공고 기준이며, 조기 마감될 수 있으니 원문을 꼭 확인하세요.</p><p>&nbsp;</p>")
