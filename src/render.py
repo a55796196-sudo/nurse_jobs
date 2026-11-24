@@ -699,34 +699,44 @@ def roundup_cards(jobs: list[Job], today: date, per_page: int = 8, max_pages: in
     out = [summary_thumb(today, len(open_jobs), counts, soon, height=H)]
     # 분야별로 묶고 각 분야 안에서 D-day 순 → 장마다 (분야 제목 + 줄) 배치
     names = {"기업": "기업 · 보건관리자", "공공": "공공기관 · 보건소", "연구": "임상연구 · CRC", "학교": "학교 보건실", "기타": "기타"}
-    items: list[tuple] = []
-    for c in CATEGORIES:
-        group = [j for j in open_jobs if j.category == c]
-        if group:
-            items.append(("h", c, len(group)))
-            items += [("r", j) for j in group]
     ROW, HEAD = 108, 96
     x0, y0, x1, y1 = 60, 70, W - 60, H - 110
     top, bottom = y0 + 150, y1 - 40
-    pages_items: list[list[tuple]] = [[]]
-    y = top
-    cur_cat = None
-    for it in items:
-        need = HEAD if it[0] == "h" else ROW
-        if it[0] == "h":
-            cur_cat = it
-            if y + HEAD + ROW > bottom:          # 제목만 덩그러니 남지 않게
-                pages_items.append([]); y = top
-        elif y + ROW > bottom:
-            pages_items.append([("h", cur_cat[1], cur_cat[2], True)]); y = top + HEAD
-        pages_items[-1].append(it); y += need
-    pages_items = [p for p in pages_items if p][:max_pages]
+
+    def paginate(listed: list[Job]) -> list[list[tuple]]:
+        items: list[tuple] = []
+        for c in CATEGORIES:
+            group = [j for j in listed if j.category == c]
+            if group:
+                items.append(("h", c, len(group)))
+                items += [("r", j) for j in group]
+        pages: list[list[tuple]] = [[]]
+        y, cur_cat = top, None
+        for it in items:
+            need = HEAD if it[0] == "h" else ROW
+            if it[0] == "h":
+                cur_cat = it
+                if y + HEAD + ROW > bottom:          # 제목만 덩그러니 남지 않게
+                    pages.append([]); y = top
+            elif y + ROW > bottom:
+                pages.append([("h", cur_cat[1], cur_cat[2], True)]); y = top + HEAD
+            pages[-1].append(it); y += need
+        return [p for p in pages if p]
+
+    # 인스타 한 게시물은 최대 10장(표지 1 + 목록 9) → 넘치면 마감이 먼 공고(상시 포함)부터 빼서 맞춤.
+    # 빠진 공고는 마지막 장에 '외 N건은 블로그 총정리'로 안내 (블로그 총정리 글에는 전부 나감)
+    listed = list(open_jobs)
+    pages_items = paginate(listed)
+    while len(pages_items) > max_pages and listed:
+        listed.pop()                     # open_jobs 는 마감 빠른 순 정렬 → 맨 뒤가 가장 늦은(상시) 공고
+        pages_items = paginate(listed)
+    hidden = len(open_jobs) - len(listed)
     for pno, chunk in enumerate(pages_items, start=1):
         img = Image.new("RGB", (W, H), bg)
         d = ImageDraw.Draw(img)
         d.rounded_rectangle((x0, y0 + 10, x1, y1 + 10), 48, fill=mark)
         d.rounded_rectangle((x0, y0, x1, y1), 48, fill="white")
-        d.text((x0 + 60, y0 + 55), "진행 중 공고", font=font(58, "Title"), fill="#1E1E1E")
+        d.text((x0 + 60, y0 + 55), "마감 임박 공고" if hidden else "진행 중 공고", font=font(58, "Title"), fill="#1E1E1E")
         d.text((x1 - 60, y0 + 70), f"{pno}/{len(pages_items)}", font=font(34, "Bold"), fill="#B0B0B0", anchor="ra")
         y = top
         for it in chunk:
@@ -757,6 +767,8 @@ def roundup_cards(jobs: list[Job], today: date, per_page: int = 8, max_pages: in
             if it is not chunk[-1]:
                 d.line((x0 + 50, y + ROW - 6, x1 - 50, y + ROW - 6), fill="#F0EEF8", width=2)
             y += ROW
-        d.text((W / 2, H - 55), BRAND + "  ·  전체 목록·링크는 프로필 링크(블로그)", font=font(30, "SemiBold"), fill=pt, anchor="mm")
+        foot = (f"외 {hidden}건 포함 전체 목록은 프로필 링크(블로그)" if hidden and pno == len(pages_items)
+                else BRAND + "  ·  전체 목록·링크는 프로필 링크(블로그)")
+        d.text((W / 2, H - 55), foot, font=font(30, "SemiBold"), fill=pt, anchor="mm")
         out.append(img)
     return out
