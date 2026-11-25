@@ -166,7 +166,7 @@ def _cover(g: dict, total: int, h: int = H) -> Image.Image:
     img = Image.new("RGB", (W, h), G_BG)
     d = ImageDraw.Draw(img)
     X = 90
-    d.text((X, 130), "리브의 탈임상 노트", font=font(40, "ExtraBold"), fill=G_PT)
+    d.text((X, 130), "탈임상 가이드", font=font(40, "ExtraBold"), fill=G_PT)
     d.text((X, 186), _label(g), font=font(40, "SemiBold"), fill=G_PT)
     d.line((X, 260, W - 90, 260), fill=G_PT, width=4)
     lines = [_t(x) for x in g["cover"]]
@@ -246,7 +246,7 @@ def _closing(g: dict, total: int) -> Image.Image:
     nd = ImageDraw.Draw(note)
     nd.rectangle((24, 30, S + 24, S + 30), fill=G_SHADOW)
     nd.rectangle((10, 10, S + 10, S + 10), fill="#FFF6B8")
-    nd.text((70, 80), "리브의 한 줄", font=font(60, "Title"), fill=G_PT)
+    nd.text((70, 80), "TIP", font=font(60, "Title"), fill=G_PT)
     yy = 200
     for ln in wrap(nd, g.get("closing") or g["comment"], font(50, "Bold"), S - 120, 8):
         nd.text((70, yy), ln, font=font(50, "Bold"), fill=G_INK)
