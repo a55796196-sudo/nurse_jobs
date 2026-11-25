@@ -106,7 +106,7 @@ def post_html(g: dict, day: str = "") -> str:
         if s.get("tip"):
             out += [f"<p {C}>(💡 {_e(s['tip'])})</p>", _gap()]
         out.append("<hr>")
-    out += [_br(g["comment"]), _gap()]
+    out += [img(len(g["sections"]) + 1), _gap(), _br(g["comment"]), _gap()]  # 마지막 장(TIP) 카드도 본문에
     if g.get("links"):
         out.append(f"<p {C}><b>공식 정보 확인</b><br>" + "<br>".join(
             f'<a href="{_e(l["url"])}">{_e(l["name"])}</a>' + (f" · {_e(l['desc'])}" if l.get("desc") else "") for l in g["links"]) + "</p>")
@@ -166,7 +166,7 @@ def _cover(g: dict, total: int, h: int = H) -> Image.Image:
     img = Image.new("RGB", (W, h), G_BG)
     d = ImageDraw.Draw(img)
     X = 90
-    d.text((X, 130), "탈임상 가이드", font=font(40, "ExtraBold"), fill=G_PT)
+    d.text((X, 130), "리브의 탈임상 노트", font=font(40, "ExtraBold"), fill=G_PT)
     d.text((X, 186), _label(g), font=font(40, "SemiBold"), fill=G_PT)
     d.line((X, 260, W - 90, 260), fill=G_PT, width=4)
     lines = [_t(x) for x in g["cover"]]
