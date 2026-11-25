@@ -1,0 +1,30 @@
+{
+ "글1 영암군보건소": {
+  "url": "https://www.korea.kr/archive/recruitInfoView.do?dataId=400674",
+  "ok": true,
+  "status": 200,
+  "hit": "7/8",
+  "why": ""
+ },
+ "글2 피플워크(주)": {
+  "url": "https://job.incruit.com/jobdb_info/jobpost.asp?job=2611230000970",
+  "ok": true,
+  "status": 200,
+  "hit": "7/7",
+  "why": ""
+ },
+ "글3 에어프레미아": {
+  "url": "https://job.incruit.com/jobdb_info/jobpost.asp?job=2610010002439",
+  "ok": true,
+  "status": 200,
+  "hit": "5/5",
+  "why": ""
+ },
+ "글4 쿠팡": {
+  "url": "https://job.incruit.com/jobdb_info/jobpost.asp?job=2610240000280",
+  "ok": false,
+  "status": 520,
+  "hit": "0/5",
+  "why": "페이지에 공고 내용이 안 보임 (링크 확인)"
+ }
+}
