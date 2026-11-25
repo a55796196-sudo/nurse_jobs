@@ -182,7 +182,7 @@ def _cover(g: dict, total: int, h: int = H) -> Image.Image:
             d.text((X, y), ln, font=ft, fill=G_INK)
         y += int(size * 1.22)
     if h == H and g.get("subtitle"):
-        for ln in wrap(d, g["subtitle"], font(50, "Bold"), W - 2 * X, 2):
+        for ln in _nice_wrap(d, g["subtitle"], font(50, "Bold"), W - 2 * X, 2):
             d.text((X, y + 20), ln, font=font(50, "Bold"), fill=G_SUB)
             y += 70
     _sparkle(d, W - 130, 165, 40, G_MARK)
@@ -220,7 +220,7 @@ def _section(g: dict, s: dict, n: int, idx: int, total: int) -> Image.Image:
         fv = font(size, "SemiBold")
         rows: list[tuple[str, str]] = []
         for i, p in enumerate(s.get("card") or [], 1):
-            ws = wrap(d, p, fv, x1 - X - 140, 3)
+            ws = _nice_wrap(d, p, fv, x1 - X - 140, 3)
             rows += [(f"{i:02d}", ws[0])] + [("", w) for w in ws[1:]] + [("", "")]
         rows = rows[:-1]
         if top + len(rows) * LH <= y1 - 40:
@@ -238,6 +238,75 @@ def _section(g: dict, s: dict, n: int, idx: int, total: int) -> Image.Image:
     return img
 
 
+
+# ---------- 읽기 좋은 줄바꿈 ----------
+# 이 말 앞에서는 줄을 바꾸지 않는다 (의존명사·보조용언: '가고 / 싶은', '할 / 수', '일 / 때' 방지)
+_NO_BREAK_BEFORE = ("싶", "수 ", "수", "것", "때", "중", "후", "전", "등", "있", "없", "않", "못", "하는", "한다", "합니다", "줄", "만큼", "뿐", "대로", "듯", "적", "바", "같", "위해", "대해", "통해", "아니", "→", "+", ":", "=")
+
+
+def _phrase_lines(d, text: str, f, maxw: int) -> list[str]:
+    """한 문장을 최소 줄 수로 나누되, 줄 길이를 고르게 하고 어색한 자리(보조용언 앞)는 피한다."""
+    words = text.split()
+    if not words or d.textlength(text, font=f) <= maxw:
+        return [text] if text else []
+    n_min = len(wrap(d, text, f, maxw, 99))
+    tw = lambda a, b: d.textlength(" ".join(words[a:b]), font=f)  # noqa: E731
+    best = None
+    for n in (n_min, n_min + 1):
+        # DP: dp[i][k] = (비용, 나눈 자리) — 앞 i개 단어를 k줄로
+        INF = float("inf")
+        dp = [[(INF, None)] * (n + 1) for _ in range(len(words) + 1)]
+        dp[0][0] = (0, None)
+        for i in range(1, len(words) + 1):
+            for k in range(1, n + 1):
+                for j in range(i - 1, -1, -1):
+                    w = tw(j, i)
+                    if w > maxw:
+                        break
+                    if dp[j][k - 1][0] == INF:
+                        continue
+                    cost = dp[j][k - 1][0]
+                    if i == len(words):  # 마지막 줄이 너무 짧으면(한 단어만 남는 등) 손해
+                        cost += 1.5 * ((maxw - w) / maxw) ** 2 + (1.0 if i - j == 1 else 0)
+                    if i < len(words):  # 마지막 줄이 아니면: 줄 길이 고르게 + 끊는 자리 점수
+                        cost += ((maxw - w) / maxw) ** 2
+                        nxt, prev = words[i], words[i - 1]
+                        if nxt.startswith(_NO_BREAK_BEFORE) or len(nxt) == 1:
+                            cost += 3
+                        if prev[-1] in ",)":
+                            cost -= 1.0
+                        elif prev.endswith(("며", "면", "서", "고")):
+                            cost -= 0.2
+                        if prev in ("→", "+", ":", "=", "·") or prev.endswith("→"):
+                            cost += 3
+                    if cost < dp[i][k][0]:
+                        dp[i][k] = (cost, j)
+        c = dp[len(words)][n][0]
+        if c < INF:
+            c += 0.6 * (n - n_min)  # 줄 수가 늘어나는 건 약간만 손해
+            if best is None or c < best[0]:
+                lines, i, k = [], len(words), n
+                while k:
+                    j = dp[i][k][1]
+                    lines.append(" ".join(words[j:i]))
+                    i, k = j, k - 1
+                best = (c, lines[::-1])
+    return best[1] if best else wrap(d, text, f, maxw, 99)
+
+
+def _nice_wrap(d, text: str, f, maxw: int, max_lines: int) -> list[str]:
+    """줄바꿈(\n)과 문장 단위로 먼저 나누고, 각 문장은 _phrase_lines로 자연스럽게 나눈다."""
+    import re
+    lines: list[str] = []
+    for part in str(text or "").split("\n"):
+        for sent in re.split(r"(?<=[.!?])\s+", part.strip()):
+            if sent:
+                lines += _phrase_lines(d, sent, f, maxw)
+    if len(lines) > max_lines:  # 넘치면 기존 방식으로 줄여서
+        return wrap(d, " ".join(str(text).split()), f, maxw, max_lines)
+    return lines
+
+
 def _closing(g: dict, total: int) -> Image.Image:
     img = Image.new("RGB", (W, H), G_BG)
     d = ImageDraw.Draw(img)
@@ -248,14 +317,17 @@ def _closing(g: dict, total: int) -> Image.Image:
     nd.rectangle((10, 10, S + 10, S + 10), fill="#FFF6B8")
     nd.text((70, 80), "TIP", font=font(60, "Title"), fill=G_PT)
     yy = 200
-    for ln in wrap(nd, g.get("closing") or g["comment"], font(50, "Bold"), S - 120, 8):
-        nd.text((70, yy), ln, font=font(50, "Bold"), fill=G_INK)
-        yy += 74
+    text = g.get("closing") or g["comment"]
+    for size in (50, 46, 42):  # 직접 넣은 줄이 넓으면 글씨를 조금 줄여 그 줄바꿈을 지킨다
+        fc = font(size, "Bold")
+        lines = _nice_wrap(nd, text, fc, S - 120, 8)
+        if len(lines) == len([x for x in text.split("\n") if x.strip()]) or size == 42:
+            break
+    for ln in lines:
+        nd.text((70, yy), ln, font=fc, fill=G_INK)
+        yy += int(size * 1.48)
     note = note.rotate(3, expand=True, resample=Image.BICUBIC)
     img.paste(note, ((W - note.width) // 2, 140), note)
-    if g.get("next_title"):
-        d.text((90, H - 330), "다음 편", font=font(36, "ExtraBold"), fill=G_PT)
-        d.text((90, H - 270), wrap(d, g["next_title"], font(50, "Bold"), W - 180, 1)[0], font=font(50, "Bold"), fill=G_INK)
     d.text((90, H - 190), "저장해두고 프로필 링크에서 전문 보기", font=font(40, "SemiBold"), fill=G_SUB)
     _sparkle(d, W - 140, 150, 36, G_MARK)
     _foot(d, total, total)
@@ -273,6 +345,8 @@ def render(g: dict, out: Path) -> list[Path]:
     secs = g["sections"]
     total = len(secs) + 2
     imgs = [_cover(g, total)] + [_section(g, s, n, n + 1, total) for n, s in enumerate(secs, 1)] + [_closing(g, total)]
+    for old in out.glob("card-*.jpg"):  # 섹션이 줄었을 때 예전 장이 남아 함께 올라가지 않도록
+        old.unlink()
     paths = []
     for i, im in enumerate(imgs):
         p = out / f"card-{i:02d}.jpg"
