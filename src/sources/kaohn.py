@@ -68,7 +68,7 @@ def fetch(days: int = 14, pages: int = 2) -> list[Job]:
             i = body.find("모집부문")
             body = body[i:] if i >= 0 else body
             body = body.split("개인정보취급방침")[0]
-            if not re.search(r"간호|보건관리", body):
+            if not (re.search(r"간호|보건\s*관리|산업\s*보건", title) or "간호사" in body[:2000]):
                 continue
             # 마감: '~11/30', '2026.12.05까지', '접수기간 ... ~ 2026-12-05' 등
             dl = None

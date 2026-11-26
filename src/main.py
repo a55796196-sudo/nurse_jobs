@@ -116,8 +116,9 @@ def collect() -> Path | None:
     today = publish_day()
     seen = load_seen()
     jobs: list[Job] = []
-    from .sources import edu, gojobs, incruit, work24
-    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch), ("edu", edu.fetch), ("gojobs", gojobs.fetch), ("work24", work24.fetch), ("incruit", incruit.fetch)):
+    from .sources import edu, gojobs, incruit, kaohn, nursevillage, work24
+    for name, fn in (("alio", alio.fetch), ("saramin", saramin.fetch), ("edu", edu.fetch), ("gojobs", gojobs.fetch), ("work24", work24.fetch),
+                     ("incruit", incruit.fetch), ("nursevillage", nursevillage.fetch), ("kaohn", kaohn.fetch)):
         try:
             jobs += fn()
         except Exception as e:  # 한 출처가 실패해도 나머지는 계속
