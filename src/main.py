@@ -37,6 +37,12 @@ def today_kst() -> str:
     return datetime.now(KST).date().isoformat()
 
 
+def publish_day() -> str:
+    """글이 나갈 날. 저녁(15시 이후)에 수집·작성하면 다음 날 아침 발행용이므로 내일 날짜."""
+    now = datetime.now(KST)
+    return (now.date() + timedelta(days=1 if now.hour >= 15 else 0)).isoformat()
+
+
 def load_seen() -> dict[str, str]:
     try:
         return json.loads(SEEN_FILE.read_text(encoding="utf-8"))
@@ -106,7 +112,8 @@ def write_jobs(path: Path, jobs: list[Job]) -> None:
 
 
 def collect() -> Path | None:
-    today = today_kst()
+    # 저녁 수집이면 '오늘' = 발행일(내일). 오늘 마감 공고는 발행 시점엔 이미 끝났으므로 걸러짐
+    today = publish_day()
     seen = load_seen()
     jobs: list[Job] = []
     from .sources import edu, gojobs, incruit, work24
@@ -231,7 +238,7 @@ def build(path: Path, day: str, archive: bool = True) -> None:
 def main() -> None:
     global DOCS
     cmd = sys.argv[1] if len(sys.argv) > 1 else "run"
-    day = sys.argv[2] if len(sys.argv) > 2 else today_kst()
+    day = sys.argv[2] if len(sys.argv) > 2 else publish_day()
     inbox_file = INBOX / f"{day}.json"
 
     if cmd == "collect":

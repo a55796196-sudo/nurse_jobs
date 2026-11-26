@@ -298,9 +298,12 @@ def _main() -> None:
         pos = [a for a in args if not a.startswith("--") and not a.isdigit()]
         if pos:
             days = [pos[0]]
-        else:   # 날짜를 안 주면 어제 + 오늘 (자정 실행 때 어제 글을 놓치지 않게)
-            t = datetime.now(KST).date()
+        else:   # 날짜를 안 주면 어제 + 오늘, 저녁(15시 이후)이면 내일 발행용 글까지
+            now = datetime.now(KST)
+            t = now.date()
             days = [(t - timedelta(days=1)).isoformat(), t.isoformat()]
+            if now.hour >= 15:
+                days.append((t + timedelta(days=1)).isoformat())
         for day in days:
             run(day, only, "--no-summary" not in args, "--redo" in args)
 
