@@ -418,7 +418,8 @@ def index_items(docs: Path) -> list[str]:
         except (OSError, ValueError):
             meta = {"title": "", "category": ""}
         wd = "월화수목금토일"[date.fromisoformat(d.name).weekday()]
-        return f'<li><a href="guides/{d.name}/">{d.name} ({wd})</a> <span class="muted">· {_e(meta["category"])}</span><br>{_e(meta["title"])}</li>'
+        return (f'<li class="g" data-date="{d.name}" data-title="{_e(meta["title"])}"><a href="guides/{d.name}/">{d.name} ({wd})</a> '
+                f'<span class="muted">· {_e(meta["category"])}</span><br>{_e(meta["title"])}</li>')
 
     items = []
     if upcoming:
@@ -472,57 +473,6 @@ def _md_html(md: str) -> str:
     return "\n".join(out)
 
 
-PICK_JS = r"""
-const KEY = 'draft-picks-__KEY__';
-let picks = {};
-try { picks = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
-const items = [];
-let on = false;
-for (const el of document.querySelectorAll('#draft > *')) {
-  if (el.tagName === 'H2') on = el.textContent.includes('후보') || (on && !el.textContent.includes('보내'));
-  if (on && el.tagName === 'UL') el.querySelectorAll('li').forEach(li => items.push(li));
-}
-const ST = {good: ['좋음', '#16a34a'], bad: ['별로', '#f59e0b'], del: ['삭제', '#94a3b8']};
-function save() { try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch (e) {} }
-function paint(li) {
-  const k = li.dataset.k, v = picks[k];
-  li.style.textDecoration = v === 'del' ? 'line-through' : '';
-  li.style.opacity = v === 'del' ? .45 : 1;
-  li.style.background = v === 'good' ? 'rgba(22,163,74,.12)' : v === 'bad' ? 'rgba(245,158,11,.12)' : '';
-  li.querySelectorAll('button').forEach(b => {
-    const on = b.dataset.v === v;
-    b.style.background = on ? ST[b.dataset.v][1] : 'transparent';
-    b.style.color = on ? '#fff' : ST[b.dataset.v][1];
-  });
-  const n = Object.values(picks), c = t => n.filter(x => x === t).length;
-  document.getElementById('pickcount').textContent = `좋음 ${c('good')} · 별로 ${c('bad')} · 삭제 ${c('del')}`;
-}
-items.forEach(li => {
-  li.dataset.k = li.firstChild.textContent.trim().slice(0, 60);
-  li.style.borderRadius = '8px'; li.style.padding = '4px 6px'; li.style.margin = '4px 0';
-  const box = document.createElement('div');
-  box.style.margin = '4px 0 2px';
-  for (const [v, [label, col]] of Object.entries(ST)) {
-    const b = document.createElement('button');
-    b.textContent = label; b.dataset.v = v;
-    b.style.cssText = `padding:3px 10px;font-size:.85rem;margin-right:6px;border:1.5px solid ${col};border-radius:999px`;
-    b.onclick = () => { picks[li.dataset.k] = picks[li.dataset.k] === v ? undefined : v; if (!picks[li.dataset.k]) delete picks[li.dataset.k]; save(); paint(li); };
-    box.appendChild(b);
-  }
-  li.appendChild(box);
-  paint(li);
-});
-if (items.length) document.getElementById('pickbar').style.display = '';
-function copyPicks(btn) {
-  const by = t => items.filter(li => picks[li.dataset.k] === t).map(li => '- ' + li.dataset.k);
-  const txt = ['[첫 출근 준비물 선택]', '좋음:', ...by('good'), '별로:', ...by('bad'), '삭제:', ...by('del')].join('\n');
-  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).catch(() => prompt('복사해서 붙여 넣으세요', txt));
-  const o = btn.textContent; btn.textContent = '복사됨 ✓'; setTimeout(() => btn.textContent = o, 1500);
-}
-function resetPicks() { if (confirm('선택을 모두 지울까요?')) { picks = {}; save(); items.forEach(paint); } }
-"""
-
-
 def draft_items(docs: Path) -> list[str]:
     """data/guides/drafts/*.md → docs/drafts/<이름>/index.html, 작업실 첫 화면 목록."""
     from .site import STYLE
@@ -539,12 +489,80 @@ def draft_items(docs: Path) -> list[str]:
 <style>{STYLE}</style></head><body><main>
 <p class="muted"><a href="../../">← 작업실 첫 화면</a></p>
 <div class="box" id="draft">{_md_html(md)}</div>
-<div class="box" id="pickbar" style="display:none;position:sticky;bottom:8px">
-<div class="row"><span id="pickcount" class="muted"></span>
-<span><button onclick="copyPicks(this)">선택 결과 복사</button> <button onclick="resetPicks()" style="background:#94a3b8">초기화</button></span></div>
-<p class="muted" style="margin:6px 0 0">체크는 이 기기에만 저장돼요. 다 고르면 '선택 결과 복사' → 채팅에 붙여 넣어 주세요.</p></div>
 <p class="muted">사진과 후기를 채팅으로 보내 주시면 이 틀로 글을 완성합니다.</p>
-</main><script>{PICK_JS.replace("__KEY__", f.stem)}</script></body></html>"""
+</main></body></html>"""
         (out / "index.html").write_text(page, encoding="utf-8")
-        items.append(f'<li><a href="drafts/{f.stem}/">{_e(title)}</a> <span class="muted">· 사진·후기 필요</span></li>')
+        import re
+        due = re.search(r"마감: (\d{4}-\d{2}-\d{2})", md)
+        pub = re.search(r"게시일: (\d{4}-\d{2}-\d{2})", md)
+        when = (f" · 사진·후기 마감 {due.group(1)[5:]}" if due else "") + (f" · 게시 {pub.group(1)[5:]}" if pub else "")
+        items.append(f'<li><a href="drafts/{f.stem}/">{_e(title)}</a> <span class="muted">· 사진·후기 필요{when} (안 오면 사진 없이 진행)</span></li>')
     return items
+
+
+REVIEW_HTML = """<h2>👀 내일 올라갈 콘텐츠</h2>
+<div class="box" id="tomorrow"><p class="muted">내일 올라갈 가이드 글이 없어요.</p></div>
+<div class="box" id="reviewbar" style="position:sticky;bottom:8px;display:none">
+<div class="row"><span id="revcount" class="muted"></span>
+<span><button onclick="copyReview(this)">검토 결과 복사</button> <button onclick="resetReview()" style="background:#94a3b8">초기화</button></span></div>
+<p class="muted" style="margin:6px 0 0">표시하지 않은 글은 예정대로 올라가요. 별로·삭제는 '검토 결과 복사' → 채팅에 붙여 넣어야 반영돼요.</p></div>"""
+
+REVIEW_JS = r"""
+const RKEY = 'guide-review';
+let rv = {};
+try { rv = JSON.parse(localStorage.getItem(RKEY) || '{}'); } catch (e) {}
+const ST = {good: ['좋음', '#16a34a'], bad: ['별로', '#f59e0b'], del: ['삭제', '#94a3b8']};
+const kst = new Date(Date.now() + 9 * 3600e3);
+const today = kst.toISOString().slice(0, 10);
+const tmr = new Date(kst.getTime() + 864e5).toISOString().slice(0, 10);
+const lis = [...document.querySelectorAll('li.g')].filter(li => li.dataset.date >= today);
+function saveR() { try { localStorage.setItem(RKEY, JSON.stringify(rv)); } catch (e) {} }
+function buttons(date) {
+  const box = document.createElement('div');
+  box.style.margin = '6px 0 2px';
+  for (const [v, [label, col]] of Object.entries(ST)) {
+    const b = document.createElement('button');
+    b.textContent = label; b.dataset.v = v; b.dataset.d = date;
+    b.style.cssText = `padding:3px 10px;font-size:.85rem;margin-right:6px;border:1.5px solid ${col};border-radius:999px`;
+    b.onclick = () => { rv[date] = rv[date] === v ? undefined : v; if (!rv[date]) delete rv[date]; saveR(); paintAll(); };
+    box.appendChild(b);
+  }
+  return box;
+}
+function paintAll() {
+  document.querySelectorAll('button[data-d]').forEach(b => {
+    const on = rv[b.dataset.d] === b.dataset.v, col = ST[b.dataset.v][1];
+    b.style.background = on ? col : 'transparent'; b.style.color = on ? '#fff' : col;
+  });
+  lis.forEach(li => {
+    const v = rv[li.dataset.date];
+    li.style.opacity = v === 'del' ? .45 : 1;
+    li.style.textDecoration = v === 'del' ? 'line-through' : '';
+    li.style.background = v === 'good' ? 'rgba(22,163,74,.12)' : v === 'bad' ? 'rgba(245,158,11,.12)' : '';
+  });
+  const n = Object.values(rv), c = t => n.filter(x => x === t).length;
+  document.getElementById('revcount').textContent = `좋음 ${c('good')} · 별로 ${c('bad')} · 삭제 ${c('del')}`;
+}
+lis.forEach(li => { li.style.borderRadius = '8px'; li.style.padding = '4px 6px'; li.style.margin = '4px 0'; li.appendChild(buttons(li.dataset.date)); });
+const tm = lis.filter(li => li.dataset.date === tmr);
+if (tm.length) {
+  const box = document.getElementById('tomorrow'); box.innerHTML = '';
+  tm.forEach(li => {
+    const d = li.dataset.date, w = document.createElement('div');
+    w.style.cssText = 'display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap';
+    w.innerHTML = `<a href="guides/${d}/"><img src="guides/${d}/card-00.jpg" alt="표지" style="width:150px;border-radius:8px;border:1px solid var(--line)"></a>
+      <div style="flex:1;min-width:180px"><b>${d}</b><br><a href="guides/${d}/">${li.dataset.title}</a><p class="muted" style="margin:6px 0">눌러서 블로그 본문·카드뉴스 전체를 확인하세요.</p></div>`;
+    w.querySelector('div').appendChild(buttons(d));
+    box.appendChild(w);
+  });
+}
+if (lis.length) document.getElementById('reviewbar').style.display = '';
+paintAll();
+function copyReview(btn) {
+  const t = k => lis.filter(li => rv[li.dataset.date] === k).map(li => `- ${li.dataset.date} ${li.dataset.title}`);
+  const txt = ['[가이드 검토]', '삭제:', ...t('del'), '별로(고쳐 주세요):', ...t('bad'), '좋음:', ...t('good')].join('\n');
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).catch(() => prompt('복사해서 채팅에 붙여 넣으세요', txt));
+  const o = btn.textContent; btn.textContent = '복사됨 ✓'; setTimeout(() => btn.textContent = o, 1500);
+}
+function resetReview() { if (confirm('표시를 모두 지울까요?')) { rv = {}; saveR(); paintAll(); } }
+"""

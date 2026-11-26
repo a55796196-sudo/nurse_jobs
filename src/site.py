@@ -263,7 +263,8 @@ def build_index(docs: Path) -> None:
     from .guide import index_items
     guides = index_items(docs)
     guide_box = f'<h2>💡 탈임상 가이드 (수·토·일)</h2><div class="box"><ul class="days">{"".join(guides)}</ul></div>' if guides else ""
-    from .guide import draft_items
+    from .guide import REVIEW_HTML, REVIEW_JS, draft_items
+    review_html, review_js = (REVIEW_HTML, REVIEW_JS) if guides else ("", "")
     drafts = draft_items(docs)
     if drafts:
         guide_box = f'<h2>✏️ 작성 대기 (사진·후기 필요)</h2><div class="box"><ul class="days">{"".join(drafts)}</ul></div>' + guide_box
@@ -271,9 +272,9 @@ def build_index(docs: Path) -> None:
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>탈임상 공고 작업실</title>
 <style>{STYLE}</style></head><body><main><h1>탈임상 공고 작업실</h1>
 <p class="muted">매일 아침 자동으로 업데이트됩니다. 날짜를 눌러 블로그 글과 카드뉴스를 확인하세요.</p>
-{guide_box}
+{review_html}{guide_box}
 <h2>📅 날짜별 공고</h2>
 <div class="box"><ul class="days">{''.join(items) or '<li>아직 데이터가 없어요</li>'}</ul></div>
-</main></body></html>"""
+</main><script>{review_js}</script></body></html>"""
     (docs / "index.html").write_text(page, encoding="utf-8")
     (docs / ".nojekyll").write_text("", encoding="utf-8")
