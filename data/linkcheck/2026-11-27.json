@@ -1,0 +1,51 @@
+{
+ "글1 인하대학교병원": {
+  "url": "https://www.nursevillage.com/job/job-posting/99572",
+  "ok": true,
+  "status": 200,
+  "hit": "7/7",
+  "why": ""
+ },
+ "글2 건국대학교병원": {
+  "url": "https://www.nursevillage.com/job/job-posting/99763",
+  "ok": true,
+  "status": 200,
+  "hit": "7/7",
+  "why": ""
+ },
+ "글3 이대목동병원": {
+  "url": "https://www.nursevillage.com/job/job-posting/99828",
+  "ok": true,
+  "status": 200,
+  "hit": "9/9",
+  "why": ""
+ },
+ "글4 중랑구보건소": {
+  "url": "https://www.nursevillage.com/job/job-posting/99764",
+  "ok": true,
+  "status": 200,
+  "hit": "9/9",
+  "why": ""
+ },
+ "글5 부천근로자건강센터": {
+  "url": "https://www.kaohn.or.kr/board/bbs81_1/1223",
+  "ok": true,
+  "status": 200,
+  "hit": "4/4",
+  "why": ""
+ },
+ "글6 국제성모병원": {
+  "url": "https://www.nursevillage.com/job/job-posting/99187",
+  "ok": true,
+  "status": 200,
+  "hit": "8/8",
+  "why": ""
+ },
+ "글7 서울아산병원": {
+  "url": "https://www.nursevillage.com/job/job-posting/100785",
+  "ok": true,
+  "status": 200,
+  "hit": "8/8",
+  "why": ""
+ }
+}
