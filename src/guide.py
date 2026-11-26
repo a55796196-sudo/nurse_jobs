@@ -472,6 +472,57 @@ def _md_html(md: str) -> str:
     return "\n".join(out)
 
 
+PICK_JS = r"""
+const KEY = 'draft-picks-__KEY__';
+let picks = {};
+try { picks = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+const items = [];
+let on = false;
+for (const el of document.querySelectorAll('#draft > *')) {
+  if (el.tagName === 'H2') on = el.textContent.includes('후보') || (on && !el.textContent.includes('보내'));
+  if (on && el.tagName === 'UL') el.querySelectorAll('li').forEach(li => items.push(li));
+}
+const ST = {good: ['좋음', '#16a34a'], bad: ['별로', '#f59e0b'], del: ['삭제', '#94a3b8']};
+function save() { try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch (e) {} }
+function paint(li) {
+  const k = li.dataset.k, v = picks[k];
+  li.style.textDecoration = v === 'del' ? 'line-through' : '';
+  li.style.opacity = v === 'del' ? .45 : 1;
+  li.style.background = v === 'good' ? 'rgba(22,163,74,.12)' : v === 'bad' ? 'rgba(245,158,11,.12)' : '';
+  li.querySelectorAll('button').forEach(b => {
+    const on = b.dataset.v === v;
+    b.style.background = on ? ST[b.dataset.v][1] : 'transparent';
+    b.style.color = on ? '#fff' : ST[b.dataset.v][1];
+  });
+  const n = Object.values(picks), c = t => n.filter(x => x === t).length;
+  document.getElementById('pickcount').textContent = `좋음 ${c('good')} · 별로 ${c('bad')} · 삭제 ${c('del')}`;
+}
+items.forEach(li => {
+  li.dataset.k = li.firstChild.textContent.trim().slice(0, 60);
+  li.style.borderRadius = '8px'; li.style.padding = '4px 6px'; li.style.margin = '4px 0';
+  const box = document.createElement('div');
+  box.style.margin = '4px 0 2px';
+  for (const [v, [label, col]] of Object.entries(ST)) {
+    const b = document.createElement('button');
+    b.textContent = label; b.dataset.v = v;
+    b.style.cssText = `padding:3px 10px;font-size:.85rem;margin-right:6px;border:1.5px solid ${col};border-radius:999px`;
+    b.onclick = () => { picks[li.dataset.k] = picks[li.dataset.k] === v ? undefined : v; if (!picks[li.dataset.k]) delete picks[li.dataset.k]; save(); paint(li); };
+    box.appendChild(b);
+  }
+  li.appendChild(box);
+  paint(li);
+});
+if (items.length) document.getElementById('pickbar').style.display = '';
+function copyPicks(btn) {
+  const by = t => items.filter(li => picks[li.dataset.k] === t).map(li => '- ' + li.dataset.k);
+  const txt = ['[첫 출근 준비물 선택]', '좋음:', ...by('good'), '별로:', ...by('bad'), '삭제:', ...by('del')].join('\n');
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).catch(() => prompt('복사해서 붙여 넣으세요', txt));
+  const o = btn.textContent; btn.textContent = '복사됨 ✓'; setTimeout(() => btn.textContent = o, 1500);
+}
+function resetPicks() { if (confirm('선택을 모두 지울까요?')) { picks = {}; save(); items.forEach(paint); } }
+"""
+
+
 def draft_items(docs: Path) -> list[str]:
     """data/guides/drafts/*.md → docs/drafts/<이름>/index.html, 작업실 첫 화면 목록."""
     from .site import STYLE
@@ -487,9 +538,13 @@ def draft_items(docs: Path) -> list[str]:
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{_e(title)}</title>
 <style>{STYLE}</style></head><body><main>
 <p class="muted"><a href="../../">← 작업실 첫 화면</a></p>
-<div class="box">{_md_html(md)}</div>
+<div class="box" id="draft">{_md_html(md)}</div>
+<div class="box" id="pickbar" style="display:none;position:sticky;bottom:8px">
+<div class="row"><span id="pickcount" class="muted"></span>
+<span><button onclick="copyPicks(this)">선택 결과 복사</button> <button onclick="resetPicks()" style="background:#94a3b8">초기화</button></span></div>
+<p class="muted" style="margin:6px 0 0">체크는 이 기기에만 저장돼요. 다 고르면 '선택 결과 복사' → 채팅에 붙여 넣어 주세요.</p></div>
 <p class="muted">사진과 후기를 채팅으로 보내 주시면 이 틀로 글을 완성합니다.</p>
-</main></body></html>"""
+</main><script>{PICK_JS.replace("__KEY__", f.stem)}</script></body></html>"""
         (out / "index.html").write_text(page, encoding="utf-8")
         items.append(f'<li><a href="drafts/{f.stem}/">{_e(title)}</a> <span class="muted">· 사진·후기 필요</span></li>')
     return items
