@@ -79,6 +79,15 @@ def fetch(scrolls: int = 12, max_detail: int = 30) -> list[Job]:
         print(f"[nursevillage] 목록 {len(links)}개 링크 중 후보 {len(cands)}건")
         for sid, parts in list(cands.items())[:max_detail]:
             url = f"{LIST}/{sid}"
+            api: dict = {}
+
+            def _grab(r, sid=sid, api=api):   # 상세 화면이 불러오는 공고 데이터(원문 주소·마감일 포함)
+                if r.url.split("?")[0].endswith(f"/job_posting/{sid}"):
+                    try:
+                        api.update(r.json().get("data") or {})
+                    except Exception:  # noqa: BLE001
+                        pass
+            page.on("response", _grab)
             try:
                 page.goto(url, wait_until="networkidle", timeout=60000)
                 page.wait_for_timeout(1500)
@@ -90,22 +99,26 @@ def fetch(scrolls: int = 12, max_detail: int = 30) -> list[Job]:
                 page.close()
                 page = ctx.new_page()
                 continue
+            page.remove_listener("response", _grab)
             org, title = parts[0], parts[1] if len(parts) > 1 else parts[0]
             i = body.find(title[:15])
             body = body[i:] if i >= 0 else body
             body = body.split("병원 후기 정보")[0]
             dl, dl_time = _deadline(body, today)
+            dl = api.get("endDate") or dl
             if dl and dl < today.isoformat():
                 continue
-            origin = next((u for u in orig if u and "nursevillage.com" not in u), None)
+            # 원문: 기관 채용 홈페이지(replaceUrl) → 원래 게시처(sourceUrl) 순. 없으면 널스빌리지 상세
+            origin = api.get("replaceUrl") or api.get("sourceUrl") or next((u for u in orig if u and "nursevillage.com" not in u), None)
             jobs.append(Job(
                 source="nursevillage", source_id=sid, title=title[:150], url=origin or url, org=org,
                 deadline=dl, start_date=today.isoformat(),
-                location=parts[2] if len(parts) > 2 else None,
+                location=" ".join(x for x in (api.get("sido"), api.get("sigungu")) if x) or (parts[2] if len(parts) > 2 else None),
                 employment_type=parts[3] if len(parts) > 3 and parts[3] != "기타" else None,
                 raw_text=(title + " " + body)[:3000],
                 extra={"site_text": body[:8000], "detail_url": url, "origin_url": origin, "deadline_time": dl_time,
                        "list_text": " · ".join(parts), "source_name": "널스빌리지",
+                       "source_url": api.get("sourceUrl"), "homepage_url": api.get("replaceUrl"), "origin_site": api.get("sourceSite"),
                        # 널스빌리지 상세는 원문을 정리한 요약(AI 요약 표기)이므로 원문 링크로 대조
                        "summary_page": "AI 요약" in body},
             ))
