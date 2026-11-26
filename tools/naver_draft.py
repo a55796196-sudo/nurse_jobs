@@ -126,6 +126,41 @@ def insert_image(page, fr, path: Path) -> None:
     pause(1.5, 2.5)
 
 
+def insert_place(page, fr, queries: list[str]) -> bool:
+    """글 맨 아래에 네이버 지도 '장소'를 넣음 (블로그 지도에 글이 표시됨). 못 찾으면 건너뜀."""
+    for q in queries:
+        try:
+            page.keyboard.press(f"{MOD}+End")
+            page.keyboard.press("Enter")
+            fr.locator("button.se-map-toolbar-button, button[data-name='map']").first.click()
+            pause(1.5, 2.5)
+            box = fr.locator("input[placeholder*='장소'], .se-place-search-input input, .react-autosuggest__input").first
+            box.fill(q)
+            page.keyboard.press("Enter")
+            pause(2, 3)
+            add = fr.locator(".se-place-map-search-result-item button, button.se-place-add-button").first
+            if not add.count():
+                add = fr.get_by_role("button", name="추가").first
+            if not add.count() or not add.is_visible():
+                raise RuntimeError("검색 결과 없음")
+            add.click()
+            pause(1, 1.5)
+            fr.locator("button.se-popup-button-confirm, .se-place-confirm-button").first.click()
+            pause(1.5, 2)
+            log(f"  장소 추가: {q}")
+            return True
+        except Exception as e:  # noqa: BLE001
+            log(f"  장소 '{q}' 못 넣음 ({str(e)[:60]})")
+            for sel in ("button.se-popup-close-button", ".se-popup-button-cancel"):
+                try:
+                    if fr.locator(sel).count() and fr.locator(sel).first.is_visible():
+                        fr.locator(sel).first.click()
+                        pause(0.5, 1)
+                except Exception:  # noqa: BLE001
+                    pass
+    return False
+
+
 def save_draft(fr) -> None:
     for loc in (fr.get_by_role("button", name="저장", exact=True), fr.locator("button[class*='save_btn']")):
         try:
@@ -178,7 +213,17 @@ def draft_one(ctx, work, day: str, key: str, title_btn: str, body_btn: str, thum
         pause()
         page.keyboard.press(f"{MOD}+V")
         pause(3, 5)
-        # 4) 임시저장
+        # 4) 글 맨 아래 지도 '장소' (작업실의 숨은 검색어 pl{n}; 실패해도 저장은 계속)
+        pid = body_btn.split(chr(39))[1].replace("pb", "pl")
+        try:
+            pl = work.locator(f"#{pid}")
+            qs = [x.strip() for x in (pl.text_content() or "").split("|") if x.strip()] if pl.count() else []
+        except Exception:  # noqa: BLE001
+            qs = []
+        if qs:
+            page.bring_to_front()
+            insert_place(page, fr, qs)
+        # 5) 임시저장
         save_draft(fr)
         _mark(key, title)
         log(f"  임시저장 완료")

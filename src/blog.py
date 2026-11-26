@@ -19,8 +19,16 @@ IG_ID = "live_in_fact"
 IG_URL = f"https://www.instagram.com/{IG_ID}/"
 
 
-def ig_cta_html(center: bool = False) -> str:
+IG_CTA_FROM = "2026-12-07"   # 인스타 업로드를 잠시 멈춘 동안은 안내를 빼고, 이 날짜(발행일)부터 다시 넣음
+
+
+def ig_cta_html(center: bool = False, day: str | None = None) -> str:
     """블로그 글 끝 인스타 안내: 인스타에만 있는 것(아침에 먼저·마감 알림)을 알려 팔로우할 이유를 준다."""
+    from datetime import datetime, timedelta, timezone
+    now = datetime.now(timezone(timedelta(hours=9)))
+    pub = day or (now.date() + timedelta(days=1 if now.hour >= 15 else 0)).isoformat()
+    if pub < IG_CTA_FROM:
+        return ""
     st = ' style="text-align:center"' if center else ""
     return (f"<p{st}>📢 <b>새 공고는 매일 아침 인스타그램 스토리에 먼저 올라옵니다.</b><br>"
             f"마감 하루 전 알림도 스토리로 보내드립니다.<br>"

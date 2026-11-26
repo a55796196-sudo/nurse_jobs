@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import html
+import re
 import json
 from datetime import date, timedelta
 from pathlib import Path
@@ -146,6 +147,17 @@ def roundup_caption(jobs: list[Job], today: date) -> str:
     return "\n".join(lines)
 
 
+def place_query(j: Job) -> str:
+    """네이버 지도 '장소' 검색어: 기관명 (네이버 장소 검색은 기관명이 가장 잘 맞음). 근무지가 여러 곳·전국이면 빈칸."""
+    loc = j.location or ""
+    if re.search(r"전국|외$|·|,|현장", loc) and not j.address:
+        return ""
+    org = re.sub(r"^\((재|사|주|의|학)\)|\(주\)|㈜|주식회사|\s*\(.*?\)$", "", j.org or "").strip()
+    addr = re.sub(r"\s*\(.*$", "", j.address or "").strip()
+    # 기관명으로 먼저 찾고, 안 나오면 주소로 (노트북 프로그램이 '|' 앞에서부터 차례로 검색)
+    return " | ".join(x for x in (org, addr) if x)
+
+
 def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Path]], all_open: list[Job] | None = None, post_day: date | None = None,
               excluded: list[Job] | None = None) -> Path:
     day_dir = docs / today.isoformat()
@@ -169,6 +181,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
         tags = " ".join("#" + t for t in blog_tags(j))
         posts.append(f"""<div class="box"><div class="row"><b>글 {n}. {_e(j.org)} · {_e(j.job_role)}</b>
 <span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>
+<pre id="pl{n}" style="display:none">{_e(place_query(j))}</pre>
 <div class="row" style="margin-top:8px"><pre id="pt{n}" style="flex:1;margin:0">{_e(post_title(j))}</pre>
 <button onclick="copyText('pt{n}',this)">제목 복사</button></div>
 <details open><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기 (접기)</summary>
