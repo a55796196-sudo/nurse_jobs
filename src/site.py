@@ -262,7 +262,11 @@ def build_index(docs: Path) -> None:
         items.append(f'<li><a href="{d}/">{d}</a> <span class="muted">· {n}건</span></li>')
     from .guide import index_items
     guides = index_items(docs)
-    guide_box = f'<h2>💡 탈임상 가이드 (주 1회)</h2><div class="box"><ul class="days">{"".join(guides)}</ul></div>' if guides else ""
+    guide_box = f'<h2>💡 탈임상 가이드 (수·토·일)</h2><div class="box"><ul class="days">{"".join(guides)}</ul></div>' if guides else ""
+    from .guide import draft_items
+    drafts = draft_items(docs)
+    if drafts:
+        guide_box = f'<h2>✏️ 작성 대기 (사진·후기 필요)</h2><div class="box"><ul class="days">{"".join(drafts)}</ul></div>' + guide_box
     page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>탈임상 공고 작업실</title>
 <style>{STYLE}</style></head><body><main><h1>탈임상 공고 작업실</h1>

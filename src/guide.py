@@ -428,3 +428,68 @@ def index_items(docs: Path) -> list[str]:
         items.append('<li class="muted" style="list-style:none;margin:12px 0 0 -1.2em"><b>지난 글</b></li>')
         items += [li(d) for d in past]
     return items
+
+
+# ---------- 작성 대기 초안 (사용자 사진·후기가 필요한 글) ----------
+
+def _md_html(md: str) -> str:
+    """초안용 아주 단순한 마크다운 → HTML (#, ##, -, 1., **굵게**)."""
+    import re
+    out, in_ul, in_ol = [], False, False
+
+    def close():
+        nonlocal in_ul, in_ol
+        if in_ul:
+            out.append("</ul>")
+        if in_ol:
+            out.append("</ol>")
+        in_ul = in_ol = False
+
+    def inline(t):
+        t = _e(t)
+        return re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+
+    for line in md.splitlines():
+        s = line.strip()
+        if not s:
+            close()
+            continue
+        if s.startswith("# "):
+            close(); out.append(f"<h1>{inline(s[2:])}</h1>")
+        elif s.startswith("## "):
+            close(); out.append(f"<h2>{inline(s[3:])}</h2>")
+        elif s.startswith("- "):
+            if not in_ul:
+                close(); out.append("<ul>"); in_ul = True
+            out.append(f"<li>{inline(s[2:])}</li>")
+        elif re.match(r"\d+\. ", s):
+            if not in_ol:
+                close(); out.append("<ol>"); in_ol = True
+            out.append(f"<li>{inline(s.split('. ', 1)[1])}</li>")
+        else:
+            close(); out.append(f"<p>{inline(s)}</p>")
+    close()
+    return "\n".join(out)
+
+
+def draft_items(docs: Path) -> list[str]:
+    """data/guides/drafts/*.md → docs/drafts/<이름>/index.html, 작업실 첫 화면 목록."""
+    from .site import STYLE
+    src = Path(__file__).resolve().parent.parent / "data" / "guides" / "drafts"
+    items = []
+    for f in sorted(src.glob("*.md")):
+        md = f.read_text(encoding="utf-8")
+        title = next((l[2:].strip() for l in md.splitlines() if l.startswith("# ")), f.stem)
+        title = title.replace("초안: ", "")
+        out = docs / "drafts" / f.stem
+        out.mkdir(parents=True, exist_ok=True)
+        page = f"""<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>{_e(title)}</title>
+<style>{STYLE}</style></head><body><main>
+<p class="muted"><a href="../../">← 작업실 첫 화면</a></p>
+<div class="box">{_md_html(md)}</div>
+<p class="muted">사진과 후기를 채팅으로 보내 주시면 이 틀로 글을 완성합니다.</p>
+</main></body></html>"""
+        (out / "index.html").write_text(page, encoding="utf-8")
+        items.append(f'<li><a href="drafts/{f.stem}/">{_e(title)}</a> <span class="muted">· 사진·후기 필요</span></li>')
+    return items
