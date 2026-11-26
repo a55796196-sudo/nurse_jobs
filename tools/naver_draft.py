@@ -31,8 +31,8 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-# 다음 날 글은 09:00 예약 발행까지 (끄려면 환경변수 NAVER_AUTO_PUBLISH=0 → 임시저장만)
-AUTO_PUBLISH = os.environ.get("NAVER_AUTO_PUBLISH", "1") != "0"
+# 기본은 임시저장만. 09:00 예약 발행까지 하려면 환경변수 NAVER_AUTO_PUBLISH=1
+AUTO_PUBLISH = os.environ.get("NAVER_AUTO_PUBLISH", "0") == "1"
 
 BLOG_ID = os.environ.get("NAVER_BLOG_ID", "live_in_fact")
 PAGES = os.environ.get("PAGES_BASE_URL", "https://a55796196-sudo.github.io/nurse_jobs").rstrip("/")
