@@ -172,11 +172,19 @@ def schedule_publish(page, fr, day: str, category: str) -> bool:
         fr.locator("button[class*='publish_btn'], button:has-text('발행')").first.click()
         pause(1.5, 2.5)
         # 1) 카테고리: 'A > B' 이면 마지막 이름으로 고름
-        name = category.split(">")[-1].strip()
+        base = category.split(">")[-1].strip()
+        names = list(dict.fromkeys([base, base.replace("·", "/"), base.replace("/", "·"), base.replace("·", "")]))
         fr.locator("button[class*='selectbox_button'], [class*='option_category'] button").first.click()
         pause(0.8, 1.2)
-        item = fr.locator(f"[class*='option_list'] :text-is('{name}'), label:text-is('{name}'), span:text-is('{name}')").first
-        item.click()
+        name = None
+        for nm in names:   # 블로그 카테고리 이름이 '산업간호사/기업'처럼 다른 구분자일 수 있음
+            item = fr.locator(f"[class*='option_list'] :text-is('{nm}'), label:text-is('{nm}'), span:text-is('{nm}')").first
+            if item.count():
+                item.click()
+                name = nm
+                break
+        if not name:
+            raise RuntimeError(f"카테고리 '{base}'를 목록에서 못 찾음")
         pause(0.8, 1.2)
         shown = fr.locator("button[class*='selectbox_button'], [class*='option_category'] button").first.inner_text()
         if name not in shown:
