@@ -219,8 +219,6 @@ def post_html(job: Job, today: date) -> str:
     else:
         headcount = NEED
     emp = job.employment_type or NEED
-    if job.contract_period:
-        emp = f"{emp} ({job.contract_period})"
     edu = job.education or (_x(job, "acbgCondNmLst") if _x(job, "acbgCondNmLst").count(",") < 2 else "")
     ref = salary_ref(job)
     rows = [
@@ -228,6 +226,7 @@ def post_html(job: Job, today: date) -> str:
         ("부서 · 직무", " ".join(x for x in (job.department, job.job_role) if x)),
         ("채용 인원", headcount),
         ("고용 형태", emp),
+        ("계약 기간", job.contract_period or ""),   # 고용형태 뒤에 괄호로 붙이면 '계약직 1년 (1년 …)'처럼 겹쳐서 따로 줄로
         ("구분", _x(job, "recrutSeNm")),
         ("근무지", job.address or job.location or NEED),
         ("학력", edu),
