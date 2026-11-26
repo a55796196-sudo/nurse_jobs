@@ -180,7 +180,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
         blog_thumb(j, post_day or today).save(day_dir / f"thumb-{n:02d}.png")  # 인스타 표지와 같은 색·형광펜
         tags = " ".join("#" + t for t in blog_tags(j))
         posts.append(f"""<div class="box"><div class="row"><b>글 {n}. {_e(j.org)} · {_e(j.job_role)}</b>
-<span class="muted">카테고리: {_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></div>
+<span class="muted">카테고리: <span id="ct{n}">{_e(BLOG_CATEGORY.get(j.category or '', '탈임상 채용공고'))}</span></span></div>
 <pre id="pl{n}" style="display:none">{_e(place_query(j))}</pre>
 <div class="row" style="margin-top:8px"><pre id="pt{n}" style="flex:1;margin:0">{_e(post_title(j))}</pre>
 <button onclick="copyText('pt{n}',this)">제목 복사</button></div>
@@ -246,7 +246,7 @@ def build_day(jobs: list[Job], today: date, docs: Path, card_paths: list[list[Pa
 {others_html}
 
 <h2>📋 진행 중 공고 전체 정리 (1개)</h2>
-<div class="box"><div class="row"><b>전체 정리 글</b><span class="muted">카테고리: {SUMMARY_CATEGORY}</span></div>
+<div class="box"><div class="row"><b>전체 정리 글</b><span class="muted">카테고리: <span id="sct">{SUMMARY_CATEGORY}</span></span></div>
 <div class="row" style="margin-top:8px"><pre id="st" style="flex:1;margin:0">{_e(summary_title(open_jobs, today))}</pre>
 <button onclick="copyText('st',this)">제목 복사</button></div>
 <details><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기</summary>

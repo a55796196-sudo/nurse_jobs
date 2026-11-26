@@ -31,6 +31,9 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+# 다음 날 글은 09:00 예약 발행까지 (끄려면 환경변수 NAVER_AUTO_PUBLISH=0 → 임시저장만)
+AUTO_PUBLISH = os.environ.get("NAVER_AUTO_PUBLISH", "1") != "0"
+
 BLOG_ID = os.environ.get("NAVER_BLOG_ID", "live_in_fact")
 PAGES = os.environ.get("PAGES_BASE_URL", "https://a55796196-sudo.github.io/nurse_jobs").rstrip("/")
 HOME = Path.home() / ".nurse_jobs_naver"
@@ -161,6 +164,56 @@ def insert_place(page, fr, queries: list[str]) -> bool:
     return False
 
 
+def schedule_publish(page, fr, day: str, category: str) -> bool:
+    """'발행' → 카테고리 선택 → 예약(발행일 09:00) → 발행. 화면 값이 맞는지 확인하고, 하나라도 어긋나면 발행하지 않음
+    (그 경우 호출한 쪽에서 임시저장으로 남김). 성공하면 True."""
+    y, m, d = (int(x) for x in day.split("-"))
+    try:
+        fr.locator("button[class*='publish_btn'], button:has-text('발행')").first.click()
+        pause(1.5, 2.5)
+        # 1) 카테고리: 'A > B' 이면 마지막 이름으로 고름
+        name = category.split(">")[-1].strip()
+        fr.locator("button[class*='selectbox_button'], [class*='option_category'] button").first.click()
+        pause(0.8, 1.2)
+        item = fr.locator(f"[class*='option_list'] :text-is('{name}'), label:text-is('{name}'), span:text-is('{name}')").first
+        item.click()
+        pause(0.8, 1.2)
+        shown = fr.locator("button[class*='selectbox_button'], [class*='option_category'] button").first.inner_text()
+        if name not in shown:
+            raise RuntimeError(f"카테고리 선택 확인 실패 ({shown.strip()[:20]})")
+        # 2) 예약 → 날짜·시각
+        fr.locator("label:has-text('예약'), input[id*='radio_time2']").first.click()
+        pause(0.8, 1.2)
+        fr.locator("input[class*='input_date'], button[class*='input_date']").first.click()
+        pause(0.8, 1.2)
+        for _ in range(3):   # 달력이 발행일의 달이 아니면 다음 달로
+            head = fr.locator("[class*='ui-datepicker-title'], [class*='calendar_title']").first.inner_text()
+            if str(m) in head.replace(str(y), ""):
+                break
+            fr.locator("[class*='ui-datepicker-next'], button[class*='next']").first.click()
+            pause(0.5, 0.8)
+        fr.locator(f"[class*='ui-datepicker-calendar'] a:text-is('{d}'), [class*='calendar'] button:text-is('{d}')").first.click()
+        pause(0.8, 1.2)
+        fr.locator("select[class*='hour_option']").first.select_option("09")
+        fr.locator("select[class*='minute_option']").first.select_option("00")
+        pause(0.8, 1.2)
+        date_txt = fr.locator("input[class*='input_date'], button[class*='input_date']").first.evaluate("e=>e.value||e.innerText")
+        hour = fr.locator("select[class*='hour_option']").first.input_value()
+        import re
+        if not re.search(rf"{y}\D+0?{m}\D+0?{d}(\D|$)", date_txt or "") or hour != "09":
+            raise RuntimeError(f"예약 날짜·시각 확인 실패 ({date_txt} {hour}시)")
+        # 3) 최종 발행(예약)
+        fr.locator("button[class*='confirm_btn']:has-text('발행'), [class*='layer_btn_area'] button:has-text('발행')").first.click()
+        pause(3, 5)
+        log(f"  {day} 09:00 예약 발행 완료 ({name})")
+        return True
+    except Exception as e:  # noqa: BLE001
+        log(f"  예약 발행 못 함 → 임시저장으로 남김 ({str(e)[:80]})")
+        page.keyboard.press("Escape")
+        pause(1, 1.5)
+        return False
+
+
 def save_draft(fr) -> None:
     for loc in (fr.get_by_role("button", name="저장", exact=True), fr.locator("button[class*='save_btn']")):
         try:
@@ -223,7 +276,20 @@ def draft_one(ctx, work, day: str, key: str, title_btn: str, body_btn: str, thum
         if qs:
             page.bring_to_front()
             insert_place(page, fr, qs)
-        # 5) 임시저장
+        # 5) 다음 날 발행용이면 09:00 예약 발행, 아니면(또는 실패하면) 임시저장
+        cat = ""
+        try:
+            cid = "sct" if body_btn.startswith("copyHtml('sb'") else ("ct" + body_btn.split(chr(39))[1][2:])
+            loc = work.locator(f"#{cid}")
+            cat = (loc.text_content() or "").strip() if loc.count() else ""
+        except Exception:  # noqa: BLE001
+            pass
+        pub_day = day.split("/")[-1]
+        if AUTO_PUBLISH and cat and pub_day > datetime.now(KST).date().isoformat():
+            page.bring_to_front()
+            if schedule_publish(page, fr, pub_day, cat):
+                _mark(key, title)
+                return
         save_draft(fr)
         _mark(key, title)
         log(f"  임시저장 완료")

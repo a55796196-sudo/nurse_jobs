@@ -377,7 +377,7 @@ def build(path: Path, docs: Path) -> Path:
 <p class="muted"><a href="../../">← 작업실 첫 화면</a></p>
 <h1>💡 {_e(day)} 탈임상 가이드</h1>
 
-<div class="box"><div class="row"><b>블로그 글</b><span class="muted">카테고리: {_e(GUIDE_CATEGORIES[g['category']])}</span></div>
+<div class="box"><div class="row"><b>블로그 글</b><span class="muted">카테고리: <span id="ct">{_e(GUIDE_CATEGORIES[g['category']])}</span></span></div>
 <div class="row" style="margin-top:8px"><pre id="pt" style="flex:1;margin:0">{_e(g['title'])}</pre>
 <button onclick="copyText('pt',this)">제목 복사</button></div>
 <details open><summary class="muted" style="margin:10px 0;cursor:pointer">본문 미리보기 (접기)</summary>
