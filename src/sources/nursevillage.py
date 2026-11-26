@@ -112,7 +112,7 @@ def fetch(scrolls: int = 12, max_detail: int = 30) -> list[Job]:
             origin = api.get("replaceUrl") or api.get("sourceUrl") or next((u for u in orig if u and "nursevillage.com" not in u), None)
             jobs.append(Job(
                 source="nursevillage", source_id=sid, title=title[:150], url=origin or url, org=org,
-                deadline=dl, start_date=today.isoformat(),
+                deadline=dl, start_date=api.get("startDate"),
                 location=" ".join(x for x in (api.get("sido"), api.get("sigungu")) if x) or (parts[2] if len(parts) > 2 else None),
                 employment_type=parts[3] if len(parts) > 3 and parts[3] != "기타" else None,
                 raw_text=(title + " " + body)[:3000],

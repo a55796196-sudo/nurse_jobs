@@ -230,7 +230,7 @@ def post_html(job: Job, today: date) -> str:
         ("구분", _x(job, "recrutSeNm")),
         ("근무지", job.address or job.location or NEED),
         ("학력", edu),
-        ("급여", job.salary or (f"{NEED} (아래 경영공시 참고)" if ref else f"{NEED} (기관 내규)")),
+        ("급여", job.salary or ("공고에 금액 없음 (아래 경영공시 참고)" if ref else "공고에 금액 없음 (기관 내규)")),
         ("근무 시간", job.work_hours or NEED),
         ("접수 기간", period),
     ]
@@ -294,7 +294,7 @@ def post_html(job: Job, today: date) -> str:
     elif _is_site_home(job.url):
         out.append(f'<li><a href="{_e(job.url)}">{_e(_org(job))} 채용 홈페이지</a> → 공고 목록에서 <b>"{_e(job.title)}"</b>을 찾아 지원하세요</li>')
     else:
-        out.append(f'<li><a href="{_e(job.url)}">{"공고 원문 보기" if job.source == "gojobs" else "기관 채용 홈페이지에서 바로 지원"}</a></li>')
+        out.append(f'<li><a href="{_e(job.url)}">{_link_label(job)}</a></li>')
     if job.extra.get("apply"):
         out.append(f'<li>접수 방법: {_e(job.extra["apply"])}</li>')
     out.append("</ul><p>※ 공고 내용을 요약한 글입니다. 지원 전 원문 공고문을 꼭 확인하세요.</p><p>&nbsp;</p>")
@@ -316,6 +316,24 @@ CAT_ORDER = [("기업", "🏭 산업간호사·기업"), ("공공", "🏛️ 공
 
 def summary_title(jobs: list[Job], today: date) -> str:
     return f"[{today.month}/{today.day}] 탈임상 간호사 채용공고 총정리 (진행 중 {len(jobs)}건)"
+
+
+BOARDS = {  # 채용 게시처 주소 → 이름 (기관 홈페이지가 아니면 '공고 원문 보기 (게시처)'로)
+    "saramin.co.kr": "사람인", "jobkorea.co.kr": "잡코리아", "incruit.com": "인크루트", "work24.go.kr": "고용24",
+    "nursejob.co.kr": "널스잡", "nurse-link.co.kr": "널스링크", "cafe.naver.com": "네이버 카페", "kaohn.or.kr": "직업건강협회",
+    "medijob.cc": "메디잡", "catch.co.kr": "캐치", "casemanager.or.kr": "보험심사간호사회", "korea.kr": "정책브리핑",
+    "nursevillage.com": "널스빌리지", "gojobs.go.kr": "나라일터", "job.alio.go.kr": "잡알리오",
+}
+
+
+def _link_label(job: Job) -> str:
+    u = job.url or ""
+    name = next((v for k, v in BOARDS.items() if k in u), None)
+    if name:
+        return f"공고 원문 보기 ({name})"
+    if job.source == "gojobs":
+        return "공고 원문 보기"
+    return "기관 채용 홈페이지에서 바로 지원"
 
 
 def _link(job: Job) -> str:
