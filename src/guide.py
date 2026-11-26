@@ -501,68 +501,20 @@ def draft_items(docs: Path) -> list[str]:
 
 
 REVIEW_HTML = """<h2>👀 내일 올라갈 콘텐츠</h2>
-<div class="box" id="tomorrow"><p class="muted">내일 올라갈 가이드 글이 없어요.</p></div>
-<div class="box" id="reviewbar" style="position:sticky;bottom:8px;display:none">
-<div class="row"><span id="revcount" class="muted"></span>
-<span><button onclick="copyReview(this)">검토 결과 복사</button> <button onclick="resetReview()" style="background:#94a3b8">초기화</button></span></div>
-<p class="muted" style="margin:6px 0 0">표시하지 않은 글은 예정대로 올라가요. 별로·삭제는 '검토 결과 복사' → 채팅에 붙여 넣어야 반영돼요.</p></div>"""
+<div class="box" id="tomorrow"><p class="muted">내일 올라갈 가이드 글이 없어요.</p></div>"""
 
 REVIEW_JS = r"""
-const RKEY = 'guide-review';
-let rv = {};
-try { rv = JSON.parse(localStorage.getItem(RKEY) || '{}'); } catch (e) {}
-const ST = {good: ['좋음', '#16a34a'], bad: ['별로', '#f59e0b'], del: ['삭제', '#94a3b8']};
 const kst = new Date(Date.now() + 9 * 3600e3);
-const today = kst.toISOString().slice(0, 10);
 const tmr = new Date(kst.getTime() + 864e5).toISOString().slice(0, 10);
-const lis = [...document.querySelectorAll('li.g')].filter(li => li.dataset.date >= today);
-function saveR() { try { localStorage.setItem(RKEY, JSON.stringify(rv)); } catch (e) {} }
-function buttons(date) {
-  const box = document.createElement('div');
-  box.style.margin = '6px 0 2px';
-  for (const [v, [label, col]] of Object.entries(ST)) {
-    const b = document.createElement('button');
-    b.textContent = label; b.dataset.v = v; b.dataset.d = date;
-    b.style.cssText = `padding:3px 10px;font-size:.85rem;margin-right:6px;border:1.5px solid ${col};border-radius:999px`;
-    b.onclick = () => { rv[date] = rv[date] === v ? undefined : v; if (!rv[date]) delete rv[date]; saveR(); paintAll(); };
-    box.appendChild(b);
-  }
-  return box;
-}
-function paintAll() {
-  document.querySelectorAll('button[data-d]').forEach(b => {
-    const on = rv[b.dataset.d] === b.dataset.v, col = ST[b.dataset.v][1];
-    b.style.background = on ? col : 'transparent'; b.style.color = on ? '#fff' : col;
-  });
-  lis.forEach(li => {
-    const v = rv[li.dataset.date];
-    li.style.opacity = v === 'del' ? .45 : 1;
-    li.style.textDecoration = v === 'del' ? 'line-through' : '';
-    li.style.background = v === 'good' ? 'rgba(22,163,74,.12)' : v === 'bad' ? 'rgba(245,158,11,.12)' : '';
-  });
-  const n = Object.values(rv), c = t => n.filter(x => x === t).length;
-  document.getElementById('revcount').textContent = `좋음 ${c('good')} · 별로 ${c('bad')} · 삭제 ${c('del')}`;
-}
-lis.forEach(li => { li.style.borderRadius = '8px'; li.style.padding = '4px 6px'; li.style.margin = '4px 0'; li.appendChild(buttons(li.dataset.date)); });
-const tm = lis.filter(li => li.dataset.date === tmr);
+const tm = [...document.querySelectorAll('li.g')].filter(li => li.dataset.date === tmr);
 if (tm.length) {
   const box = document.getElementById('tomorrow'); box.innerHTML = '';
   tm.forEach(li => {
     const d = li.dataset.date, w = document.createElement('div');
     w.style.cssText = 'display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap';
     w.innerHTML = `<a href="guides/${d}/"><img src="guides/${d}/card-00.jpg" alt="표지" style="width:150px;border-radius:8px;border:1px solid var(--line)"></a>
-      <div style="flex:1;min-width:180px"><b>${d}</b><br><a href="guides/${d}/">${li.dataset.title}</a><p class="muted" style="margin:6px 0">눌러서 블로그 본문·카드뉴스 전체를 확인하세요.</p></div>`;
-    w.querySelector('div').appendChild(buttons(d));
+      <div style="flex:1;min-width:180px"><b>${d}</b><br><a href="guides/${d}/">${li.dataset.title}</a><p class="muted" style="margin:6px 0">눌러서 블로그 본문·카드뉴스 전체를 확인하세요. 고칠 점은 채팅으로 알려 주세요.</p></div>`;
     box.appendChild(w);
   });
 }
-if (lis.length) document.getElementById('reviewbar').style.display = '';
-paintAll();
-function copyReview(btn) {
-  const t = k => lis.filter(li => rv[li.dataset.date] === k).map(li => `- ${li.dataset.date} ${li.dataset.title}`);
-  const txt = ['[가이드 검토]', '삭제:', ...t('del'), '별로(고쳐 주세요):', ...t('bad'), '좋음:', ...t('good')].join('\n');
-  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).catch(() => prompt('복사해서 채팅에 붙여 넣으세요', txt));
-  const o = btn.textContent; btn.textContent = '복사됨 ✓'; setTimeout(() => btn.textContent = o, 1500);
-}
-function resetReview() { if (confirm('표시를 모두 지울까요?')) { rv = {}; saveR(); paintAll(); } }
 """
