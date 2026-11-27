@@ -1,0 +1,14 @@
+{
+ "reviewed_at": "2026-11-27T21:04+09:00",
+ "remaining_issues": [
+  "글3 베스티안서울병원: 사람인 원문 미수집 — 직무내용·우대·자격 상세가 빠졌을 가능성 큼 (사용자에게 캡처 요청)",
+  "글7 서울대학교병원: 마감일 없음",
+  "링크 확인 실패 글1 석촌중학교: 열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"https://work.sen.go.kr/work/search/recInfo/BD_selectRe",
+  "링크 확인 실패 글2 서울특별시금천구보건소: 열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"https://www.nursejob.co.kr/recruit/recruit_view.php?r_",
+  "링크 확인 실패 글3 베스티안서울병원: 열기 실패: Page.goto: Timeout 60000ms exceeded.\nCall log:\n  - navigating to \"https://www.saramin.co.kr/zf_user/jobs/relay/view?rec_",
+  "링크 확인 실패 글4 제물포구보건소: 페이지에 공고 내용이 안 보임 (링크 확인)",
+  "링크 확인 실패 글5 남양주 풍양보건소: 열기 실패: Page.goto: net::ERR_CONNECTION_TIMED_OUT at https://www.nursejob.co.kr/recruit/recruit_view.php?r_idx=1237701\nCall log:\n",
+  "링크 확인 실패 글6 강남성심병원: 열기 실패: Page.goto: net::ERR_CONNECTION_REFUSED at http://recruit.hallym.or.kr/\nCall log:\n  - navigating to \"http://recruit.hally",
+  "링크 확인 실패 글7 서울대학교병원: 열기 실패: Page.goto: Navigation to \"https://cafe.naver.com/ca-fe/cafes/15621235/articles/377885?menuid=19\" is interrupted by anoth"
+ ]
+}
