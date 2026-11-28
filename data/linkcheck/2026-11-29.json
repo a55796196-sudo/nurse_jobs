@@ -1,0 +1,51 @@
+{
+ "글1 번동중학교": {
+  "url": "https://work.sen.go.kr/work/search/recInfo/BD_selectRecDetail.do?q_rcrtSn=115452",
+  "ok": true,
+  "status": 200,
+  "hit": "6/6",
+  "why": ""
+ },
+ "글2 서울언북초등학교": {
+  "url": "https://work.sen.go.kr/work/search/recInfo/BD_selectRecDetail.do?q_rcrtSn=115457",
+  "ok": true,
+  "status": 200,
+  "hit": "7/7",
+  "why": ""
+ },
+ "글3 이화여자대학교병원(목동)": {
+  "url": "https://www.eumc.ac.kr/intro/recrut/view.do?bbs_no=31851&pageIndex=1&searchWord=%EA%B0%84%ED%98%B8&bid_status=I",
+  "ok": true,
+  "status": 200,
+  "hit": "7/9",
+  "why": ""
+ },
+ "글4 한림병원": {
+  "url": "https://recruit.hallym.net/",
+  "ok": true,
+  "status": 200,
+  "hit": "5/5",
+  "why": ""
+ },
+ "글5 서울대학교병원": {
+  "url": "https://www.jobkorea.co.kr/Recruit/GI_Read/50442923",
+  "ok": true,
+  "status": 200,
+  "hit": "7/7",
+  "why": ""
+ },
+ "글6 부산백병원": {
+  "url": "https://cafe.naver.com/ca-fe/cafes/15621235/articles/377992?menuid=19",
+  "ok": false,
+  "status": 200,
+  "hit": "0/6",
+  "why": "페이지에 공고 내용이 안 보임 (링크 확인)"
+ },
+ "글7 서울아산병원": {
+  "url": "https://cafe.naver.com/ca-fe/cafes/15621235/articles/378013?menuid=19",
+  "ok": true,
+  "status": 200,
+  "hit": "8/8",
+  "why": ""
+ }
+}
